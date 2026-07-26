@@ -1,0 +1,20 @@
+{
+  "entities": {
+    "consultations": {
+      "title": "Consultation Applications",
+      "description": "Stores user consultation requests and uploaded photo attachment download URLs",
+      "fields": {
+        "name": { "type": "string", "description": "Applicant name" },
+        "phone": { "type": "string", "description": "Applicant phone number" },
+        "location": { "type": "string", "description": "Construction location" },
+        "spaceType": { "type": "string", "description": "Space type (e.g. 아파트, 주택, 상가)" },
+        "area": { "type": "string", "description": "Space area size" },
+        "startDate": { "type": "string", "description": "Preferred construction start date" },
+        "details": { "type": "string", "description": "Consultation details" },
+        "photoUrls": { "type": "array", "description": "Array of uploaded photo download URLs" },
+        "createdAt": { "type": "string", "description": "Submission ISO timestamp" },
+        "status": { "type": "string", "description": "Consultation status e.g. pending" }
+      }
+    }
+  }
+}

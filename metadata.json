@@ -1,0 +1,6 @@
+{
+  "name": "한신인테리어 | 부산진구 전포동·서면 실내건축·리모델링",
+  "description": "부산진구 전포동 한신인테리어. 아파트·주택 리모델링, 상가·매장·카페·사무실 인테리어 및 실내건축 전문. 부산진구·전포동·서면 및 부산 전 지역 상담. 무료 현장 실측 및 AI 견적 상담.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

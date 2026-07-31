@@ -6,6 +6,7 @@ import {
   CheckCircle,
   Loader2,
   AlertCircle,
+  Phone,
 } from "lucide-react";
 import { db, firebaseProjectId, firebaseDatabaseId } from "../firebase";
 import { collection, doc, setDoc, serverTimestamp } from "firebase/firestore";
@@ -236,12 +237,22 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                 </div>
               </div>
 
-              <button
-                onClick={handleResetAndClose}
-                className="w-full py-3.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-950 font-extrabold rounded-xl transition-all shadow-lg text-sm"
-              >
-                확인
-              </button>
+              <div className="space-y-2.5 pt-2">
+                <a
+                  href={`tel:${SITE_CONFIG.company.phone}`}
+                  className="w-full min-h-[44px] py-3.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold rounded-xl transition-all shadow-lg text-xs sm:text-sm flex items-center justify-center gap-2 active:scale-[0.99] text-center"
+                >
+                  <Phone className="w-4 h-4 shrink-0 text-white" />
+                  <span>📞 지금 바로 전화 상담하기 ({SITE_CONFIG.company.phone})</span>
+                </a>
+
+                <button
+                  onClick={handleResetAndClose}
+                  className="w-full min-h-[44px] py-3.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-950 font-extrabold rounded-xl transition-all shadow-lg text-xs sm:text-sm"
+                >
+                  확인
+                </button>
+              </div>
             </div>
           ) : (
             /* Consultation Input Form */

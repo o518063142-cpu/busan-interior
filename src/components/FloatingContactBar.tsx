@@ -49,14 +49,14 @@ export const FloatingContactBar: React.FC<FloatingContactBarProps> = ({
         </button>
 
         {/* Free Measurement Button */}
-        <a
-          href={`tel:${SITE_CONFIG.company.mobilePhone}`}
+        <button
+          onClick={openContactModal}
           className="col-span-3 flex flex-col items-center justify-center py-2 px-1 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-950 rounded-xl text-[11px] font-black shadow-lg shadow-amber-500/20 active:scale-95 transition-all text-center"
         >
           <Calendar className="w-3.5 h-3.5 shrink-0 mb-0.5" />
           <span className="text-[10px] text-stone-900 font-bold">무료</span>
           <span className="truncate font-black">실측신청</span>
-        </a>
+        </button>
       </div>
     </div>
   );

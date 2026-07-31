@@ -1,5 +1,4 @@
 import React from "react";
-import { SITE_CONFIG } from "../config/siteConfig";
 import { SERVICES_DATA } from "../data/servicesData";
 import { NavigationMenu, ProjectCategory } from "../types";
 import {
@@ -134,12 +133,12 @@ export const ServicePage: React.FC<ServicePageProps> = ({
                   <span>관련 시공사례 보기 ({service.targetCategory})</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
-                <a
-                  href={`tel:${SITE_CONFIG.company.mobilePhone}`}
-                  className="px-5 py-3 bg-amber-500 hover:bg-amber-600 text-stone-950 font-bold rounded-xl text-xs sm:text-sm transition-all flex items-center justify-center"
+                <button
+                  onClick={openContactModal}
+                  className="px-5 py-3 bg-amber-500 hover:bg-amber-600 text-stone-950 font-bold rounded-xl text-xs sm:text-sm transition-all"
                 >
                   무료 실측 및 견적 문의
-                </a>
+                </button>
               </div>
             </div>
 

@@ -88,22 +88,29 @@ export const HomePage: React.FC<HomePageProps> = ({
           </div>
 
           {/* Hero Action Buttons */}
-          <div className="pt-6 flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto">
+          <div className="pt-6 flex flex-col sm:flex-row flex-wrap items-center justify-center gap-3 sm:gap-4 max-w-2xl mx-auto">
             <a
-              href={`tel:${SITE_CONFIG.company.mobilePhone}`}
-              className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-950 font-extrabold rounded-xl text-base transition-all shadow-xl hover:shadow-amber-500/25 flex items-center justify-center gap-2 active:scale-[0.98]"
+              href={`tel:${SITE_CONFIG.company.phone}`}
+              className="w-full sm:w-auto min-h-[44px] px-6 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold rounded-xl text-sm sm:text-base transition-all shadow-xl hover:shadow-emerald-600/25 flex items-center justify-center gap-2 active:scale-[0.98]"
             >
-              <Calendar className="w-5 h-5" />
-              <span>무료 현장 실측 상담</span>
+              <Phone className="w-5 h-5 shrink-0 text-white" />
+              <span>📞 지금 바로 전화 상담</span>
             </a>
+            <button
+              onClick={openContactModal}
+              className="w-full sm:w-auto min-h-[44px] px-6 py-3.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-950 font-extrabold rounded-xl text-sm sm:text-base transition-all shadow-xl hover:shadow-amber-500/25 flex items-center justify-center gap-2 active:scale-[0.98]"
+            >
+              <Calendar className="w-5 h-5 shrink-0" />
+              <span>📝 무료 현장 실측 신청하기</span>
+            </button>
             <button
               onClick={() => {
                 setActiveTab("AI_ESTIMATE");
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}
-              className="w-full sm:w-auto px-8 py-4 bg-stone-900/90 hover:bg-stone-800 text-amber-300 font-bold rounded-xl text-base border border-amber-500/40 hover:border-amber-400 transition-all flex items-center justify-center gap-2 backdrop-blur-sm"
+              className="w-full sm:w-auto min-h-[44px] px-6 py-3.5 bg-stone-900/90 hover:bg-stone-800 text-amber-300 font-bold rounded-xl text-sm sm:text-base border border-amber-500/40 hover:border-amber-400 transition-all flex items-center justify-center gap-2 backdrop-blur-sm"
             >
-              <Sparkles className="w-5 h-5 text-amber-400" />
+              <Sparkles className="w-5 h-5 shrink-0 text-amber-400" />
               <span>AI 견적 상담</span>
             </button>
           </div>
@@ -460,13 +467,13 @@ export const HomePage: React.FC<HomePageProps> = ({
                   <Eye className="w-4 h-4" />
                   <span>이 시공사례 상세스펙 & 도면 확인</span>
                 </button>
-                <a
-                  href={`tel:${SITE_CONFIG.company.mobilePhone}`}
+                <button
+                  onClick={openContactModal}
                   className="w-full py-3 bg-stone-800 hover:bg-stone-700 text-stone-200 font-bold rounded-xl text-xs transition-all border border-stone-700 flex items-center justify-center gap-2"
                 >
                   <Calendar className="w-4 h-4 text-amber-400" />
                   <span>비슷한 평수 무료 방문 실측 신청</span>
-                </a>
+                </button>
               </div>
             </div>
           </div>
@@ -798,32 +805,38 @@ export const HomePage: React.FC<HomePageProps> = ({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
-          <div className="bg-white p-6 rounded-2xl border border-stone-200 text-center space-y-3 shadow-sm">
-            <Phone className="w-8 h-8 text-amber-600 mx-auto" />
-            <h3 className="font-bold text-stone-900 text-base">전화 빠른 상담</h3>
-            <p className="text-xs text-stone-600">
-              상담 대표번호: {SITE_CONFIG.company.phoneDisplay}
-            </p>
+          <div className="bg-white p-6 rounded-2xl border border-stone-200 text-center space-y-3 shadow-sm flex flex-col justify-between">
+            <div className="space-y-2">
+              <Phone className="w-8 h-8 text-emerald-600 mx-auto" />
+              <h3 className="font-bold text-stone-900 text-base">전화 빠른 상담</h3>
+              <p className="text-xs text-stone-600">
+                상담 대표번호: <strong className="text-stone-900">{SITE_CONFIG.company.phoneDisplay}</strong>
+              </p>
+            </div>
             <a
               href={`tel:${SITE_CONFIG.company.phone}`}
-              className="inline-block py-2.5 px-6 bg-stone-900 hover:bg-stone-800 text-white font-bold text-xs rounded-xl transition-all"
+              className="w-full min-h-[44px] py-3 px-6 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs sm:text-sm rounded-xl transition-all shadow-md flex items-center justify-center gap-2 active:scale-95"
             >
-              바로 전화걸기
+              <Phone className="w-4 h-4 shrink-0 text-white" />
+              <span>📞 지금 바로 전화 상담</span>
             </a>
           </div>
 
-          <div className="bg-white p-6 rounded-2xl border border-stone-200 text-center space-y-3 shadow-sm">
-            <Calendar className="w-8 h-8 text-amber-600 mx-auto" />
-            <h3 className="font-bold text-stone-900 text-base">온라인 무료 실측</h3>
-            <p className="text-xs text-stone-600">
-              원하시는 날짜에 무료 방문 실측을 신청하실 수 있습니다.
-            </p>
-            <a
-              href={`tel:${SITE_CONFIG.company.mobilePhone}`}
-              className="inline-block py-2.5 px-6 bg-amber-500 hover:bg-amber-600 text-stone-950 font-bold text-xs rounded-xl transition-all"
+          <div className="bg-white p-6 rounded-2xl border border-stone-200 text-center space-y-3 shadow-sm flex flex-col justify-between">
+            <div className="space-y-2">
+              <Calendar className="w-8 h-8 text-amber-600 mx-auto" />
+              <h3 className="font-bold text-stone-900 text-base">온라인 무료 실측</h3>
+              <p className="text-xs text-stone-600">
+                원하시는 날짜에 무료 방문 실측을 신청하실 수 있습니다.
+              </p>
+            </div>
+            <button
+              onClick={openContactModal}
+              className="w-full min-h-[44px] py-3 px-6 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-950 font-extrabold text-xs sm:text-sm rounded-xl transition-all shadow-md flex items-center justify-center gap-2 active:scale-95"
             >
-              무료 실측 신청
-            </a>
+              <Calendar className="w-4 h-4 shrink-0" />
+              <span>📝 무료 현장 실측 신청하기</span>
+            </button>
           </div>
         </div>
       </section>

@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { SITE_CONFIG } from "../config/siteConfig";
 import { PROJECTS_DATA } from "../data/projectsData";
 import { ProjectCategory, ProjectItem } from "../types";
 import {
@@ -349,13 +348,15 @@ export const ProjectPage: React.FC<ProjectPageProps> = ({
 
               {/* Action */}
               <div className="pt-4 flex flex-col sm:flex-row gap-3 border-t border-stone-800">
-                <a
-                  href={`tel:${SITE_CONFIG.company.mobilePhone}`}
-                  onClick={() => onSelectProject(null)}
-                  className="block w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-950 font-bold rounded-xl text-xs sm:text-sm transition-all shadow text-center"
+                <button
+                  onClick={() => {
+                    onSelectProject(null);
+                    openContactModal();
+                  }}
+                  className="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-950 font-bold rounded-xl text-xs sm:text-sm transition-all shadow"
                 >
                   비슷한 스타일로 무료 현장 실측 상담 신청
-                </a>
+                </button>
               </div>
             </div>
           </div>

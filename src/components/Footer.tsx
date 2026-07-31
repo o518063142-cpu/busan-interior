@@ -134,12 +134,12 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab, openContactModal }
               ))}
             </ul>
             <div className="pt-2">
-              <a
-                href={`tel:${SITE_CONFIG.company.mobilePhone}`}
-                className="block w-full py-2.5 px-4 bg-amber-500 hover:bg-amber-600 text-stone-950 font-bold rounded-lg text-xs transition-all shadow text-center"
+              <button
+                onClick={openContactModal}
+                className="w-full py-2.5 px-4 bg-amber-500 hover:bg-amber-600 text-stone-950 font-bold rounded-lg text-xs transition-all shadow text-center"
               >
                 무료 현장 실측 신청하기
-              </a>
+              </button>
             </div>
           </div>
         </div>

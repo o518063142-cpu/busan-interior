@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { NavigationMenu, ProjectCategory, ProjectItem } from "./types";
-import { SITE_CONFIG } from "./config/siteConfig";
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
 import { FloatingContactBar } from "./components/FloatingContactBar";
@@ -40,8 +39,6 @@ export function App() {
     area?: string;
     details?: string;
   }) => {
-    // 무료 현장 실측 버튼 클릭 시 바로 핸드폰 번호(직통 010-7231-1470)로 전화 연결
-    window.location.href = `tel:${SITE_CONFIG.company.mobilePhone}`;
     setContactModalData(data);
     setContactModalOpen(true);
   };

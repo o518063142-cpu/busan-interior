@@ -151,13 +151,13 @@ export const Header: React.FC<HeaderProps> = ({
             <Calculator className="w-4 h-4 text-amber-400" />
             <span>AI 견적 상담</span>
           </button>
-          <a
-            href={`tel:${SITE_CONFIG.company.mobilePhone}`}
+          <button
+            onClick={openContactModal}
             className="px-4 py-2 text-xs lg:text-sm font-bold rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-950 shadow-md transition-all flex items-center gap-1 hover:shadow-amber-500/20 active:scale-[0.98]"
           >
             <span>무료 현장 실측</span>
             <ChevronRight className="w-4 h-4" />
-          </a>
+          </button>
         </div>
 
         {/* Mobile Hamburger Toggle */}
@@ -240,14 +240,16 @@ export const Header: React.FC<HeaderProps> = ({
                 <span>네이버 지도</span>
               </a>
             )}
-            <a
-              href={`tel:${SITE_CONFIG.company.mobilePhone}`}
-              onClick={() => setMobileMenuOpen(false)}
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                openContactModal();
+              }}
               className="py-2.5 px-3 bg-amber-500 text-stone-950 rounded-lg text-xs font-bold flex items-center justify-center gap-1 shadow active:bg-amber-600"
             >
               <span>무료 실측 신청</span>
               <ChevronRight className="w-4 h-4" />
-            </a>
+            </button>
           </div>
         </div>
       )}

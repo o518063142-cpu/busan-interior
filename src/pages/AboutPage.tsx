@@ -174,12 +174,12 @@ export const AboutPage: React.FC<AboutPageProps> = ({
             <ExternalLink className="w-4 h-4" />
           </a>
 
-          <a
-            href={`tel:${SITE_CONFIG.company.mobilePhone}`}
-            className="inline-block px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-stone-950 font-bold rounded-xl text-xs transition-all shadow"
+          <button
+            onClick={openContactModal}
+            className="px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-stone-950 font-bold rounded-xl text-xs transition-all shadow"
           >
             무료 현장 실측 상담 신청
-          </a>
+          </button>
         </div>
       </div>
     </div>

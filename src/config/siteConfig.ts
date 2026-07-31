@@ -78,7 +78,7 @@ export const SITE_CONFIG = {
   },
 
   heroImages: {
-    main: "/src/assets/images/hanshin_hero_bg_1784852933011.jpg",
-    commercial: "/src/assets/images/hanshin_commercial_interior_1784852944836.jpg",
+    main: "/images/hanshin_hero_bg_1784852933011.jpg",
+    commercial: "/images/hanshin_commercial_interior_1784852944836.jpg",
   },
 };

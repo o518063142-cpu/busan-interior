@@ -18,7 +18,7 @@ export const PROJECTS_DATA: ProjectItem[] = [
     inProgressImage:
       "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=800&q=80",
     afterImages: [
-      "/src/assets/images/hanshin_hero_bg_1784852933011.jpg",
+      "/images/hanshin_hero_bg_1784852933011.jpg",
       "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1200&q=80",
       "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80",
       "https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?auto=format&fit=crop&w=1200&q=80",
@@ -49,7 +49,7 @@ export const PROJECTS_DATA: ProjectItem[] = [
     inProgressImage:
       "https://images.unsplash.com/photo-1541888946425-d0fbb186a5b7?auto=format&fit=crop&w=800&q=80",
     afterImages: [
-      "/src/assets/images/hanshin_commercial_interior_1784852944836.jpg",
+      "/images/hanshin_commercial_interior_1784852944836.jpg",
       "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=1200&q=80",
       "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=1200&q=80",
     ],

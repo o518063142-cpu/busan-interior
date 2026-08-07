@@ -1,0 +1,18 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Consultations path: allow image uploads up to 10MB for unauthenticated users
+    match /consultations/{fileName} {
+      allow create: if request.resource.contentType.matches('image/.*')
+                    && request.resource.size <= 10 * 1024 * 1024;
+      allow read: if true;
+      allow update, delete: if request.auth != null;
+    }
+
+    // Default deny for all other paths
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

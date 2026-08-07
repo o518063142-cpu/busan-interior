@@ -9,7 +9,7 @@ import {
   Phone,
 } from "lucide-react";
 import { db, firebaseProjectId, firebaseDatabaseId } from "../firebase";
-import { collection, doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
 interface ContactModalProps {
   isOpen: boolean;
@@ -58,24 +58,6 @@ export const ContactModal: React.FC<ContactModalProps> = ({
 
   if (!isOpen) return null;
 
-  // Timeout wrapper helper (15 seconds max for Firestore operation)
-  const withTimeout = <T,>(
-    promise: Promise<T>,
-    timeoutMs: number = 15000,
-    timeoutErrorMessage: string = "요청 시간이 초과되었습니다."
-  ): Promise<T> => {
-    let timer: any;
-    const timeoutPromise = new Promise<T>((_, reject) => {
-      timer = setTimeout(() => {
-        reject(new Error(timeoutErrorMessage));
-      }, timeoutMs);
-    });
-
-    return Promise.race([promise, timeoutPromise]).finally(() => {
-      clearTimeout(timer);
-    });
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
@@ -95,19 +77,13 @@ export const ContactModal: React.FC<ContactModalProps> = ({
     setLoading(true);
 
     try {
-      console.log("1. 상담 신청 시작");
+      console.log("1. 상담 신청 시작 (busan-interior Firestore)");
 
       if (!db) {
         throw new Error("Firebase 초기화 오류: Firestore DB 인스턴스가 존재하지 않습니다.");
       }
 
-      // 1. 상담 document 참조 및 ID 생성
-      const consultationRef = doc(collection(db, "consultations"));
-      const consultationId = consultationRef.id;
-      console.log("2. 상담 ID:", consultationId);
-
-      // 2. Firestore 저장 시작
-      console.log("3. Firestore 저장 시작");
+      // 3. Save document to Firestore consultations collection using addDoc
       const consultationData = {
         name: formData.name.trim(),
         phone: formData.phone.trim(),
@@ -120,26 +96,68 @@ export const ContactModal: React.FC<ContactModalProps> = ({
         status: "new",
       };
 
-      await withTimeout(
-        setDoc(consultationRef, consultationData),
-        15000,
-        "Firestore 저장 오류: 15초 시간 초과"
-      );
+      console.log("=== FIRESTORE DEBUG START ===");
+      console.log("Project:", firebaseProjectId);
+      console.log("Database:", firebaseDatabaseId);
+      console.log("Collection: consultations");
+      console.log("Payload:", consultationData);
+      console.log("=== FIRESTORE WRITE START ===");
 
-      // 3. Firestore 저장 성공 및 경로 기록
-      console.log("4. Firestore 저장 성공");
-      console.log("5. 저장된 문서 경로:", consultationRef.path);
-      setSavedDocPath(consultationRef.path);
+      let docRef;
+      try {
+        docRef = await addDoc(collection(db, "consultations"), consultationData);
+        console.log("=== FIRESTORE WRITE SUCCESS ===");
+        console.log("Document ID:", docRef.id);
+        console.log("Document Path:", docRef.path);
+        console.log("Project:", firebaseProjectId);
+      } catch (error: any) {
+        console.error("=== FIRESTORE WRITE FAILED ===");
+        console.error("Error Code:", error?.code);
+        console.error("Error Message:", error?.message);
+        console.error("Error Name:", error?.name);
+        console.error(error);
+        throw error;
+      }
 
-      // 4. 저장 성공 완료된 후에만 성공 화면 표시
-      console.log("6. 상담 신청 성공 화면 표시");
+      setSavedDocPath(docRef.path);
       setSubmitted(true);
+
+      // Auxiliary Admin Email Notification (does not block client submission success)
+      try {
+        const notifyRes = await fetch("/api/notify-consultation", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: formData.name.trim(),
+            phone: formData.phone.trim(),
+            location: formData.location.trim(),
+            spaceType: formData.spaceType,
+            area: formData.area.trim(),
+            startDate: formData.startDate.trim(),
+            details: formData.details.trim(),
+            docPath: docRef.path,
+            createdAt: new Date().toLocaleString("ko-KR"),
+          }),
+        });
+        const notifyData = await notifyRes.json();
+        if (notifyData?.success) {
+          console.log("EMAIL NOTIFICATION SUCCESS");
+        } else {
+          console.error("EMAIL NOTIFICATION FAILED");
+        }
+      } catch (emailErr) {
+        console.error("EMAIL NOTIFICATION FAILED");
+      }
     } catch (error: any) {
-      console.error("Firestore 저장 실패:", error);
+      setSubmitted(false);
+      setSavedDocPath(null);
+      console.error("REAL FIRESTORE WRITE FAILED:", error);
       console.error("Firebase error code:", error?.code);
       console.error("Firebase error message:", error?.message);
 
-      setErrorMessage("상담 신청 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+      setErrorMessage(
+        `상담 신청 중 오류가 발생했습니다 (${error?.message || "네트워크 오류"}). 잠시 후 다시 시도해 주세요.`
+      );
     } finally {
       setLoading(false);
     }

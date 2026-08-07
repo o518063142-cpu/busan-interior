@@ -3,6 +3,7 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import dotenv from "dotenv";
 import { GoogleGenAI, Type } from "@google/genai";
+import nodemailer from "nodemailer";
 
 dotenv.config();
 
@@ -30,6 +31,83 @@ function getGenAIClient(): GoogleGenAI | null {
 // Health check endpoint
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", company: "한신인테리어" });
+});
+
+// Admin Email Notification API endpoint
+app.post("/api/notify-consultation", async (req, res) => {
+  try {
+    const {
+      name,
+      phone,
+      location = "",
+      spaceType = "",
+      area = "",
+      startDate = "",
+      details = "",
+      docPath = "",
+      createdAt = new Date().toLocaleString("ko-KR"),
+    } = req.body;
+
+    const emailUser = process.env.EMAIL_USER;
+    const emailPassword = process.env.EMAIL_PASSWORD;
+    const adminEmail = process.env.ADMIN_EMAIL || emailUser;
+    const smtpHost = process.env.SMTP_HOST || "smtp.gmail.com";
+    const smtpPort = Number(process.env.SMTP_PORT) || 465;
+
+    if (!emailUser || !emailPassword) {
+      console.error("EMAIL NOTIFICATION FAILED");
+      console.error("Reason: EMAIL_USER or EMAIL_PASSWORD environment variable not set.");
+      return res.status(200).json({
+        success: false,
+        message: "Email environment variables not configured on server.",
+      });
+    }
+
+    const transporter = nodemailer.createTransport({
+      host: smtpHost,
+      port: smtpPort,
+      secure: smtpPort === 465,
+      auth: {
+        user: emailUser,
+        pass: emailPassword,
+      },
+    });
+
+    const mailText = `한신인테리어 새로운 상담신청
+
+성함: ${name}
+연락처: ${phone}
+지역: ${location}
+공간 유형: ${spaceType}
+면적: ${area}평
+희망 일정: ${startDate}
+상세 내용: ${details || "없음"}
+
+Firestore 문서:
+${docPath}
+
+접수 시간:
+${createdAt}
+
+관리자 페이지에서 상담 내용을 확인해주세요.`;
+
+    await transporter.sendMail({
+      from: `"한신인테리어 알림" <${emailUser}>`,
+      to: adminEmail,
+      subject: "[한신인테리어] 새로운 상담신청이 접수되었습니다.",
+      text: mailText,
+    });
+
+    console.log("EMAIL NOTIFICATION SUCCESS");
+    return res.json({ success: true });
+  } catch (error: any) {
+    console.error("EMAIL NOTIFICATION FAILED");
+    console.error("Details:", error?.message || error);
+    return res.status(200).json({
+      success: false,
+      error: error?.message || "Send mail failed",
+    });
+  }
 });
 
 // AI Estimate API endpoint

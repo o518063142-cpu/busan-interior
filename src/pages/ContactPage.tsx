@@ -3,15 +3,17 @@ import { SITE_CONFIG } from "../config/siteConfig";
 import {
   Phone,
   Send,
-  Upload,
   CheckCircle,
   MapPin,
   ExternalLink,
   Clock,
   ShieldCheck,
   Building,
-  Image as ImageIcon,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
+import { db, firebaseProjectId, firebaseDatabaseId } from "../firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
 interface ContactPageProps {
   initialData?: {
@@ -33,23 +35,111 @@ export const ContactPage: React.FC<ContactPageProps> = ({ initialData }) => {
     details: initialData?.details || "",
   });
 
-  const [photos, setPhotos] = useState<File[]>([]);
-  const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
+  const [privacyAgreed, setPrivacyAgreed] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [savedDocPath, setSavedDocPath] = useState<string | null>(null);
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const selectedFiles = Array.from(e.target.files);
-      setPhotos(selectedFiles);
-
-      const previews = selectedFiles.map((file) => URL.createObjectURL(file as Blob));
-      setPhotoPreviews(previews);
-    }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+    setErrorMessage(null);
+
+    if (!privacyAgreed) {
+      setErrorMessage("개인정보 수집 및 이용 동의에 체크해 주세요.");
+      return;
+    }
+
+    if (!formData.name.trim() || !formData.phone.trim()) {
+      setErrorMessage("이름과 연락처를 모두 작성해 주세요.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      console.log("1. ContactPage 상담 신청 시작 (busan-interior Firestore)");
+
+      if (!db) {
+        throw new Error("Firebase 초기화 오류: Firestore DB 인스턴스가 존재하지 않습니다.");
+      }
+
+      // Save document to Firestore consultations collection using addDoc
+      const consultationData = {
+        name: formData.name.trim(),
+        phone: formData.phone.trim(),
+        location: formData.location.trim(),
+        spaceType: formData.spaceType,
+        area: formData.area.trim(),
+        startDate: formData.startDate.trim(),
+        details: formData.details.trim(),
+        createdAt: serverTimestamp(),
+        status: "new",
+      };
+
+      console.log("=== FIRESTORE DEBUG START ===");
+      console.log("Project:", firebaseProjectId);
+      console.log("Database:", firebaseDatabaseId);
+      console.log("Collection: consultations");
+      console.log("Payload:", consultationData);
+      console.log("=== FIRESTORE WRITE START ===");
+
+      let docRef;
+      try {
+        docRef = await addDoc(collection(db, "consultations"), consultationData);
+        console.log("=== FIRESTORE WRITE SUCCESS ===");
+        console.log("Document ID:", docRef.id);
+        console.log("Document Path:", docRef.path);
+        console.log("Project:", firebaseProjectId);
+      } catch (error: any) {
+        console.error("=== FIRESTORE WRITE FAILED ===");
+        console.error("Error Code:", error?.code);
+        console.error("Error Message:", error?.message);
+        console.error("Error Name:", error?.name);
+        console.error(error);
+        throw error;
+      }
+
+      setSavedDocPath(docRef.path);
+      setSubmitted(true);
+
+      // Auxiliary Admin Email Notification (does not block client submission success)
+      try {
+        const notifyRes = await fetch("/api/notify-consultation", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: formData.name.trim(),
+            phone: formData.phone.trim(),
+            location: formData.location.trim(),
+            spaceType: formData.spaceType,
+            area: formData.area.trim(),
+            startDate: formData.startDate.trim(),
+            details: formData.details.trim(),
+            docPath: docRef.path,
+            createdAt: new Date().toLocaleString("ko-KR"),
+          }),
+        });
+        const notifyData = await notifyRes.json();
+        if (notifyData?.success) {
+          console.log("EMAIL NOTIFICATION SUCCESS");
+        } else {
+          console.error("EMAIL NOTIFICATION FAILED");
+        }
+      } catch (emailErr) {
+        console.error("EMAIL NOTIFICATION FAILED");
+      }
+
+    } catch (error: any) {
+      setSubmitted(false);
+      setSavedDocPath(null);
+      console.error("REAL FIRESTORE WRITE FAILED:", error);
+      setErrorMessage(
+        `상담 신청 중 오류가 발생했습니다 (${error?.message || "네트워크 오류"}). 잠시 후 다시 시도해 주세요.`
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -157,6 +247,13 @@ export const ContactPage: React.FC<ContactPageProps> = ({ initialData }) => {
               <p className="text-sm text-stone-600 max-w-md mx-auto leading-relaxed">
                 작성해주신 정보를 바탕으로 한신인테리어 담당자가 빠르게 연락드려 현장 실측 방문 일정을 잡아드리겠습니다.
               </p>
+
+              {savedDocPath && (
+                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl max-w-md mx-auto text-xs text-emerald-800 font-mono">
+                  <strong>접수 문서 경로:</strong> {savedDocPath}
+                </div>
+              )}
+
               <div className="pt-4">
                 <button
                   onClick={() => {
@@ -170,8 +267,6 @@ export const ContactPage: React.FC<ContactPageProps> = ({ initialData }) => {
                       startDate: "가장 빠른 일자",
                       details: "",
                     });
-                    setPhotoPreviews([]);
-                    setPhotos([]);
                   }}
                   className="px-6 py-3 bg-stone-900 text-white font-bold text-xs rounded-xl hover:bg-stone-800 transition-colors"
                 >
@@ -288,47 +383,53 @@ export const ContactPage: React.FC<ContactPageProps> = ({ initialData }) => {
                 />
               </div>
 
-              {/* Photo Upload with live preview */}
-              <div>
-                <label className="block font-bold text-stone-800 mb-1">
-                  사진 첨부 (현장 사진 또는 원하는 스타일)
-                </label>
-                <div className="border-2 border-dashed border-stone-200 bg-stone-50 p-4 rounded-2xl text-center hover:border-amber-500 transition-colors">
+              {/* Privacy Consent Box */}
+              <div className="p-3.5 bg-stone-50 rounded-xl border border-stone-200 space-y-2 text-xs">
+                <div className="flex items-start gap-2.5">
                   <input
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    onChange={handlePhotoUpload}
-                    className="hidden"
-                    id="contact-photo-upload"
+                    type="checkbox"
+                    id="contactPrivacyAgreed"
+                    checked={privacyAgreed}
+                    onChange={(e) => setPrivacyAgreed(e.target.checked)}
+                    disabled={loading}
+                    className="mt-0.5 accent-amber-600 w-4 h-4 rounded shrink-0 cursor-pointer"
                   />
-                  <label htmlFor="contact-photo-upload" className="cursor-pointer block space-y-2">
-                    <Upload className="w-6 h-6 text-stone-400 mx-auto" />
-                    <p className="text-xs text-stone-600 font-semibold">
-                      클릭하여 사진 선택 (여러 장 첨부 가능)
-                    </p>
+                  <label
+                    htmlFor="contactPrivacyAgreed"
+                    className="text-stone-700 cursor-pointer font-medium leading-relaxed select-none"
+                  >
+                    상담 신청을 위해 이름, 연락처 및 상담 내용을 수집·이용하는 것에 동의합니다.
+                    <span className="text-amber-600 font-bold ml-1">(필수)</span>
                   </label>
                 </div>
-
-                {photoPreviews.length > 0 && (
-                  <div className="grid grid-cols-4 gap-2 pt-3">
-                    {photoPreviews.map((src, idx) => (
-                      <div key={idx} className="h-20 rounded-xl overflow-hidden border border-stone-200 relative">
-                        <img src={src} alt="미리보기" className="w-full h-full object-cover" />
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
+
+              {/* Error Message Box */}
+              {errorMessage && (
+                <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs flex items-start gap-2.5">
+                  <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+                  <span className="leading-relaxed font-medium">{errorMessage}</span>
+                </div>
+              )}
 
               {/* Submit Button */}
               <div className="pt-2">
                 <button
                   type="submit"
-                  className="w-full py-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-950 font-extrabold rounded-2xl text-base transition-all shadow-lg flex items-center justify-center gap-2"
+                  disabled={loading || !privacyAgreed}
+                  className="w-full py-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-950 font-extrabold rounded-2xl text-base transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Send className="w-5 h-5" />
-                  <span>견적 상담 신청</span>
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin text-stone-950" />
+                      <span>접수 처리 중...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-5 h-5" />
+                      <span>견적 상담 신청</span>
+                    </>
+                  )}
                 </button>
               </div>
             </form>

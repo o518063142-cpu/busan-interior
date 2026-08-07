@@ -162,6 +162,22 @@ export const AdminPage: React.FC = () => {
             status: (data.status as ConsultationStatus) || "new",
           };
         });
+
+        // Ensure safe timestamp sort fallback in case any document lacks createdAt
+        list.sort((a, b) => {
+          const timeA = a.createdAt?.toMillis
+            ? a.createdAt.toMillis()
+            : a.createdAt?.seconds
+            ? a.createdAt.seconds * 1000
+            : 0;
+          const timeB = b.createdAt?.toMillis
+            ? b.createdAt.toMillis()
+            : b.createdAt?.seconds
+            ? b.createdAt.seconds * 1000
+            : 0;
+          return timeB - timeA;
+        });
+
         setConsultations(list);
         setDataLoading(false);
       },
@@ -251,8 +267,17 @@ export const AdminPage: React.FC = () => {
   // Format timestamp safely
   const formatDate = (timestamp: any) => {
     if (!timestamp) return "방금 전";
-    if (timestamp instanceof Timestamp) {
+    if (timestamp instanceof Timestamp || typeof timestamp?.toDate === "function") {
       const date = timestamp.toDate();
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
+        2,
+        "0"
+      )}-${String(date.getDate()).padStart(2, "0")} ${String(
+        date.getHours()
+      ).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+    }
+    if (timestamp?.seconds) {
+      const date = new Date(timestamp.seconds * 1000);
       return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
         2,
         "0"

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://gene-interior.vercel.app/sitemap.xml

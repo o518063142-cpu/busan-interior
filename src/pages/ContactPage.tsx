@@ -130,6 +130,32 @@ export const ContactPage: React.FC<ContactPageProps> = ({ initialData }) => {
         console.error("EMAIL NOTIFICATION FAILED");
       }
 
+      // Auxiliary Admin Kakao Notification (does not block client submission success)
+      try {
+        const kakaoRes = await fetch("/api/notify-kakao", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: formData.name.trim(),
+            phone: formData.phone.trim(),
+            location: formData.location.trim(),
+            spaceType: formData.spaceType,
+            area: formData.area.trim(),
+            startDate: formData.startDate.trim(),
+            details: formData.details.trim(),
+            docPath: docRef.path,
+          }),
+        });
+        const kakaoData = await kakaoRes.json();
+        if (kakaoData?.success) {
+          console.log("KAKAO NOTIFICATION SUCCESS");
+        } else {
+          console.warn("KAKAO NOTIFICATION FAILED");
+        }
+      } catch (kakaoErr) {
+        console.warn("KAKAO NOTIFICATION FAILED", kakaoErr);
+      }
+
     } catch (error: any) {
       setSubmitted(false);
       setSavedDocPath(null);

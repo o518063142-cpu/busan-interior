@@ -77,7 +77,7 @@ export const SERVICES_DATA: ServiceCategoryItem[] = [
       "5. 가오픈 및 시운전 입회 점검",
     ],
     bannerImage:
-      "/images/hanshin_commercial_interior_1784852944836.jpg",
+      "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=1200&q=80",
   },
   {
     id: "office",

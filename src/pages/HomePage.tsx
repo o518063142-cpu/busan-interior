@@ -350,8 +350,14 @@ export const HomePage: React.FC<HomePageProps> = ({
                 {/* Top Badges */}
                 <div className="absolute top-4 left-4 right-4 flex items-center justify-between gap-2 z-10">
                   <div className="flex items-center gap-2">
-                    <span className="bg-amber-500 text-stone-950 text-xs font-black px-3 py-1 rounded-full shadow-lg">
-                      샘플 프로젝트
+                    <span
+                      className={`text-xs font-black px-3 py-1 rounded-full shadow-lg ${
+                        featuredProject.isSample
+                          ? "bg-amber-500 text-stone-950"
+                          : "bg-emerald-500 text-white"
+                      }`}
+                    >
+                      {featuredProject.isSample ? "샘플 프로젝트" : "실제 시공사례"}
                     </span>
                     <span className="bg-stone-900/80 text-stone-200 text-xs font-semibold px-3 py-1 rounded-full backdrop-blur-md border border-stone-700">
                       {featuredProject.category}

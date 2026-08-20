@@ -15,6 +15,15 @@ service cloud.firestore {
       // Only authenticated admin users can read, update, or delete consultations
       allow read, update, delete: if request.auth != null;
     }
+
+    // Projects Collection Security Rules
+    match /projects/{projectId} {
+      // Public visitors can read projects
+      allow read: if true;
+
+      // Only authenticated admin users can create, update, or delete projects
+      allow create, update, delete: if request.auth != null;
+    }
   }
 }
 

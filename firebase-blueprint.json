@@ -15,6 +15,27 @@
         "createdAt": { "type": "string", "description": "Submission ISO timestamp" },
         "status": { "type": "string", "description": "Consultation status e.g. pending" }
       }
+    },
+    "projects": {
+      "title": "Interior Projects Portfolio",
+      "description": "Stores portfolio projects registered by admin with specs and photos",
+      "fields": {
+        "title": { "type": "string", "description": "Project title" },
+        "location": { "type": "string", "description": "Project location" },
+        "category": { "type": "string", "description": "Category (주거, 상가·매장, 카페·음식점, 사무실)" },
+        "spaceTypeDetail": { "type": "string", "description": "Detail space type" },
+        "area": { "type": "string", "description": "Area size" },
+        "duration": { "type": "string", "description": "Construction duration" },
+        "scope": { "type": "string", "description": "Construction scope" },
+        "clientRequest": { "type": "string", "description": "Client requests and needs" },
+        "description": { "type": "string", "description": "Project detailed description" },
+        "keyFeatures": { "type": "array", "description": "List of key construction features" },
+        "beforeImage": { "type": "string", "description": "Before construction photo URL" },
+        "inProgressImage": { "type": "string", "description": "In-progress construction photo URL" },
+        "afterImages": { "type": "array", "description": "Array of completed construction photo URLs" },
+        "isSample": { "type": "boolean", "description": "Whether this is a sample project" },
+        "createdAt": { "type": "string", "description": "Creation timestamp" }
+      }
     }
   }
 }

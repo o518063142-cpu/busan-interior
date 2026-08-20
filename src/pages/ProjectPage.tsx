@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { PROJECTS_DATA } from "../data/projectsData";
 import { ProjectCategory, ProjectItem } from "../types";
+import { db } from "../firebase";
+import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
 import {
   MapPin,
   Calendar,
@@ -15,6 +17,7 @@ import {
   Maximize2,
   Eye,
   ArrowLeftRight,
+  Image as ImageIcon,
 } from "lucide-react";
 
 interface ProjectPageProps {
@@ -34,6 +37,73 @@ export const ProjectPage: React.FC<ProjectPageProps> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activePhotoIdx, setActivePhotoIdx] = useState<number>(0);
+  const [firestoreProjects, setFirestoreProjects] = useState<ProjectItem[]>([]);
+
+  // Real-time subscription to Firestore 'projects' collection
+  useEffect(() => {
+    let unsubscribe = () => {};
+    try {
+      const q = query(collection(db, "projects"), orderBy("createdAt", "desc"));
+      unsubscribe = onSnapshot(
+        q,
+        (snapshot) => {
+          const items: ProjectItem[] = snapshot.docs.map((docSnap) => {
+            const data = docSnap.data();
+            return {
+              id: docSnap.id,
+              isSample: data.isSample ?? false,
+              title: data.title || "시공 프로젝트",
+              location: data.location || "부산",
+              category: (data.category as "주거" | "상가·매장" | "카페·음식점" | "사무실") || "주거",
+              spaceTypeDetail: data.spaceTypeDetail || "",
+              area: data.area || "",
+              duration: data.duration || "",
+              scope: data.scope || "",
+              clientRequest: data.clientRequest || "",
+              description: data.description || "",
+              keyFeatures: Array.isArray(data.keyFeatures) ? data.keyFeatures : [],
+              beforeImage: data.beforeImage || "",
+              inProgressImage: data.inProgressImage || "",
+              afterImages: Array.isArray(data.afterImages) ? data.afterImages : [],
+            };
+          });
+          setFirestoreProjects(items);
+        },
+        (error) => {
+          // Graceful fallback on Firestore query issue: PROJECTS_DATA continues uninterrupted
+          console.warn("Firestore projects onSnapshot notice (using base data fallback):", error);
+        }
+      );
+    } catch (err) {
+      console.warn("Firestore projects subscription exception:", err);
+    }
+
+    return () => unsubscribe();
+  }, []);
+
+  // Merge Firestore Projects + Built-in PROJECTS_DATA with strict deduplication
+  const allProjects = useMemo(() => {
+    const seenIds = new Set<string>();
+    const combined: ProjectItem[] = [];
+
+    // 1. Prioritize Firestore real-time projects (newest registered projects first)
+    for (const fp of firestoreProjects) {
+      if (!seenIds.has(fp.id)) {
+        seenIds.add(fp.id);
+        combined.push(fp);
+      }
+    }
+
+    // 2. Add base PROJECTS_DATA (preserving Sajik & baseline portfolio)
+    for (const bp of PROJECTS_DATA) {
+      if (!seenIds.has(bp.id)) {
+        seenIds.add(bp.id);
+        combined.push(bp);
+      }
+    }
+
+    return combined;
+  }, [firestoreProjects]);
 
   const categories: ProjectCategory[] = [
     "전체",
@@ -43,7 +113,7 @@ export const ProjectPage: React.FC<ProjectPageProps> = ({
     "사무실",
   ];
 
-  const filteredProjects = PROJECTS_DATA.filter((proj) => {
+  const filteredProjects = allProjects.filter((proj) => {
     const matchesCategory =
       selectedCategory === "전체" || proj.category === selectedCategory;
     const matchesSearch =
@@ -65,10 +135,10 @@ export const ProjectPage: React.FC<ProjectPageProps> = ({
           한신인테리어 대표 시공사례
         </h1>
         <p className="text-stone-600 text-sm sm:text-base leading-relaxed">
-          부산진구 전포동, 서면 등 부산 주요 공간의 완공 사례를 확인해보세요.
+          부산진구 전포동, 서면, 동래구 등 부산 주요 공간의 완공 사례를 확인해보세요.
           <br />
           <span className="text-amber-700 font-semibold text-xs">
-            * 모든 포트폴리오는 시공 안내를 위한 [샘플 프로젝트]로 명확히 표시되어 있으며, 추후 실제 완료된 현장 사진으로 언제든지 교체하실 수 있습니다.
+            * 한신인테리어의 실제 시공 현장 및 추천 포트폴리오를 실시간으로 투명하게 공개합니다.
           </span>
         </p>
       </div>
@@ -118,82 +188,109 @@ export const ProjectPage: React.FC<ProjectPageProps> = ({
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredProjects.map((project) => (
-            <div
-              key={project.id}
-              onClick={() => {
-                setActivePhotoIdx(0);
-                onSelectProject(project);
-              }}
-              className="bg-white rounded-3xl overflow-hidden border border-stone-200 shadow-md hover:shadow-2xl transition-all cursor-pointer group flex flex-col justify-between hover:-translate-y-1"
-            >
-              <div>
-                {/* Main Large Photo Box (h-72 sm:h-80) */}
-                <div className="relative h-72 sm:h-80 overflow-hidden bg-stone-950">
-                  <img
-                    src={project.afterImages[0]}
-                    alt={project.title}
-                    className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-700"
-                    loading="lazy"
-                    referrerPolicy="no-referrer"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-black/30 pointer-events-none" />
+          {filteredProjects.map((project) => {
+            const hasMainPhoto =
+              project.afterImages &&
+              project.afterImages.length > 0 &&
+              Boolean(project.afterImages[0]);
 
-                  {/* Top Badges */}
-                  <div className="absolute top-4 left-4 flex items-center gap-2 z-10">
-                    <span className="bg-amber-500 text-stone-950 font-black text-[11px] px-3 py-1 rounded-full shadow">
-                      샘플 프로젝트
-                    </span>
-                    <span className="bg-stone-950/80 text-white text-xs px-3 py-1 rounded-full backdrop-blur-md font-semibold border border-stone-700">
-                      {project.category}
-                    </span>
-                  </div>
+            const totalPhotosCount =
+              (project.afterImages ? project.afterImages.filter(Boolean).length : 0) +
+              (project.beforeImage ? 1 : 0) +
+              (project.inProgressImage ? 1 : 0);
 
-                  {/* Photo Count */}
-                  <div className="absolute top-4 right-4 bg-stone-900/90 text-amber-300 text-xs px-2.5 py-1 rounded-full backdrop-blur-md border border-amber-500/30 font-semibold flex items-center gap-1">
-                    <Images className="w-3.5 h-3.5" />
-                    <span>총 {project.afterImages.length + 2}장</span>
-                  </div>
+            return (
+              <div
+                key={project.id}
+                onClick={() => {
+                  setActivePhotoIdx(0);
+                  onSelectProject(project);
+                }}
+                className="bg-white rounded-3xl overflow-hidden border border-stone-200 shadow-md hover:shadow-2xl transition-all cursor-pointer group flex flex-col justify-between hover:-translate-y-1"
+              >
+                <div>
+                  {/* Main Large Photo Box (h-72 sm:h-80) */}
+                  <div className="relative h-72 sm:h-80 overflow-hidden bg-stone-950 flex items-center justify-center">
+                    {hasMainPhoto ? (
+                      <img
+                        src={project.afterImages[0]}
+                        alt={project.title}
+                        className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-700"
+                        loading="lazy"
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : (
+                      <div className="text-center text-stone-500 p-6 space-y-2">
+                        <ImageIcon className="w-10 h-10 mx-auto opacity-40" />
+                        <span className="text-xs font-semibold block text-stone-400">
+                          완공 현장 사진 준비 중
+                        </span>
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-black/30 pointer-events-none" />
 
-                  {/* Bottom Text Overlay */}
-                  <div className="absolute bottom-4 left-4 right-4 text-white space-y-1">
-                    <div className="flex items-center gap-2 text-xs text-amber-300 font-semibold">
-                      <MapPin className="w-3.5 h-3.5" />
-                      <span>{project.location}</span>
-                      <span>•</span>
-                      <span>{project.area}</span>
-                      <span>•</span>
-                      <span>{project.duration}</span>
+                    {/* Top Badges */}
+                    <div className="absolute top-4 left-4 flex items-center gap-2 z-10">
+                      <span
+                        className={`font-black text-[11px] px-3 py-1 rounded-full shadow ${
+                          project.isSample
+                            ? "bg-amber-500 text-stone-950"
+                            : "bg-emerald-500 text-white"
+                        }`}
+                      >
+                        {project.isSample ? "샘플 프로젝트" : "실제 시공사례"}
+                      </span>
+                      <span className="bg-stone-950/80 text-white text-xs px-3 py-1 rounded-full backdrop-blur-md font-semibold border border-stone-700">
+                        {project.category}
+                      </span>
                     </div>
-                    <h3 className="text-lg font-extrabold text-white font-serif line-clamp-1 group-hover:text-amber-300 transition-colors">
-                      {project.title}
-                    </h3>
+
+                    {/* Photo Count */}
+                    <div className="absolute top-4 right-4 bg-stone-900/90 text-amber-300 text-xs px-2.5 py-1 rounded-full backdrop-blur-md border border-amber-500/30 font-semibold flex items-center gap-1">
+                      <Images className="w-3.5 h-3.5" />
+                      <span>{totalPhotosCount > 0 ? `총 ${totalPhotosCount}장` : "상세 스펙"}</span>
+                    </div>
+
+                    {/* Bottom Text Overlay */}
+                    <div className="absolute bottom-4 left-4 right-4 text-white space-y-1">
+                      <div className="flex items-center gap-2 text-xs text-amber-300 font-semibold">
+                        <MapPin className="w-3.5 h-3.5" />
+                        <span>{project.location}</span>
+                        <span>•</span>
+                        <span>{project.area}</span>
+                        <span>•</span>
+                        <span>{project.duration}</span>
+                      </div>
+                      <h3 className="text-lg font-extrabold text-white font-serif line-clamp-1 group-hover:text-amber-300 transition-colors">
+                        {project.title}
+                      </h3>
+                    </div>
+                  </div>
+
+                  {/* Content */}
+                  <div className="p-6 space-y-3">
+                    <p className="text-xs text-stone-600 line-clamp-2 leading-relaxed">
+                      {project.description}
+                    </p>
+                    <div className="p-2.5 bg-stone-50 rounded-xl border border-stone-100 text-xs text-stone-600 space-y-1">
+                      <span className="font-bold text-amber-800 block text-[11px]">
+                        시공범위: {project.scope}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
-                {/* Content */}
-                <div className="p-6 space-y-3">
-                  <p className="text-xs text-stone-600 line-clamp-2 leading-relaxed">
-                    {project.description}
-                  </p>
-                  <div className="p-2.5 bg-stone-50 rounded-xl border border-stone-100 text-xs text-stone-600 space-y-1">
-                    <span className="font-bold text-amber-800 block text-[11px]">
-                      시공범위: {project.scope}
-                    </span>
-                  </div>
+                {/* Bottom detail action */}
+                <div className="p-5 border-t border-stone-100 flex items-center justify-between text-xs text-stone-900 font-black group-hover:text-amber-600 transition-colors">
+                  <span className="flex items-center gap-1.5">
+                    <Maximize2 className="w-3.5 h-3.5 text-amber-600" />
+                    <span>공사 전/후 사진 & 세부 도면 스펙</span>
+                  </span>
+                  <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </div>
               </div>
-
-              {/* Bottom detail action */}
-              <div className="p-5 border-t border-stone-100 flex items-center justify-between text-xs text-stone-900 font-black group-hover:text-amber-600 transition-colors">
-                <span className="flex items-center gap-1.5">
-                  <Maximize2 className="w-3.5 h-3.5 text-amber-600" />
-                  <span>공사 전/후 사진 & 세부 도면 스펙</span>
-                </span>
-                <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -205,8 +302,16 @@ export const ProjectPage: React.FC<ProjectPageProps> = ({
             <div className="flex items-center justify-between px-6 py-4 border-b border-stone-800 bg-stone-950">
               <div className="space-y-0.5">
                 <div className="flex items-center gap-2">
-                  <span className="bg-amber-500/20 text-amber-300 text-[11px] px-2.5 py-0.5 rounded font-bold border border-amber-500/30">
-                    샘플 포트폴리오 상세보기
+                  <span
+                    className={`text-[11px] px-2.5 py-0.5 rounded font-bold border ${
+                      selectedProject.isSample
+                        ? "bg-amber-500/20 text-amber-300 border-amber-500/30"
+                        : "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
+                    }`}
+                  >
+                    {selectedProject.isSample
+                      ? "샘플 포트폴리오 상세보기"
+                      : "실제 시공사례 상세보기"}
                   </span>
                   <span className="text-xs text-stone-400">
                     {selectedProject.category} · {selectedProject.location}
@@ -229,18 +334,37 @@ export const ProjectPage: React.FC<ProjectPageProps> = ({
             <div className="p-6 overflow-y-auto space-y-8 flex-1 text-xs sm:text-sm">
               {/* Big High-Definition Image Main Viewer */}
               {(() => {
-                const allPhotos = [
-                  { label: "완공 메인", url: selectedProject.afterImages[0] },
-                  ...selectedProject.afterImages.slice(1).map((u, i) => ({ label: `완공 컷 ${i+2}`, url: u })),
-                  { label: "시공 전 현장", url: selectedProject.beforeImage },
-                  { label: "기초/목공 과정", url: selectedProject.inProgressImage },
-                ];
+                const afters = (selectedProject.afterImages || []).filter(Boolean);
+                const allPhotos: { label: string; url: string }[] = [];
+
+                if (afters.length > 0) {
+                  allPhotos.push({ label: "완공 메인", url: afters[0] });
+                  afters.slice(1).forEach((u, i) => {
+                    allPhotos.push({ label: `완공 컷 ${i + 2}`, url: u });
+                  });
+                }
+                if (selectedProject.beforeImage) {
+                  allPhotos.push({ label: "시공 전 현장", url: selectedProject.beforeImage });
+                }
+                if (selectedProject.inProgressImage) {
+                  allPhotos.push({ label: "기초/목공 과정", url: selectedProject.inProgressImage });
+                }
+
+                // If no photos at all were uploaded
+                if (allPhotos.length === 0) {
+                  allPhotos.push({
+                    label: "대표 이미지",
+                    url: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80",
+                  });
+                }
+
                 const currentPhoto = allPhotos[activePhotoIdx % allPhotos.length] || allPhotos[0];
 
                 return (
                   <div className="space-y-3">
-                    <div className="relative h-[340px] sm:h-[460px] lg:h-[520px] rounded-2xl overflow-hidden bg-stone-950 border border-stone-800 group">
+                    <div className="relative h-[340px] sm:h-[460px] lg:h-[520px] rounded-2xl overflow-hidden bg-stone-950 border border-stone-800 group flex items-center justify-center">
                       <img
+                        key={currentPhoto.url}
                         src={currentPhoto.url}
                         alt={currentPhoto.label}
                         className="w-full h-full object-cover transition-all duration-500"
@@ -250,7 +374,7 @@ export const ProjectPage: React.FC<ProjectPageProps> = ({
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20 pointer-events-none" />
 
                       <div className="absolute top-4 left-4 bg-stone-900/90 text-amber-300 text-xs px-3 py-1.5 rounded-full backdrop-blur-md border border-amber-500/40 font-bold">
-                        {currentPhoto.label} ({activePhotoIdx + 1} / {allPhotos.length})
+                        {currentPhoto.label} ({(activePhotoIdx % allPhotos.length) + 1} / {allPhotos.length})
                       </div>
 
                       <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between text-white text-xs bg-stone-900/80 p-3 rounded-xl border border-stone-800 backdrop-blur-md">
@@ -260,24 +384,26 @@ export const ProjectPage: React.FC<ProjectPageProps> = ({
                     </div>
 
                     {/* Photo Selector Thumbnails Strip */}
-                    <div className="flex items-center gap-2.5 overflow-x-auto pb-2 scrollbar-none">
-                      {allPhotos.map((item, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => setActivePhotoIdx(idx)}
-                          className={`relative w-24 h-16 rounded-xl overflow-hidden border shrink-0 transition-all ${
-                            activePhotoIdx === idx
-                              ? "border-amber-400 ring-2 ring-amber-400/60 scale-105"
-                              : "border-stone-800 opacity-60 hover:opacity-100"
-                          }`}
-                        >
-                          <img src={item.url} alt={item.label} className="w-full h-full object-cover" />
-                          <span className="absolute bottom-0 inset-x-0 bg-black/80 text-[9px] text-center text-stone-200 font-bold py-0.5 truncate">
-                            {item.label}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
+                    {allPhotos.length > 1 && (
+                      <div className="flex items-center gap-2.5 overflow-x-auto pb-2 scrollbar-none">
+                        {allPhotos.map((item, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => setActivePhotoIdx(idx)}
+                            className={`relative w-24 h-16 rounded-xl overflow-hidden border shrink-0 transition-all ${
+                              activePhotoIdx === idx
+                                ? "border-amber-400 ring-2 ring-amber-400/60 scale-105"
+                                : "border-stone-800 opacity-60 hover:opacity-100"
+                            }`}
+                          >
+                            <img src={item.url} alt={item.label} className="w-full h-full object-cover" />
+                            <span className="absolute bottom-0 inset-x-0 bg-black/80 text-[9px] text-center text-stone-200 font-bold py-0.5 truncate">
+                              {item.label}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 );
               })()}
@@ -304,14 +430,16 @@ export const ProjectPage: React.FC<ProjectPageProps> = ({
 
               {/* Client Request & Scope */}
               <div className="space-y-4">
-                <div className="p-4 bg-stone-800/60 rounded-2xl border border-stone-700/80 space-y-1">
-                  <h4 className="font-bold text-amber-400 text-xs uppercase tracking-wide">
-                    고객 요청사항
-                  </h4>
-                  <p className="text-stone-200 leading-relaxed italic">
-                    "{selectedProject.clientRequest}"
-                  </p>
-                </div>
+                {selectedProject.clientRequest && (
+                  <div className="p-4 bg-stone-800/60 rounded-2xl border border-stone-700/80 space-y-1">
+                    <h4 className="font-bold text-amber-400 text-xs uppercase tracking-wide">
+                      고객 요청사항
+                    </h4>
+                    <p className="text-stone-200 leading-relaxed italic">
+                      "{selectedProject.clientRequest}"
+                    </p>
+                  </div>
+                )}
 
                 <div className="p-4 bg-stone-800/60 rounded-2xl border border-stone-700/80 space-y-1">
                   <h4 className="font-bold text-amber-400 text-xs uppercase tracking-wide">
@@ -331,19 +459,21 @@ export const ProjectPage: React.FC<ProjectPageProps> = ({
                 <p className="text-stone-300 leading-relaxed">
                   {selectedProject.description}
                 </p>
-                <div className="bg-stone-950 p-4 rounded-2xl border border-stone-800 space-y-2">
-                  <span className="text-xs font-bold text-amber-400 block">
-                    핵심 시공 포인트:
-                  </span>
-                  <ul className="space-y-1.5 text-xs text-stone-300">
-                    {selectedProject.keyFeatures.map((feat, i) => (
-                      <li key={i} className="flex items-center gap-2">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                        <span>{feat}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                {selectedProject.keyFeatures && selectedProject.keyFeatures.length > 0 && (
+                  <div className="bg-stone-950 p-4 rounded-2xl border border-stone-800 space-y-2">
+                    <span className="text-xs font-bold text-amber-400 block">
+                      핵심 시공 포인트:
+                    </span>
+                    <ul className="space-y-1.5 text-xs text-stone-300">
+                      {selectedProject.keyFeatures.map((feat, i) => (
+                        <li key={i} className="flex items-center gap-2">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                          <span>{feat}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
 
               {/* Action */}
@@ -353,7 +483,7 @@ export const ProjectPage: React.FC<ProjectPageProps> = ({
                     onSelectProject(null);
                     openContactModal();
                   }}
-                  className="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-950 font-bold rounded-xl text-xs sm:text-sm transition-all shadow"
+                  className="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-950 font-bold rounded-xl text-xs sm:text-sm transition-all shadow cursor-pointer"
                 >
                   비슷한 스타일로 무료 현장 실측 상담 신청
                 </button>

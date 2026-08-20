@@ -17,6 +17,7 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import { Consultation, ConsultationStatus } from "../types";
+import { ProjectManagementSection } from "../components/admin/ProjectManagementSection";
 import {
   Lock,
   LogOut,
@@ -27,6 +28,7 @@ import {
   Building,
   Ruler,
   FileText,
+  FolderPlus,
   Image as ImageIcon,
   CheckCircle2,
   Clock,
@@ -91,6 +93,11 @@ const STATUS_CONFIG: Record<
 export const AdminPage: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+
+  // Sub-tab Navigation state ("consultations" | "projects")
+  const [activeSubTab, setActiveSubTab] = useState<"consultations" | "projects">(
+    "consultations"
+  );
 
   // Login form state
   const [email, setEmail] = useState("");
@@ -465,9 +472,50 @@ export const AdminPage: React.FC = () => {
         </div>
       </header>
 
+      {/* Admin Sub-Tabs Navigation Bar */}
+      <div className="bg-stone-900 border-b border-stone-800 sticky top-[65px] sm:top-[73px] z-30 shadow-md">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setActiveSubTab("consultations")}
+            className={`py-3.5 px-4 sm:px-6 font-bold text-xs sm:text-sm border-b-2 transition-all flex items-center gap-2 ${
+              activeSubTab === "consultations"
+                ? "border-amber-400 text-amber-400 bg-stone-800/40"
+                : "border-transparent text-stone-400 hover:text-stone-200 hover:bg-stone-800/20"
+            }`}
+          >
+            <FileText className="w-4 h-4" />
+            <span>상담 신청 관리</span>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-stone-800 text-stone-300 border border-stone-700">
+              {consultations.length}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveSubTab("projects")}
+            className={`py-3.5 px-4 sm:px-6 font-bold text-xs sm:text-sm border-b-2 transition-all flex items-center gap-2 ${
+              activeSubTab === "projects"
+                ? "border-amber-400 text-amber-400 bg-stone-800/40"
+                : "border-transparent text-stone-400 hover:text-stone-200 hover:bg-stone-800/20"
+            }`}
+          >
+            <FolderPlus className="w-4 h-4" />
+            <span>시공사례 관리</span>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-400/20 text-amber-300 border border-amber-400/30">
+              신규
+            </span>
+          </button>
+        </div>
+      </div>
+
       {/* Main Content Area */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
-        {/* Stat Cards Overview */}
+        {activeSubTab === "projects" ? (
+          <ProjectManagementSection />
+        ) : (
+          <>
+            {/* Stat Cards Overview */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2.5 sm:gap-3">
           {[
             { key: "all", label: "전체 신청", count: statusCounts.all, color: "text-white" },
@@ -857,6 +905,8 @@ export const AdminPage: React.FC = () => {
               })}
             </div>
           </div>
+        )}
+          </>
         )}
       </main>
 

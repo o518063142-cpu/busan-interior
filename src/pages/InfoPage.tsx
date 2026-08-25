@@ -1,6 +1,10 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import { SITE_CONFIG } from "../config/siteConfig";
 import { NavigationMenu } from "../types";
+import { MetaManager } from "../components/seo/MetaManager";
+import { StructuredData } from "../components/seo/StructuredData";
+import { INFORMATION_ARTICLES } from "../data/informationData";
 import {
   ShieldCheck,
   HelpCircle,
@@ -13,11 +17,13 @@ import {
   FileText,
   AlertCircle,
   Wrench,
+  Sparkles,
+  ArrowRight,
 } from "lucide-react";
 
 interface InfoPageProps {
-  setActiveTab: (tab: NavigationMenu) => void;
-  openContactModal: () => void;
+  setActiveTab?: (tab: NavigationMenu) => void;
+  openContactModal?: () => void;
 }
 
 export const InfoPage: React.FC<InfoPageProps> = ({
@@ -29,11 +35,11 @@ export const InfoPage: React.FC<InfoPageProps> = ({
   const faqs = [
     {
       q: "현장 실측 및 상담 비용은 무료인가요?",
-      a: "네, 한신인테리어의 부산진구, 전포동, 서면 및 부산 전 지역 현장 실측과 1:1 상담은 100% 무료로 진행됩니다.",
+      a: "네, 지니 인테리어의 부산진구, 전포동, 서면 및 부산 전 지역 현장 실측과 1:1 상담은 100% 무료로 진행됩니다.",
     },
     {
       q: "실내건축면허 보유 업체인가요?",
-      a: "네, 한신인테리어는 합법적인 기준을 이행하는 실내건축공사업 면허 보유 업체입니다. 법적 공사 기준과 안전 기준을 철저히 준수합니다.",
+      a: "네, 지니 인테리어는 합법적인 기준을 이행하는 실내건축공사업 면허 보유 업체(법적상호: 한신인테리어)입니다. 법적 공사 기준과 안전 기준을 철저히 준수합니다.",
     },
     {
       q: "아파트 및 상가 인테리어의 평균 공사 기간은 얼마인가요?",
@@ -45,7 +51,7 @@ export const InfoPage: React.FC<InfoPageProps> = ({
     },
     {
       q: "공사 완공 후 A/S 보증 기간은 어떻게 되나요?",
-      a: "한신인테리어는 완공 후 하자 보증 이행 조항에 따라 하자에 대한 사후 관리 서비스를 제공해 드립니다.",
+      a: "지니 인테리어는 완공 후 하자 보증 이행 조항에 따라 하자에 대한 사후 관리 서비스를 제공해 드립니다.",
     },
     {
       q: "견적서에 명시되지 않은 추가금이 발생하나요?",
@@ -55,6 +61,17 @@ export const InfoPage: React.FC<InfoPageProps> = ({
 
   return (
     <div className="max-w-7xl mx-auto px-4 lg:px-8 py-12 space-y-16">
+      <MetaManager
+        title="이용안내 & FAQ｜실내건축공사업 정보 및 부산 인테리어 가이드"
+        description="지니 인테리어(GENE INTERIOR) 실내건축공사업 등록 정보, 공사 진행 수칙, 자주 묻는 질문(FAQ) 및 부산진구 전포동 시공 가이드."
+        canonicalPath="/information"
+      />
+      <StructuredData
+        type="page"
+        title="이용안내 & FAQ | 지니 인테리어"
+        description="지니 인테리어 이용안내, 실내건축공사업 등록 정보, 공사진행 수칙 및 FAQ"
+        path="/information"
+      />
       {/* Page Header */}
       <div className="text-center space-y-4 max-w-3xl mx-auto">
         <span className="text-amber-600 font-bold text-xs uppercase tracking-wider bg-amber-100 px-3 py-1 rounded-full border border-amber-200">
@@ -64,7 +81,7 @@ export const InfoPage: React.FC<InfoPageProps> = ({
           이용안내 & 시공 가이드
         </h1>
         <p className="text-stone-600 text-sm sm:text-base leading-relaxed">
-          한신인테리어의 신뢰도 안내, 자주 묻는 질문(FAQ) 및 부산 지역 시공에 관한 유용한 수칙을 확인하세요.
+          {SITE_CONFIG.brand.nameKo}({SITE_CONFIG.brand.nameEn})의 신뢰도 안내, 자주 묻는 질문(FAQ) 및 부산 지역 시공에 관한 유용한 수칙을 확인하세요.
         </p>
       </div>
 
@@ -137,6 +154,64 @@ export const InfoPage: React.FC<InfoPageProps> = ({
         </div>
       </div>
 
+      {/* GENE KNOWLEDGE CENTER */}
+      <section className="space-y-8 pt-4">
+        <div className="text-center space-y-3 max-w-2xl mx-auto">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-50 border border-amber-300 text-amber-900 text-xs font-bold shadow-xs">
+            <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+            <span>GENE KNOWLEDGE CENTER</span>
+            <span className="text-amber-400">·</span>
+            <span className="text-amber-800 font-medium">실내건축 전문 지식</span>
+          </div>
+
+          <h2 className="text-2xl sm:text-3xl font-bold font-serif text-stone-900 leading-tight">
+            소비자가 계약 전에 꼭 알아야 할<br className="hidden sm:inline" /> 인테리어 핵심 가이드
+          </h2>
+
+          <p className="text-stone-600 text-xs sm:text-sm leading-relaxed">
+            견적·계약·면허·공사비·시공 과정에서 소비자가 실제로 확인해야 할 내용을 GENE INTERIOR의 실무 기준으로 정리합니다.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {INFORMATION_ARTICLES.map((article) => (
+            <Link
+              key={article.slug}
+              to={`/information/${article.slug}`}
+              className="group bg-white rounded-3xl p-7 sm:p-8 border border-stone-200 hover:border-amber-400 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-6"
+            >
+              <div className="space-y-4">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <span className="px-3 py-1 bg-stone-100 group-hover:bg-amber-100 text-stone-700 group-hover:text-amber-900 text-xs font-bold rounded-full transition-colors">
+                    {article.category || "인테리어 가이드"}
+                  </span>
+                  {article.publishedAt && (
+                    <span className="text-xs text-stone-400 font-mono">
+                      {article.publishedAt}
+                    </span>
+                  )}
+                </div>
+
+                <h3 className="text-lg sm:text-xl font-bold text-stone-900 font-serif leading-snug group-hover:text-amber-700 transition-colors">
+                  {article.title}
+                </h3>
+
+                <p className="text-xs sm:text-sm text-stone-600 leading-relaxed line-clamp-3">
+                  {article.shortAnswer}
+                </p>
+              </div>
+
+              <div className="pt-4 border-t border-stone-100 flex items-center justify-between text-xs font-bold text-stone-900 group-hover:text-amber-600 transition-colors">
+                <span>자세히 읽기</span>
+                <span className="inline-flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                  <span>→</span>
+                </span>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
       {/* Regional Guide & Location */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="bg-white p-8 rounded-3xl border border-stone-200 space-y-4">
@@ -179,7 +254,7 @@ export const InfoPage: React.FC<InfoPageProps> = ({
               <span>위치 및 오시는 길</span>
             </h3>
             <p className="text-xs text-stone-300 leading-relaxed">
-              부산광역시 부산진구 전포동 소재 한신인테리어. 서면역 및 전포역 인근에 위치하여 빠르게 현장 실측 방문이 가능합니다.
+              부산광역시 부산진구 전포동 소재 {SITE_CONFIG.brand.nameKo}({SITE_CONFIG.brand.nameEn}). 서면역 및 전포역 인근에 위치하여 빠르게 현장 실측 방문이 가능합니다.
             </p>
             <div className="p-4 bg-stone-950 rounded-2xl border border-stone-800 text-xs space-y-1">
               <p>

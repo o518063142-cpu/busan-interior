@@ -1,6 +1,6 @@
 {
   "name": "한신인테리어 | 부산진구 전포동·서면 실내건축·리모델링",
-  "description": "부산진구 전포동 한신인테리어. 아파트·주택 리모델링, 상가·매장·카페·사무실 인테리어 및 실내건축 전문. 부산진구·전포동·서면 및 부산 전 지역 상담. 무료 현장 실측 및 AI 견적 상담.",
+  "description": "지니 인테리어(GENE INTERIOR / 법적상호: 한신인테리어)는 부산의 주거·소형 상업공간 인테리어·리모델링을 전문으로 하는 실내건축 면허 업체입니다. 아파트, 주택, 상가, 카페, 사무실 인테리어 및 무료 현장 실측.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

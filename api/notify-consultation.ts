@@ -60,7 +60,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       },
     });
 
-    const mailText = `한신인테리어 새로운 상담신청
+    const mailText = `[지니 인테리어] 새로운 상담신청
 
 성함: ${name}
 연락처: ${phone}
@@ -79,9 +79,9 @@ ${createdAt}
 관리자 페이지에서 상담 내용을 확인해주세요.`;
 
     await transporter.sendMail({
-      from: `"한신인테리어 알림" <${emailUser}>`,
+      from: `"지니 인테리어 알림" <${emailUser}>`,
       to: adminEmail,
-      subject: "[한신인테리어] 새로운 상담신청이 접수되었습니다.",
+      subject: "[지니 인테리어] 새로운 상담신청이 접수되었습니다.",
       text: mailText,
     });
 

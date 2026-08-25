@@ -1,5 +1,28 @@
 {
+  "headers": [
+    {
+      "source": "/admin(.*)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow, noarchive"
+        }
+      ]
+    }
+  ],
   "rewrites": [
+    {
+      "source": "/sitemap.xml",
+      "destination": "/api/sitemap"
+    },
+    {
+      "source": "/information/:slug",
+      "destination": "/api/render-information?slug=:slug"
+    },
+    {
+      "source": "/projects/:slug",
+      "destination": "/api/render-project?slug=:slug"
+    },
     {
       "source": "/((?!api/.*|sitemap\\.xml|robots\\.txt).*)",
       "destination": "/index.html"

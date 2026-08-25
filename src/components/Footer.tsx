@@ -1,5 +1,6 @@
 import React from "react";
-import { SITE_CONFIG } from "../config/siteConfig";
+import { Link } from "react-router-dom";
+import { SITE_CONFIG, SITE_ENTITY } from "../config/siteConfig";
 import { NavigationMenu } from "../types";
 import {
   MapPin,
@@ -13,15 +14,22 @@ import {
 } from "lucide-react";
 
 interface FooterProps {
-  setActiveTab: (tab: NavigationMenu) => void;
+  setActiveTab?: (tab: NavigationMenu) => void;
   openContactModal: () => void;
 }
 
 export const Footer: React.FC<FooterProps> = ({ setActiveTab, openContactModal }) => {
-  const handleLink = (tab: NavigationMenu) => {
-    setActiveTab(tab);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+  const quickLinks: { path: string; label: string; tabId?: NavigationMenu }[] = [
+    { path: "/", label: "HOME", tabId: "HOME" },
+    { path: "/about", label: "ABOUT", tabId: "ABOUT" },
+    { path: "/service", label: "SERVICE", tabId: "SERVICE" },
+    { path: "/projects", label: "PROJECT", tabId: "PROJECT" },
+    { path: "/information", label: "INFORMATION", tabId: "INFORMATION" },
+    { path: "/trust", label: "안심 시공" },
+    { path: "/ai-estimate", label: "AI 상담·견적", tabId: "AI_ESTIMATE" },
+    { path: "/contact", label: "CONTACT", tabId: "CONTACT" },
+    { path: "/admin", label: "상담 관리자", tabId: "ADMIN" },
+  ];
 
   return (
     <footer className="bg-stone-950 text-stone-300 border-t border-stone-800 pt-12 pb-24 md:pb-12 text-sm">
@@ -29,13 +37,16 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab, openContactModal }
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-10 pb-10 border-b border-stone-800/80">
           {/* Company Identity */}
           <div className="space-y-4">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col">
               <span className="text-2xl font-bold text-white tracking-tight font-serif">
-                {SITE_CONFIG.company.name}
+                {SITE_CONFIG.brand.nameKo}
+              </span>
+              <span className="text-xs font-semibold tracking-widest text-amber-400 font-sans uppercase">
+                {SITE_CONFIG.brand.nameEn}
               </span>
             </div>
             <p className="text-xs text-stone-400 leading-relaxed">
-              부산진구 전포동 실내건축·인테리어 전문 한신인테리어. 아파트, 주택, 상가, 매장, 카페, 사무실 리모델링 및 실내건축 책임시공.
+              부산진구 전포동 실내건축·인테리어 전문 지니 인테리어(GENE INTERIOR). 아파트, 주택, 상가, 매장, 카페, 사무실 리모델링 및 실내건축 책임시공.
             </p>
             <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-950/60 text-amber-400 border border-amber-800/50 rounded text-xs font-semibold">
               <ShieldCheck className="w-4 h-4 text-amber-400" />
@@ -80,19 +91,19 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab, openContactModal }
             </h4>
             <div className="space-y-1.5 text-xs text-stone-400 bg-stone-900/60 p-3 rounded-lg border border-stone-800">
               <p>
-                <strong className="text-stone-300">상호명:</strong> {SITE_CONFIG.company.name}
+                <strong className="text-stone-300">상호명:</strong> {SITE_CONFIG.legal.businessName}
               </p>
               <p>
-                <strong className="text-stone-300">대표자:</strong> {SITE_CONFIG.company.representative}
+                <strong className="text-stone-300">대표자:</strong> {SITE_CONFIG.legal.representative}
               </p>
               <p>
-                <strong className="text-stone-300">사업자등록번호:</strong> {SITE_CONFIG.company.businessNumber}
+                <strong className="text-stone-300">사업자등록번호:</strong> {SITE_CONFIG.legal.businessNumber}
               </p>
               <p>
-                <strong className="text-stone-300">실내건축공사업 면허:</strong> {SITE_CONFIG.company.licenseNumber}
+                <strong className="text-stone-300">실내건축공사업 면허:</strong> {SITE_CONFIG.legal.licenseNumber}
               </p>
               <p className="text-[11px] text-amber-400/90 pt-1 border-t border-stone-800 leading-normal">
-                * 한신인테리어 공식 정보 기준을 반영하고 있습니다.
+                * 한신인테리어(법적 상호) / 지니 인테리어(서비스 브랜드) 공식 정보 기준을 반영하고 있습니다.
               </p>
             </div>
             <a
@@ -112,31 +123,26 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab, openContactModal }
               빠른 링크 & 상담
             </h4>
             <ul className="grid grid-cols-2 gap-2 text-xs">
-              {[
-                { id: "HOME", label: "HOME" },
-                { id: "ABOUT", label: "ABOUT" },
-                { id: "SERVICE", label: "SERVICE" },
-                { id: "PROJECT", label: "PROJECT" },
-                { id: "INFORMATION", label: "INFORMATION" },
-                { id: "AI_ESTIMATE", label: "AI 상담·견적" },
-                { id: "CONTACT", label: "CONTACT" },
-                { id: "ADMIN", label: "상담 관리자" },
-              ].map((m) => (
-                <li key={m.id}>
-                  <button
-                    onClick={() => handleLink(m.id as NavigationMenu)}
+              {quickLinks.map((m) => (
+                <li key={m.path}>
+                  <Link
+                    to={m.path}
+                    onClick={() => {
+                      if (m.tabId && setActiveTab) setActiveTab(m.tabId);
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
                     className="hover:text-amber-400 transition-colors flex items-center gap-1 text-stone-300"
                   >
                     <ChevronRight className="w-3 h-3 text-stone-500" />
                     <span>{m.label}</span>
-                  </button>
+                  </Link>
                 </li>
               ))}
             </ul>
             <div className="pt-2">
               <button
                 onClick={openContactModal}
-                className="w-full py-2.5 px-4 bg-amber-500 hover:bg-amber-600 text-stone-950 font-bold rounded-lg text-xs transition-all shadow text-center"
+                className="w-full py-2.5 px-4 bg-amber-500 hover:bg-amber-600 text-stone-950 font-bold rounded-lg text-xs transition-all shadow text-center cursor-pointer"
               >
                 무료 현장 실측 신청하기
               </button>
@@ -164,7 +170,7 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab, openContactModal }
         {/* Copyright */}
         <div className="flex flex-col sm:flex-row items-center justify-between text-xs text-stone-400 pt-4 border-t border-stone-900 gap-2">
           <p>
-            © {new Date().getFullYear()} {SITE_CONFIG.company.name}. All rights reserved.
+            © {new Date().getFullYear()} {SITE_CONFIG.brand.nameEn} ({SITE_CONFIG.legal.businessName}). All rights reserved.
           </p>
           <p className="text-stone-400 text-[11px]">
             부산진구 전포동 · 서면 실내건축 · 리모델링 전문 공식 홈페이지

@@ -1,6 +1,8 @@
 import React from "react";
 import { SITE_CONFIG } from "../config/siteConfig";
 import { NavigationMenu } from "../types";
+import { MetaManager } from "../components/seo/MetaManager";
+import { StructuredData } from "../components/seo/StructuredData";
 import {
   ShieldCheck,
   CheckCircle2,
@@ -16,8 +18,8 @@ import {
 } from "lucide-react";
 
 interface AboutPageProps {
-  setActiveTab: (tab: NavigationMenu) => void;
-  openContactModal: () => void;
+  setActiveTab?: (tab: NavigationMenu) => void;
+  openContactModal?: () => void;
 }
 
 export const AboutPage: React.FC<AboutPageProps> = ({
@@ -26,17 +28,33 @@ export const AboutPage: React.FC<AboutPageProps> = ({
 }) => {
   return (
     <div className="max-w-7xl mx-auto px-4 lg:px-8 py-12 space-y-16">
+      <MetaManager
+        title="회사소개｜부산진구 전포동 실내건축공사업 지니 인테리어 (GENE INTERIOR)"
+        description="지니 인테리어(GENE INTERIOR / 법적상호: 한신인테리어) 소개. 실내건축공사업 등록업체, 부산진구 전포동·서면 직영 시공. 공간의 가치를 높이는 1:1 맞춤 설계 및 정직한 시공."
+        canonicalPath="/about"
+      />
+      <StructuredData
+        type="page"
+        title="회사소개 | 지니 인테리어"
+        description="부산진구 전포동 실내건축공사업 등록업체 지니 인테리어 회사소개"
+        path="/about"
+      />
       {/* Top Banner */}
       <div className="text-center space-y-4 max-w-3xl mx-auto">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-bold border border-amber-200">
           <ShieldCheck className="w-4 h-4 text-amber-600" />
-          <span>{SITE_CONFIG.company.licenseStatus}</span>
+          <span>{SITE_CONFIG.legal.licenseStatus}</span>
         </div>
-        <h1 className="text-3xl sm:text-5xl font-extrabold text-stone-900 font-serif">
-          한신인테리어 소개
-        </h1>
+        <div className="space-y-1">
+          <h1 className="text-3xl sm:text-5xl font-extrabold text-stone-900 font-serif">
+            {SITE_CONFIG.brand.nameKo} 소개
+          </h1>
+          <p className="text-xs sm:text-sm font-semibold tracking-widest text-amber-600 uppercase font-sans">
+            {SITE_CONFIG.brand.nameEn}
+          </p>
+        </div>
         <p className="text-stone-600 text-sm sm:text-base leading-relaxed">
-          부산진구 전포동에 거점을 둔 한신인테리어는
+          부산진구 전포동에 거점을 둔 {SITE_CONFIG.brand.nameKo}({SITE_CONFIG.brand.nameEn})는
           공간의 미학적 아름다움과 내구성, 실용성을 겸비한
           전문 실내건축 종합 리모델링 기업입니다.
         </p>
@@ -54,7 +72,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({
             고객의 삶과 비즈니스 가치를 높입니다."
           </h2>
           <p className="text-stone-600 text-sm leading-relaxed">
-            한신인테리어는 부산 부산진구 전포동, 서면 지역의 아파트, 단독주택 주거 공간과 상가, 카페, 사무실 등 다양한 인테리어 현장에서 쌓아온 축적된 기술력을 바탕으로 운영됩니다.
+            {SITE_CONFIG.brand.nameKo}({SITE_CONFIG.brand.nameEn})는 부산 부산진구 전포동, 서면 지역의 아파트, 단독주택 주거 공간과 상가, 카페, 사무실 등 다양한 인테리어 현장에서 쌓아온 축적된 기술력을 바탕으로 운영됩니다.
           </p>
           <p className="text-stone-600 text-sm leading-relaxed">
             단순히 겉모습만 꾸미는 인테리어가 아닌, 기초 단열 및 철거, 소방 법규 준수, 동선 효율화, 내구성 높은 자재 사용까지 실내건축 면허업체다운 책임감 있는 정석 시공을 원칙으로 삼고 있습니다.
@@ -76,7 +94,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({
           <div className="rounded-2xl overflow-hidden border border-stone-200 shadow-lg">
             <img
               src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1000&q=80"
-              alt="한신인테리어 시공 철학"
+              alt={`${SITE_CONFIG.brand.nameKo} 시공 철학`}
               className="w-full h-80 object-cover"
               loading="lazy"
               referrerPolicy="no-referrer"
@@ -99,8 +117,8 @@ export const AboutPage: React.FC<AboutPageProps> = ({
           </div>
         </div>
         <p className="text-xs sm:text-sm text-stone-300 leading-relaxed">
-          한신인테리어는 부산진구 전포동에 위치한 전문 실내건축 리모델링 기업입니다.
-          네이버 플레이스 공식 등록 정보를 바탕으로 제공되며, 사용자분께서 직접 제공하지 않은 정보(사업자등록번호, 대표자명, 세부 면허번호 등)는 임의 추측하여 작성하지 않는 원칙을 엄격히 준수합니다.
+          {SITE_CONFIG.brand.nameKo}({SITE_CONFIG.brand.nameEn})는 부산진구 전포동에 위치한 전문 실내건축 리모델링 기업(법적 상호: {SITE_CONFIG.legal.businessName})입니다.
+          공식 등록 정보를 바탕으로 제공되며, 사용자분께서 직접 제공하지 않은 정보는 임의 추측하여 작성하지 않는 원칙을 엄격히 준수합니다.
         </p>
       </div>
 
@@ -109,42 +127,47 @@ export const AboutPage: React.FC<AboutPageProps> = ({
         <div className="border-b border-stone-200 pb-4">
           <h3 className="text-xl font-bold text-stone-900 font-serif flex items-center gap-2">
             <Building className="w-5 h-5 text-amber-600" />
-            <span>한신인테리어 공식 정보 (Company Profile)</span>
+            <span>기업 및 사업자 공식 정보 (Company Profile)</span>
           </h3>
           <p className="text-xs text-stone-500 mt-1">
-            * 네이버 플레이스 기준 정보이며, 미제공 항목은 추측 없이 보존됩니다. 추가 정보 제공 시 siteConfig.ts에서 즉시 수정이 가능합니다.
+            * 서비스 브랜드명과 공식 사업자 등록 정보가 분리되어 투명하게 제공됩니다.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs sm:text-sm">
+          <div className="p-4 bg-amber-50/50 rounded-xl border border-amber-200/80 space-y-1">
+            <span className="text-amber-800 text-xs font-semibold block">서비스 브랜드명</span>
+            <span className="font-bold text-stone-900 text-base">{SITE_CONFIG.brand.displayName}</span>
+          </div>
+
           <div className="p-4 bg-stone-50 rounded-xl border border-stone-200/80 space-y-1">
-            <span className="text-stone-400 text-xs block">업체명</span>
-            <span className="font-bold text-stone-900 text-base">{SITE_CONFIG.company.name}</span>
+            <span className="text-stone-400 text-xs block">법적 상호명</span>
+            <span className="font-bold text-stone-900 text-base">{SITE_CONFIG.legal.businessName}</span>
           </div>
 
           <div className="p-4 bg-stone-50 rounded-xl border border-stone-200/80 space-y-1">
             <span className="text-stone-400 text-xs block">업종</span>
-            <span className="font-bold text-stone-900 text-base">{SITE_CONFIG.company.industry}</span>
+            <span className="font-bold text-stone-900 text-base">{SITE_CONFIG.legal.industry}</span>
           </div>
 
           <div className="p-4 bg-stone-50 rounded-xl border border-stone-200/80 space-y-1">
             <span className="text-stone-400 text-xs block">면허 사항</span>
             <span className="font-bold text-amber-700 text-base">
-              {SITE_CONFIG.company.licenseStatus} ({SITE_CONFIG.company.licenseNumber})
+              {SITE_CONFIG.legal.licenseStatus} ({SITE_CONFIG.legal.licenseNumber})
             </span>
           </div>
 
           <div className="p-4 bg-stone-50 rounded-xl border border-stone-200/80 space-y-1">
             <span className="text-stone-400 text-xs block">사업자등록번호</span>
             <span className="font-bold text-stone-900 text-base">
-              {SITE_CONFIG.company.businessNumber}
+              {SITE_CONFIG.legal.businessNumber}
             </span>
           </div>
 
           <div className="p-4 bg-stone-50 rounded-xl border border-stone-200/80 space-y-1">
             <span className="text-stone-400 text-xs block">대표자명</span>
             <span className="font-bold text-stone-900 text-base">
-              {SITE_CONFIG.company.representative}
+              {SITE_CONFIG.legal.representative}
             </span>
           </div>
 
@@ -155,10 +178,10 @@ export const AboutPage: React.FC<AboutPageProps> = ({
             </span>
           </div>
 
-          <div className="p-4 bg-stone-50 rounded-xl border border-stone-200/80 space-y-1 md:col-span-2">
+          <div className="p-4 bg-stone-50 rounded-xl border border-stone-200/80 space-y-1">
             <span className="text-stone-400 text-xs block">소재지 주소</span>
             <span className="font-bold text-stone-900 text-base">
-              {SITE_CONFIG.company.address} {SITE_CONFIG.company.addressDetail}
+              {SITE_CONFIG.legal.address} {SITE_CONFIG.legal.addressDetail}
             </span>
           </div>
         </div>

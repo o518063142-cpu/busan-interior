@@ -101,3 +101,14 @@ export interface ContactFormInput {
   details: string;
   attachedPhotos?: File[];
 }
+
+declare global {
+  interface Window {
+    __GENE_INITIAL_DATA__?: {
+      type: "project" | "article";
+      slug: string;
+      data: any;
+    };
+  }
+}
+

@@ -73,7 +73,7 @@ app.post("/api/notify-consultation", async (req, res) => {
       },
     });
 
-    const mailText = `한신인테리어 새로운 상담신청
+    const mailText = `[지니 인테리어] 새로운 상담신청
 
 성함: ${name}
 연락처: ${phone}
@@ -92,9 +92,9 @@ ${createdAt}
 관리자 페이지에서 상담 내용을 확인해주세요.`;
 
     await transporter.sendMail({
-      from: `"한신인테리어 알림" <${emailUser}>`,
+      from: `"지니 인테리어 알림" <${emailUser}>`,
       to: adminEmail,
-      subject: "[한신인테리어] 새로운 상담신청이 접수되었습니다.",
+      subject: "[지니 인테리어] 새로운 상담신청이 접수되었습니다.",
       text: mailText,
     });
 
@@ -128,7 +128,7 @@ app.post("/api/ai-estimate", async (req, res) => {
 
     if (ai) {
       const prompt = `
-당신은 부산 부산진구 전포동에 위치한 실내건축·인테리어 전문 업체 '한신인테리어'의 수석 견적·설계 전문가 AI입니다.
+당신은 부산 부산진구 전포동에 위치한 실내건축·인테리어 전문 브랜드 '지니 인테리어(GENE INTERIOR / 법적상호: 한신인테리어)'의 수석 견적·설계 전문가 AI입니다.
 다음 고객이 입력한 인테리어 정보를 바탕으로 세부적인 참고용 예상 공사 계획 및 비용/기간 분석을 산출해주세요.
 
 [고객 입력 정보]
@@ -146,8 +146,8 @@ app.post("/api/ai-estimate", async (req, res) => {
 2. constructionPhases: 공사 단계별 상세 과정 (배열, 각 객체는 phaseName, description, durationDays 포함)
 3. costRange: 예상 비용 범위 (문자열, 예: "약 3,500만 원 ~ 4,800만 원 (자재 등급에 따라 변동)")
 4. durationRange: 예상 공사기간 (문자열, 예: "약 3주 ~ 4주")
-5. expertTips: 한신인테리어 현장 전문가의 조언 및 추가 확인이 필요한 중요 사항 3~4개 (배열)
-6. summaryMessage: 한신인테리어의 공간에 맞춘 디자인 제안 및 한줄 인삿말
+5. expertTips: 지니 인테리어 현장 전문가의 조언 및 추가 확인이 필요한 중요 사항 3~4개 (배열)
+6. summaryMessage: 지니 인테리어(GENE INTERIOR)의 공간에 맞춘 디자인 제안 및 한줄 인삿말
 
 반드시 사실적이고 한국의 최신 인테리어 시공 시세(부산 지역 기준)를 반영하여 작성해주세요.
 `;
@@ -243,7 +243,7 @@ app.post("/api/ai-estimate", async (req, res) => {
           `공동주택/상가의 경우 입주자대표회의 동의서 제출 및 소음 공사 가능 시간 사전 파악 필요`,
           `현장 실측 시 단열 상태 및 창호 교체 여부를 함께 확인하면 정확한 비용 산출 가능`,
         ],
-        summaryMessage: `한신인테리어는 부산진구 전포동·서면 지역 실내건축 면허 업체로서 고객님의 ${spaceType} 공간을 가장 효율적이고 감각적으로 완성해 드립니다.`,
+        summaryMessage: `지니 인테리어(GENE INTERIOR)는 부산진구 전포동·서면 지역 실내건축 면허 업체로서 고객님의 ${spaceType} 공간을 가장 효율적이고 감각적으로 완성해 드립니다.`,
       },
     });
   } catch (error: any) {

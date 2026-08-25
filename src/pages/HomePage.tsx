@@ -1,8 +1,11 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import { SITE_CONFIG } from "../config/siteConfig";
 import { NavigationMenu, ProjectItem } from "../types";
 import { SERVICES_DATA } from "../data/servicesData";
 import { PROJECTS_DATA } from "../data/projectsData";
+import { MetaManager } from "../components/seo/MetaManager";
+import { StructuredData } from "../components/seo/StructuredData";
 import {
   ShieldCheck,
   CheckCircle2,
@@ -44,13 +47,15 @@ export const HomePage: React.FC<HomePageProps> = ({
 
   return (
     <div className="space-y-16 lg:space-y-24 pb-12">
+      <MetaManager canonicalPath="/" />
+      <StructuredData type="home" />
       {/* ================= HERO SECTION ================= */}
       <section className="relative min-h-[85vh] flex items-center justify-center bg-stone-950 overflow-hidden border-b border-stone-800">
         {/* Background Image Layer */}
         <div className="absolute inset-0 z-0">
           <img
             src={SITE_CONFIG.heroImages.main}
-            alt="한신인테리어 부산진구 전포동 서면 실내건축 메인 비주얼"
+            alt="지니 인테리어 (GENE INTERIOR) 부산진구 전포동 서면 실내건축 메인 비주얼"
             className="w-full h-full object-cover object-center opacity-40 filter contrast-105"
             loading="eager"
             referrerPolicy="no-referrer"
@@ -74,9 +79,14 @@ export const HomePage: React.FC<HomePageProps> = ({
             <p className="text-amber-400 font-medium text-lg sm:text-xl lg:text-2xl tracking-wide">
               부산진구 전포동 실내건축·인테리어 전문
             </p>
-            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-white tracking-tight leading-tight font-serif drop-shadow-md">
-              한신인테리어
-            </h1>
+            <div className="flex flex-col items-center justify-center gap-1.5">
+              <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-white tracking-tight leading-tight font-serif drop-shadow-md">
+                {SITE_CONFIG.brand.nameKo}
+              </h1>
+              <span className="text-sm sm:text-base lg:text-lg font-semibold tracking-widest text-amber-400 font-sans uppercase">
+                {SITE_CONFIG.brand.nameEn}
+              </span>
+            </div>
             <h2 className="text-xl sm:text-3xl font-bold text-stone-200 tracking-normal pt-2">
               아파트·주택 리모델링부터
               <br className="sm:hidden" /> 상가·매장·사무실 인테리어까지
@@ -137,7 +147,7 @@ export const HomePage: React.FC<HomePageProps> = ({
         </div>
       </section>
 
-      {/* ================= SECTION 1: 한신인테리어 소개 ================= */}
+      {/* ================= SECTION 1: 지니 인테리어 소개 ================= */}
       <section className="max-w-7xl mx-auto px-4 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           <div className="lg:col-span-6 space-y-6">
@@ -147,10 +157,10 @@ export const HomePage: React.FC<HomePageProps> = ({
             <h2 className="text-3xl sm:text-4xl font-extrabold text-stone-900 font-serif leading-tight">
               부산진구 전포동 중심,
               <br />
-              <span className="text-stone-700">공간의 품격을 더하는 한신인테리어</span>
+              <span className="text-stone-700">공간의 품격을 더하는 {SITE_CONFIG.brand.nameKo} ({SITE_CONFIG.brand.nameEn})</span>
             </h2>
             <p className="text-stone-600 leading-relaxed text-sm sm:text-base">
-              한신인테리어는 부산 부산진구 전포동 및 서면, 부산 전 지역을 무대로 최상의 실내건축과 리모델링을 선보이는 전문 공간 제작 기업입니다.
+              {SITE_CONFIG.brand.nameKo}({SITE_CONFIG.brand.nameEn})는 부산 부산진구 전포동 및 서면, 부산 전 지역을 무대로 최상의 실내건축과 리모델링을 선보이는 전문 공간 제작 기업입니다.
             </p>
             <p className="text-stone-600 leading-relaxed text-sm sm:text-base">
               주거용 아파트·주택 올 리모델링부터 상가·매장, 전포 카페거리 감성 카페, 사무실 인테리어까지 단순한 마감을 넘어 고객의 라이프스타일과 브랜드 가치에 부합하는 정밀 설계를 제안합니다.
@@ -158,7 +168,7 @@ export const HomePage: React.FC<HomePageProps> = ({
 
             <div className="p-4 bg-stone-100 rounded-2xl border border-stone-200/80 space-y-2 text-xs sm:text-sm text-stone-800">
               <div className="flex items-center gap-2 font-bold text-amber-800">
-                <ShieldCheck className="w-5 h-5 text-amber-600 shrink-0" />
+                 <ShieldCheck className="w-5 h-5 text-amber-600 shrink-0" />
                 <span>실내건축면허 보유 공식 업체</span>
               </div>
               <p className="text-stone-600 leading-normal pl-7">
@@ -174,7 +184,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                 }}
                 className="inline-flex items-center gap-2 px-6 py-3 bg-stone-900 hover:bg-stone-800 text-white font-bold rounded-xl text-sm transition-all shadow"
               >
-                <span>한신인테리어 자세히 보기</span>
+                <span>{SITE_CONFIG.brand.nameKo} 자세히 보기</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>
@@ -184,7 +194,7 @@ export const HomePage: React.FC<HomePageProps> = ({
             <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-stone-200 group">
               <img
                 src="https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1200&q=80"
-                alt="한신인테리어 대표 시공 공간 비주얼"
+                alt="지니 인테리어 대표 시공 공간 비주얼"
                 className="w-full h-[400px] sm:h-[480px] object-cover transition-transform duration-700 group-hover:scale-105"
                 loading="lazy"
                 referrerPolicy="no-referrer"
@@ -211,7 +221,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               02. OUR SERVICES
             </span>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-stone-900 font-serif">
-              한신인테리어 주요 분야
+              {SITE_CONFIG.brand.nameKo} 주요 분야
             </h2>
             <p className="text-stone-600 text-sm sm:text-base">
               주거 공간부터 상업, 사무, 전체 실내건축까지 각 공간 목적에 맞는 최적의 인테리어 솔루션을 전달합니다.
@@ -285,7 +295,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               실제 감성을 담은 시공갤러리
             </h2>
             <p className="text-stone-600 text-xs sm:text-sm">
-              * 아래 시공사례는 한신인테리어의 디자인 역량과 마감 퀄리티를 보여드리기 위한 [샘플 포트폴리오]입니다.
+              * 아래 시공사례는 {SITE_CONFIG.brand.nameKo}의 디자인 역량과 마감 퀄리티를 보여드리기 위한 [샘플 포트폴리오]입니다.
             </p>
           </div>
           <button
@@ -466,13 +476,13 @@ export const HomePage: React.FC<HomePageProps> = ({
               </div>
 
               <div className="pt-4 border-t border-stone-800 space-y-3">
-                <button
-                  onClick={() => onSelectProject(featuredProject)}
-                  className="w-full py-3.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-950 font-black rounded-xl text-xs sm:text-sm transition-all shadow-lg flex items-center justify-center gap-2"
+                <Link
+                  to={`/projects/${featuredProject.id}`}
+                  className="w-full py-3.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-950 font-black rounded-xl text-xs sm:text-sm transition-all shadow-lg flex items-center justify-center gap-2 text-inherit no-underline"
                 >
                   <Eye className="w-4 h-4" />
                   <span>이 시공사례 상세스펙 & 도면 확인</span>
-                </button>
+                </Link>
                 <button
                   onClick={openContactModal}
                   className="w-full py-3 bg-stone-800 hover:bg-stone-700 text-stone-200 font-bold rounded-xl text-xs transition-all border border-stone-700 flex items-center justify-center gap-2"
@@ -498,10 +508,10 @@ export const HomePage: React.FC<HomePageProps> = ({
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {PROJECTS_DATA.map((project) => (
-              <div
+              <Link
                 key={project.id}
-                onClick={() => onSelectProject(project)}
-                className="bg-white rounded-3xl overflow-hidden border border-stone-200/90 shadow-md hover:shadow-2xl transition-all cursor-pointer group flex flex-col justify-between hover:-translate-y-1"
+                to={`/projects/${project.id}`}
+                className="bg-white rounded-3xl overflow-hidden border border-stone-200/90 shadow-md hover:shadow-2xl transition-all cursor-pointer group flex flex-col justify-between hover:-translate-y-1 block text-inherit no-underline"
               >
                 <div>
                   {/* Large High-Impact Image Box (h-72 sm:h-80) */}
@@ -563,13 +573,13 @@ export const HomePage: React.FC<HomePageProps> = ({
                   </span>
                   <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ================= SECTION 4: 한신인테리어의 강점 ================= */}
+      {/* ================= SECTION 4: 지니 인테리어의 강점 ================= */}
       <section className="bg-stone-950 text-white py-16 border-y border-stone-800">
         <div className="max-w-7xl mx-auto px-4 lg:px-8 space-y-12">
           <div className="text-center space-y-3 max-w-2xl mx-auto">
@@ -577,7 +587,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               04. OUR STRENGTHS
             </span>
             <h2 className="text-3xl sm:text-4xl font-extrabold font-serif">
-              왜 한신인테리어를 선택해야 할까요?
+              왜 {SITE_CONFIG.brand.nameKo}를 선택해야 할까요?
             </h2>
             <p className="text-stone-400 text-sm sm:text-base">
               실내건축 면허 보유 업체의 높은 신뢰도와 부산 지역에 최적화된 시공 노하우를 제공합니다.
@@ -685,7 +695,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               {
                 title: "전포동 30평대 아파트 올 리모델링",
                 content:
-                  "부산진구에서 인테리어 업체를 찾다가 실내건축 면허가 있어서 한신인테리어를 선택했습니다. 마감도 깔끔하고 특히 조명 라인이 너무 마음에 듭니다!",
+                  "부산진구에서 인테리어 업체를 찾다가 실내건축 면허가 있어서 지니 인테리어를 선택했습니다. 마감도 깔끔하고 특히 조명 라인이 너무 마음에 듭니다!",
                 author: "전포동 김OO 고객님",
                 rating: 5,
               },
@@ -734,7 +744,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               부산진구 전포동 · 서면 및 부산 전 지역 출장 실측
             </h2>
             <p className="text-stone-300 text-xs sm:text-sm leading-relaxed">
-              한신인테리어는 부산 부산진구 전포동에 소재지를 두고 있으며, 부산진구(전포동, 서면, 부전동, 가야동, 범천동)를 중심으로 부산 전 지역(연제구, 수영구, 해운대구, 남구 등)에 신속한 방문 실측 및 견적 서비스를 제공합니다.
+              {SITE_CONFIG.brand.nameKo}는 부산 부산진구 전포동에 소재지를 두고 있으며, 부산진구(전포동, 서면, 부전동, 가야동, 범천동)를 중심으로 부산 전 지역(연제구, 수영구, 해운대구, 남구 등)에 신속한 방문 실측 및 견적 서비스를 제공합니다.
             </p>
           </div>
 
@@ -806,7 +816,7 @@ export const HomePage: React.FC<HomePageProps> = ({
             현장 실측 및 상담 문의
           </h2>
           <p className="text-stone-600 text-xs sm:text-sm">
-            궁금하신 점이 있으시다면 언제든지 한신인테리어로 연락 주시기 바랍니다.
+            궁금하신 점이 있으시다면 언제든지 {SITE_CONFIG.brand.nameKo}로 연락 주시기 바랍니다.
           </p>
         </div>
 

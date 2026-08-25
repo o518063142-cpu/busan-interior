@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { SITE_CONFIG } from "../config/siteConfig";
 import { AIEstimateInput, AIEstimateResult, NavigationMenu } from "../types";
+import { MetaManager } from "../components/seo/MetaManager";
 import {
   Sparkles,
   Calculator,
@@ -18,8 +19,8 @@ import {
 } from "lucide-react";
 
 interface AIEstimatePageProps {
-  setActiveTab: (tab: NavigationMenu) => void;
-  openContactModalWithData: (data: {
+  setActiveTab?: (tab: NavigationMenu) => void;
+  openContactModalWithData?: (data: {
     spaceType: string;
     location: string;
     area: string;
@@ -115,6 +116,11 @@ export const AIEstimatePage: React.FC<AIEstimatePageProps> = ({
 
   return (
     <div className="max-w-7xl mx-auto px-4 lg:px-8 py-12 space-y-12">
+      <MetaManager
+        title="AI 상담·견적｜부산진구 인테리어 무료 예상 견적 산출"
+        description="인공지능 기반 맞춤 인테리어 예상 견적 및 공사 기간 산출. 부산진구 전포동·서면 아파트/상가/카페 맞춤 AI 시공 가이드."
+        canonicalPath="/ai-estimate"
+      />
       {/* Top Banner Header */}
       <div className="text-center space-y-4 max-w-3xl mx-auto">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-bold border border-amber-200">
@@ -329,7 +335,7 @@ export const AIEstimatePage: React.FC<AIEstimatePageProps> = ({
             <div className="bg-stone-900 text-white p-12 rounded-3xl border border-stone-800 text-center space-y-4 shadow-xl animate-pulse">
               <Loader2 className="w-10 h-10 text-amber-400 animate-spin mx-auto" />
               <h3 className="text-lg font-bold">
-                AI가 한신인테리어 부산 시공 데이터와 자재비를 계산 중입니다...
+                AI가 {SITE_CONFIG.brand.nameKo} 부산 시공 데이터와 자재비를 계산 중입니다...
               </h3>
               <p className="text-xs text-stone-400">잠시만 기다려주세요.</p>
             </div>
@@ -442,7 +448,7 @@ export const AIEstimatePage: React.FC<AIEstimatePageProps> = ({
                   <span>[필독] AI 견적 참고용 안내사항</span>
                 </p>
                 <p className="text-stone-300 text-[11px] sm:text-xs leading-relaxed">
-                  "AI가 제공하는 비용과 기간은 입력 정보를 기반으로 한 참고용 예상치이며 실제 견적은 현장 상태, 자재, 공사 범위에 따라 달라질 수 있습니다. 정확한 견적은 한신인테리어의 현장 실측 상담을 통해 확인하시기 바랍니다."
+                  "AI가 제공하는 비용과 기간은 입력 정보를 기반으로 한 참고용 예상치이며 실제 견적은 현장 상태, 자재, 공사 범위에 따라 달라질 수 있습니다. 정확한 견적은 {SITE_CONFIG.brand.nameKo}({SITE_CONFIG.brand.nameEn})의 현장 실측 상담을 통해 확인하시기 바랍니다."
                 </p>
               </div>
 
@@ -453,7 +459,7 @@ export const AIEstimatePage: React.FC<AIEstimatePageProps> = ({
                   className="w-full py-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-950 font-extrabold rounded-2xl text-sm sm:text-base transition-all shadow-xl flex items-center justify-center gap-2"
                 >
                   <Send className="w-5 h-5" />
-                  <span>한신인테리어 무료 현장 실측 신청</span>
+                  <span>{SITE_CONFIG.brand.nameKo} 무료 현장 실측 신청</span>
                 </button>
               </div>
             </div>

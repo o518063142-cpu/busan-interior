@@ -1,10 +1,11 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { SITE_CONFIG } from "../config/siteConfig";
 import { NavigationMenu } from "../types";
-import { Phone, Sparkles, Calendar, ChevronRight } from "lucide-react";
+import { Phone, Sparkles, Calendar } from "lucide-react";
 
 interface FloatingContactBarProps {
-  setActiveTab: (tab: NavigationMenu) => void;
+  setActiveTab?: (tab: NavigationMenu) => void;
   openContactModal: () => void;
 }
 
@@ -12,6 +13,8 @@ export const FloatingContactBar: React.FC<FloatingContactBarProps> = ({
   setActiveTab,
   openContactModal,
 }) => {
+  const navigate = useNavigate();
+
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 bg-stone-950/95 backdrop-blur-xl border-t border-amber-500/30 p-2.5 sm:p-3 shadow-[0_-10px_25px_-5px_rgba(0,0,0,0.8)] xl:hidden">
       <div className="max-w-lg mx-auto grid grid-cols-12 gap-2 items-center">
@@ -38,10 +41,11 @@ export const FloatingContactBar: React.FC<FloatingContactBarProps> = ({
         {/* AI Estimate Button */}
         <button
           onClick={() => {
-            setActiveTab("AI_ESTIMATE");
+            if (setActiveTab) setActiveTab("AI_ESTIMATE");
+            navigate("/ai-estimate");
             window.scrollTo({ top: 0, behavior: "smooth" });
           }}
-          className="col-span-3 flex flex-col items-center justify-center py-2 px-1 bg-stone-900 hover:bg-stone-800 text-stone-200 rounded-xl text-[11px] font-bold border border-stone-800 active:scale-95 transition-all text-center"
+          className="col-span-3 flex flex-col items-center justify-center py-2 px-1 bg-stone-900 hover:bg-stone-800 text-stone-200 rounded-xl text-[11px] font-bold border border-stone-800 active:scale-95 transition-all text-center cursor-pointer"
         >
           <Sparkles className="w-3.5 h-3.5 text-amber-400 mb-0.5 animate-pulse" />
           <span className="text-[10px] text-stone-400 font-medium">AI분석</span>
@@ -51,7 +55,7 @@ export const FloatingContactBar: React.FC<FloatingContactBarProps> = ({
         {/* Free Measurement Button */}
         <button
           onClick={openContactModal}
-          className="col-span-3 flex flex-col items-center justify-center py-2 px-1 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-950 rounded-xl text-[11px] font-black shadow-lg shadow-amber-500/20 active:scale-95 transition-all text-center"
+          className="col-span-3 flex flex-col items-center justify-center py-2 px-1 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-950 rounded-xl text-[11px] font-black shadow-lg shadow-amber-500/20 active:scale-95 transition-all text-center cursor-pointer"
         >
           <Calendar className="w-3.5 h-3.5 shrink-0 mb-0.5" />
           <span className="text-[10px] text-stone-900 font-bold">무료</span>
@@ -61,4 +65,3 @@ export const FloatingContactBar: React.FC<FloatingContactBarProps> = ({
     </div>
   );
 };
-

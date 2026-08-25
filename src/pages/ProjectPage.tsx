@@ -1,13 +1,17 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { Link } from "react-router-dom";
 import { PROJECTS_DATA } from "../data/projectsData";
 import { ProjectCategory, ProjectItem } from "../types";
 import { db } from "../firebase";
 import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
+import { MetaManager } from "../components/seo/MetaManager";
+import { StructuredData } from "../components/seo/StructuredData";
 import {
   MapPin,
   Calendar,
   Layers,
   Ruler,
+  ChevronLeft,
   ChevronRight,
   Info,
   CheckCircle2,
@@ -21,20 +25,28 @@ import {
 } from "lucide-react";
 
 interface ProjectPageProps {
-  selectedCategory: ProjectCategory;
-  setSelectedCategory: (cat: ProjectCategory) => void;
-  openContactModal: () => void;
-  selectedProject: ProjectItem | null;
-  onSelectProject: (proj: ProjectItem | null) => void;
+  selectedCategory?: ProjectCategory;
+  setSelectedCategory?: (cat: ProjectCategory) => void;
+  openContactModal?: () => void;
+  selectedProject?: ProjectItem | null;
+  onSelectProject?: (proj: ProjectItem | null) => void;
 }
 
 export const ProjectPage: React.FC<ProjectPageProps> = ({
-  selectedCategory,
-  setSelectedCategory,
+  selectedCategory: initialCategory = "전체",
+  setSelectedCategory: parentSetSelectedCategory,
   openContactModal,
-  selectedProject,
-  onSelectProject,
+  selectedProject: parentSelectedProject,
+  onSelectProject: parentOnSelectProject,
 }) => {
+  const [internalCategory, setInternalCategory] = useState<ProjectCategory>(initialCategory);
+  const selectedCategory = parentSetSelectedCategory ? initialCategory : internalCategory;
+  const setSelectedCategory = parentSetSelectedCategory || setInternalCategory;
+
+  const [internalSelectedProject, setInternalSelectedProject] = useState<ProjectItem | null>(null);
+  const selectedProject = parentOnSelectProject ? parentSelectedProject : internalSelectedProject;
+  const onSelectProject = parentOnSelectProject || setInternalSelectedProject;
+
   const [searchQuery, setSearchQuery] = useState("");
   const [activePhotoIdx, setActivePhotoIdx] = useState<number>(0);
   const [firestoreProjects, setFirestoreProjects] = useState<ProjectItem[]>([]);
@@ -126,19 +138,30 @@ export const ProjectPage: React.FC<ProjectPageProps> = ({
 
   return (
     <div className="max-w-7xl mx-auto px-4 lg:px-8 py-12 space-y-12">
+      <MetaManager
+        title="시공사례 (PROJECT)｜부산진구·전포동 인테리어 포트폴리오｜지니 인테리어"
+        description="지니 인테리어(GENE INTERIOR) 대표 시공사례 포트폴리오. 부산 주거·상가·카페·사무실 리모델링 완공 및 비포/애프터 공사 과정 공개."
+        canonicalPath="/projects"
+      />
+      <StructuredData
+        type="page"
+        title="시공사례 (PROJECT) | 지니 인테리어"
+        description="지니 인테리어 부산 시공사례 포트폴리오"
+        path="/projects"
+      />
       {/* Page Header */}
       <div className="text-center space-y-4 max-w-3xl mx-auto">
         <span className="text-amber-600 font-bold text-xs uppercase tracking-wider bg-amber-100 px-3 py-1 rounded-full border border-amber-200">
           PORTFOLIO GALLERY
         </span>
         <h1 className="text-3xl sm:text-5xl font-extrabold text-stone-900 font-serif">
-          한신인테리어 대표 시공사례
+          지니 인테리어 대표 시공사례
         </h1>
         <p className="text-stone-600 text-sm sm:text-base leading-relaxed">
           부산진구 전포동, 서면, 동래구 등 부산 주요 공간의 완공 사례를 확인해보세요.
           <br />
           <span className="text-amber-700 font-semibold text-xs">
-            * 한신인테리어의 실제 시공 현장 및 추천 포트폴리오를 실시간으로 투명하게 공개합니다.
+            * 지니 인테리어(GENE INTERIOR)의 실제 시공 현장 및 추천 포트폴리오를 실시간으로 투명하게 공개합니다.
           </span>
         </p>
       </div>
@@ -200,13 +223,10 @@ export const ProjectPage: React.FC<ProjectPageProps> = ({
               (project.inProgressImage ? 1 : 0);
 
             return (
-              <div
+              <Link
                 key={project.id}
-                onClick={() => {
-                  setActivePhotoIdx(0);
-                  onSelectProject(project);
-                }}
-                className="bg-white rounded-3xl overflow-hidden border border-stone-200 shadow-md hover:shadow-2xl transition-all cursor-pointer group flex flex-col justify-between hover:-translate-y-1"
+                to={`/projects/${project.id}`}
+                className="bg-white rounded-3xl overflow-hidden border border-stone-200 shadow-md hover:shadow-2xl transition-all cursor-pointer group flex flex-col justify-between hover:-translate-y-1 block text-inherit no-underline"
               >
                 <div>
                   {/* Main Large Photo Box (h-72 sm:h-80) */}
@@ -288,7 +308,7 @@ export const ProjectPage: React.FC<ProjectPageProps> = ({
                   </span>
                   <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </div>
-              </div>
+              </Link>
             );
           })}
         </div>
@@ -360,6 +380,16 @@ export const ProjectPage: React.FC<ProjectPageProps> = ({
 
                 const currentPhoto = allPhotos[activePhotoIdx % allPhotos.length] || allPhotos[0];
 
+                const handleModalPrev = (e?: React.MouseEvent) => {
+                  e?.stopPropagation();
+                  setActivePhotoIdx((prev) => (prev - 1 + allPhotos.length) % allPhotos.length);
+                };
+
+                const handleModalNext = (e?: React.MouseEvent) => {
+                  e?.stopPropagation();
+                  setActivePhotoIdx((prev) => (prev + 1) % allPhotos.length);
+                };
+
                 return (
                   <div className="space-y-3">
                     <div className="relative h-[340px] sm:h-[460px] lg:h-[520px] rounded-2xl overflow-hidden bg-stone-950 border border-stone-800 group flex items-center justify-center">
@@ -373,9 +403,40 @@ export const ProjectPage: React.FC<ProjectPageProps> = ({
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20 pointer-events-none" />
 
-                      <div className="absolute top-4 left-4 bg-stone-900/90 text-amber-300 text-xs px-3 py-1.5 rounded-full backdrop-blur-md border border-amber-500/40 font-bold">
-                        {currentPhoto.label} ({(activePhotoIdx % allPhotos.length) + 1} / {allPhotos.length})
+                      {/* Photo Label (Top Left) */}
+                      <div className="absolute top-4 left-4 bg-stone-900/90 text-amber-300 text-xs px-3.5 py-1.5 rounded-full backdrop-blur-md border border-amber-500/40 font-bold z-10">
+                        {currentPhoto.label}
                       </div>
+
+                      {/* Photo Counter Badge (Top Right) */}
+                      <div className="absolute top-4 right-4 bg-stone-950/85 text-stone-200 text-xs px-3 py-1.5 rounded-full backdrop-blur-md border border-stone-700/60 font-mono font-semibold z-10">
+                        <span className="text-amber-400 font-bold">{(activePhotoIdx % allPhotos.length) + 1}</span>
+                        <span className="text-stone-400 mx-1">/</span>
+                        <span>{allPhotos.length}</span>
+                      </div>
+
+                      {/* Modal Navigation Arrows */}
+                      {allPhotos.length > 1 && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={handleModalPrev}
+                            className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-stone-950/70 hover:bg-amber-500 hover:text-stone-950 text-white flex items-center justify-center border border-white/20 transition-all backdrop-blur-md z-10 cursor-pointer shadow-xl hover:scale-105 active:scale-95"
+                            aria-label="이전 사진 보기"
+                          >
+                            <ChevronLeft className="w-5 h-5" />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={handleModalNext}
+                            className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-stone-950/70 hover:bg-amber-500 hover:text-stone-950 text-white flex items-center justify-center border border-white/20 transition-all backdrop-blur-md z-10 cursor-pointer shadow-xl hover:scale-105 active:scale-95"
+                            aria-label="다음 사진 보기"
+                          >
+                            <ChevronRight className="w-5 h-5" />
+                          </button>
+                        </>
+                      )}
 
                       <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between text-white text-xs bg-stone-900/80 p-3 rounded-xl border border-stone-800 backdrop-blur-md">
                         <span className="font-semibold">{selectedProject.spaceTypeDetail} · {selectedProject.area}</span>
@@ -383,21 +444,23 @@ export const ProjectPage: React.FC<ProjectPageProps> = ({
                       </div>
                     </div>
 
-                    {/* Photo Selector Thumbnails Strip */}
+                    {/* Photo Selector Thumbnails Grid */}
                     {allPhotos.length > 1 && (
-                      <div className="flex items-center gap-2.5 overflow-x-auto pb-2 scrollbar-none">
+                      <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 gap-2 sm:gap-2.5 pt-1">
                         {allPhotos.map((item, idx) => (
                           <button
                             key={idx}
+                            type="button"
                             onClick={() => setActivePhotoIdx(idx)}
-                            className={`relative w-24 h-16 rounded-xl overflow-hidden border shrink-0 transition-all ${
-                              activePhotoIdx === idx
-                                ? "border-amber-400 ring-2 ring-amber-400/60 scale-105"
+                            className={`relative aspect-[4/3] rounded-xl overflow-hidden border transition-all cursor-pointer group ${
+                              (activePhotoIdx % allPhotos.length) === idx
+                                ? "border-amber-400 ring-2 ring-amber-400/80 scale-[1.02] shadow-md"
                                 : "border-stone-800 opacity-60 hover:opacity-100"
                             }`}
                           >
-                            <img src={item.url} alt={item.label} className="w-full h-full object-cover" />
-                            <span className="absolute bottom-0 inset-x-0 bg-black/80 text-[9px] text-center text-stone-200 font-bold py-0.5 truncate">
+                            <img src={item.url} alt={item.label} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
+                            <span className="absolute bottom-1 inset-x-1 text-[10px] text-center text-stone-200 font-bold truncate">
                               {item.label}
                             </span>
                           </button>

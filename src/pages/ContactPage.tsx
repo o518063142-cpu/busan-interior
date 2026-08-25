@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { SITE_CONFIG } from "../config/siteConfig";
+import { MetaManager } from "../components/seo/MetaManager";
+import { StructuredData } from "../components/seo/StructuredData";
 import {
   Phone,
   Send,
@@ -170,6 +172,17 @@ export const ContactPage: React.FC<ContactPageProps> = ({ initialData }) => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 lg:px-8 py-12 space-y-16">
+      <MetaManager
+        title="무료 현장 실측 & 견적 문의｜지니 인테리어 (GENE INTERIOR)"
+        description="부산진구 전포동 지니 인테리어(GENE INTERIOR) 무료 현장 실측 및 상담 신청. 실내건축공사업 등록 전문가의 1:1 맞춤 견적."
+        canonicalPath="/contact"
+      />
+      <StructuredData
+        type="page"
+        title="무료 현장 실측 & 견적 문의 | 지니 인테리어"
+        description="지니 인테리어 무료 현장 실측 및 견적 문의"
+        path="/contact"
+      />
       {/* Page Header */}
       <div className="text-center space-y-4 max-w-3xl mx-auto">
         <span className="text-amber-600 font-bold text-xs uppercase tracking-wider bg-amber-100 px-3 py-1 rounded-full border border-amber-200">
@@ -232,7 +245,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ initialData }) => {
           <div className="bg-white p-6 rounded-3xl border border-stone-200 space-y-4 shadow-sm text-xs sm:text-sm text-stone-700">
             <h3 className="text-base font-bold text-stone-900 font-serif flex items-center gap-2 border-b border-stone-200 pb-3">
               <Building className="w-5 h-5 text-amber-600" />
-              <span>한신인테리어 정보</span>
+              <span>{SITE_CONFIG.brand.displayName} 안내</span>
             </h3>
 
             <div className="space-y-2.5">

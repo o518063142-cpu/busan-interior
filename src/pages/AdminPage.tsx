@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { auth, db } from "../firebase";
+import { MetaManager } from "../components/seo/MetaManager";
 import {
   signInWithEmailAndPassword,
   signOut,
@@ -342,6 +343,7 @@ export const AdminPage: React.FC = () => {
   if (!user) {
     return (
       <div className="min-h-screen bg-stone-950 text-stone-100 flex items-center justify-center p-4">
+        <MetaManager title="관리자 시스템" noindex={true} canonicalPath="/admin" />
         <div className="w-full max-w-md bg-stone-900 border border-stone-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
           {/* Logo & Header */}
           <div className="text-center space-y-2">
@@ -439,6 +441,7 @@ export const AdminPage: React.FC = () => {
   // Dashboard View (Authenticated Admin)
   return (
     <div className="min-h-screen bg-stone-950 text-stone-100 pb-16">
+      <MetaManager title="상담 관리 시스템" noindex={true} canonicalPath="/admin" />
       {/* Top Admin Navigation Header */}
       <header className="bg-stone-900 border-b border-stone-800 sticky top-0 z-40 shadow-xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">

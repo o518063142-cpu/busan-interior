@@ -1,6 +1,8 @@
 import React from "react";
 import { SERVICES_DATA } from "../data/servicesData";
 import { NavigationMenu, ProjectCategory } from "../types";
+import { MetaManager } from "../components/seo/MetaManager";
+import { StructuredData } from "../components/seo/StructuredData";
 import {
   CheckCircle2,
   ChevronRight,
@@ -15,9 +17,9 @@ import {
 } from "lucide-react";
 
 interface ServicePageProps {
-  setActiveTab: (tab: NavigationMenu) => void;
-  setSelectedCategory: (cat: ProjectCategory) => void;
-  openContactModal: () => void;
+  setActiveTab?: (tab: NavigationMenu) => void;
+  setSelectedCategory?: (cat: ProjectCategory) => void;
+  openContactModal?: () => void;
 }
 
 export const ServicePage: React.FC<ServicePageProps> = ({
@@ -43,13 +45,26 @@ export const ServicePage: React.FC<ServicePageProps> = ({
   };
 
   const handleProjectFilterClick = (targetCategory: ProjectCategory) => {
-    setSelectedCategory(targetCategory);
-    setActiveTab("PROJECT");
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    if (setSelectedCategory) setSelectedCategory(targetCategory);
+    if (setActiveTab) {
+      setActiveTab("PROJECT");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   };
 
   return (
     <div className="max-w-7xl mx-auto px-4 lg:px-8 py-12 space-y-16">
+      <MetaManager
+        title="주요 서비스｜아파트·상가·카페·사무실 인테리어｜지니 인테리어"
+        description="지니 인테리어(GENE INTERIOR) 주요 서비스: 부산 아파트·주택 리모델링, 상가·매장, 카페·음식점, 사무실 인테리어 및 실내건축 책임시공."
+        canonicalPath="/service"
+      />
+      <StructuredData
+        type="page"
+        title="주요 서비스 | 지니 인테리어"
+        description="부산진구 전포동 아파트, 상가, 매장, 카페, 사무실 인테리어 및 실내건축 서비스"
+        path="/service"
+      />
       {/* Page Header */}
       <div className="text-center space-y-4 max-w-3xl mx-auto">
         <span className="text-amber-600 font-bold text-xs uppercase tracking-wider bg-amber-100 px-3 py-1 rounded-full border border-amber-200">
@@ -59,7 +74,7 @@ export const ServicePage: React.FC<ServicePageProps> = ({
           주요 인테리어 서비스
         </h1>
         <p className="text-stone-600 text-sm sm:text-base leading-relaxed">
-          한신인테리어는 부산진구 전포동 및 서면, 부산 전역의 주거 및 상업·사무 공간을 위한 5가지 전문 영역의 인테리어 및 실내건축 서비스를 제공합니다.
+          지니 인테리어(GENE INTERIOR)는 부산진구 전포동 및 서면, 부산 전역의 주거 및 상업·사무 공간을 위한 5가지 전문 영역의 인테리어 및 실내건축 서비스를 제공합니다.
         </p>
       </div>
 

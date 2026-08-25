@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { getFirestoreAdmin, isProjectPublic } from "./_lib/firebaseAdmin";
-import { SITE_ENTITY } from "../src/config/siteConfig";
-import { PROJECTS_DATA } from "../src/data/projectsData";
-import { INFORMATION_ARTICLES } from "../src/data/informationData";
+import { SITE_ENTITY } from "./_config/siteConfig";
+import { PROJECTS_DATA } from "./_data/projectsData";
+import { INFORMATION_ARTICLES } from "./_data/informationData";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const baseUrl = SITE_ENTITY.url.replace(/\/$/, "");

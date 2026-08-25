@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { SITE_CONFIG, SITE_ENTITY } from "../src/config/siteConfig";
+import { SITE_CONFIG, SITE_ENTITY } from "./_config/siteConfig";
 import { getFirestoreAdmin } from "./_lib/firebaseAdmin";
-import { PILLAR_ARTICLES } from "../src/data/informationData";
+import { PILLAR_ARTICLES } from "./_data/informationData";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { slug } = req.query;

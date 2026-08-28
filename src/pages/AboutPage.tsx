@@ -29,14 +29,14 @@ export const AboutPage: React.FC<AboutPageProps> = ({
   return (
     <div className="max-w-7xl mx-auto px-4 lg:px-8 py-12 space-y-16">
       <MetaManager
-        title="회사소개｜부산진구 전포동 실내건축공사업 지니 인테리어 (GENE INTERIOR)"
-        description="지니 인테리어(GENE INTERIOR / 법적상호: 한신인테리어) 소개. 실내건축공사업 등록업체, 부산진구 전포동·서면 직영 시공. 공간의 가치를 높이는 1:1 맞춤 설계 및 정직한 시공."
+        title="회사소개 (ABOUT)｜부산 실내건축공사업 등록업체 지니 인테리어"
+        description="지니 인테리어(GENE INTERIOR / 법적상호: 한신인테리어) 소개. 실내건축공사업 등록업체, 부산 전역 및 경남·울산 책임 시공. 공간의 가치를 높이는 1:1 맞춤 설계 및 정직한 시공."
         canonicalPath="/about"
       />
       <StructuredData
         type="page"
         title="회사소개 | 지니 인테리어"
-        description="부산진구 전포동 실내건축공사업 등록업체 지니 인테리어 회사소개"
+        description="부산 실내건축공사업 등록업체 지니 인테리어 회사소개"
         path="/about"
       />
       {/* Top Banner */}
@@ -46,14 +46,14 @@ export const AboutPage: React.FC<AboutPageProps> = ({
           <span>{SITE_CONFIG.legal.licenseStatus}</span>
         </div>
         <div className="space-y-1">
-          <h1 className="text-3xl sm:text-5xl font-extrabold text-stone-900 font-serif">
+          <h1 className="text-3xl sm:text-5xl font-extrabold text-stone-900 font-sans break-keep">
             {SITE_CONFIG.brand.nameKo} 소개
           </h1>
           <p className="text-xs sm:text-sm font-semibold tracking-widest text-amber-600 uppercase font-sans">
             {SITE_CONFIG.brand.nameEn}
           </p>
         </div>
-        <p className="text-stone-600 text-sm sm:text-base leading-relaxed">
+        <p className="text-stone-600 text-sm sm:text-base leading-relaxed font-sans break-keep">
           부산진구 전포동에 거점을 둔 {SITE_CONFIG.brand.nameKo}({SITE_CONFIG.brand.nameEn})는
           공간의 미학적 아름다움과 내구성, 실용성을 겸비한
           전문 실내건축 종합 리모델링 기업입니다.
@@ -61,24 +61,24 @@ export const AboutPage: React.FC<AboutPageProps> = ({
       </div>
 
       {/* Main Philosophy Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center bg-white p-8 sm:p-12 rounded-3xl border border-stone-200 shadow-sm">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center bg-white p-8 sm:p-12 rounded-3xl border border-stone-200 shadow-sm font-sans">
         <div className="lg:col-span-7 space-y-6">
-          <span className="text-amber-600 font-bold text-xs uppercase tracking-wider">
+          <span className="text-amber-600 font-bold text-xs uppercase tracking-wider font-sans">
             PHILOSOPHY & VALUE
           </span>
-          <h2 className="text-2xl sm:text-3xl font-bold text-stone-900 font-serif leading-tight">
+          <h2 className="text-2xl sm:text-3xl font-bold text-stone-900 font-sans leading-tight break-keep">
             "정직한 설계와 정밀 시공으로
             <br />
             고객의 삶과 비즈니스 가치를 높입니다."
           </h2>
-          <p className="text-stone-600 text-sm leading-relaxed">
-            {SITE_CONFIG.brand.nameKo}({SITE_CONFIG.brand.nameEn})는 부산 부산진구 전포동, 서면 지역의 아파트, 단독주택 주거 공간과 상가, 카페, 사무실 등 다양한 인테리어 현장에서 쌓아온 축적된 기술력을 바탕으로 운영됩니다.
+          <p className="text-stone-600 text-sm leading-relaxed font-sans break-keep">
+            {SITE_CONFIG.brand.nameKo}({SITE_CONFIG.brand.nameEn})는 부산 전역을 중심으로 경남·울산의 아파트, 단독주택 주거 공간과 상가, 카페, 사무실 등 다양한 인테리어 현장에서 쌓아온 축적된 기술력을 바탕으로 운영됩니다.
           </p>
-          <p className="text-stone-600 text-sm leading-relaxed">
+          <p className="text-stone-600 text-sm leading-relaxed font-sans break-keep">
             단순히 겉모습만 꾸미는 인테리어가 아닌, 기초 단열 및 철거, 소방 법규 준수, 동선 효율화, 내구성 높은 자재 사용까지 실내건축 면허업체다운 책임감 있는 정석 시공을 원칙으로 삼고 있습니다.
           </p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 text-xs font-sans">
             <div className="p-3.5 bg-stone-50 rounded-xl border border-stone-200 space-y-1">
               <span className="font-bold text-stone-900 block">1:1 디자인 맞춤 제안</span>
               <span className="text-stone-500">고객의 라이프스타일과 브랜드 정체성 반영</span>
@@ -104,28 +104,28 @@ export const AboutPage: React.FC<AboutPageProps> = ({
       </div>
 
       {/* License Notice Box */}
-      <div className="bg-stone-950 text-white p-8 sm:p-10 rounded-3xl border border-stone-800 space-y-4">
+      <div className="bg-stone-950 text-white p-8 sm:p-10 rounded-3xl border border-stone-800 space-y-4 font-sans">
         <div className="flex items-center gap-3">
           <div className="p-3 bg-amber-500/20 text-amber-400 rounded-xl border border-amber-500/30">
             <Award className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-white">실내건축공사업 면허 안내</h3>
-            <p className="text-xs text-amber-400 font-semibold">
+            <h3 className="text-lg font-bold text-white font-sans">실내건축공사업 면허 안내</h3>
+            <p className="text-xs text-amber-400 font-semibold font-sans">
               법적 기준을 준수하는 공식 전문 실내건축 기업
             </p>
           </div>
         </div>
-        <p className="text-xs sm:text-sm text-stone-300 leading-relaxed">
+        <p className="text-xs sm:text-sm text-stone-300 leading-relaxed font-sans break-keep">
           {SITE_CONFIG.brand.nameKo}({SITE_CONFIG.brand.nameEn})는 부산진구 전포동에 위치한 전문 실내건축 리모델링 기업(법적 상호: {SITE_CONFIG.legal.businessName})입니다.
           공식 등록 정보를 바탕으로 제공되며, 사용자분께서 직접 제공하지 않은 정보는 임의 추측하여 작성하지 않는 원칙을 엄격히 준수합니다.
         </p>
       </div>
 
       {/* Company Profile Table */}
-      <div className="bg-white p-8 rounded-3xl border border-stone-200 shadow-sm space-y-6">
+      <div className="bg-white p-8 rounded-3xl border border-stone-200 shadow-sm space-y-6 font-sans">
         <div className="border-b border-stone-200 pb-4">
-          <h3 className="text-xl font-bold text-stone-900 font-serif flex items-center gap-2">
+          <h3 className="text-xl font-bold text-stone-900 font-sans flex items-center gap-2">
             <Building className="w-5 h-5 text-amber-600" />
             <span>기업 및 사업자 공식 정보 (Company Profile)</span>
           </h3>

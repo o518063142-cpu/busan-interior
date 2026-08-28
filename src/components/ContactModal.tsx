@@ -202,18 +202,18 @@ export const ContactModal: React.FC<ContactModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
       <div className="relative w-full max-w-xl bg-stone-900 border border-stone-800 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden text-stone-100 max-h-[92vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-stone-800 bg-stone-950">
+        <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-stone-800 bg-stone-950 font-sans">
           <div>
-            <span className="text-[11px] font-bold text-amber-400 uppercase tracking-wide">
+            <span className="text-[11px] font-bold text-amber-400 uppercase tracking-wide font-sans">
               {SITE_CONFIG.company.name} 공식 실측 신청
             </span>
-            <h3 className="text-base sm:text-lg font-bold text-white font-serif mt-0.5">
+            <h3 className="text-base sm:text-lg font-bold text-white font-sans mt-0.5 break-keep">
               무료 현장 실측 & 견적 신청
             </h3>
           </div>
           <button
             onClick={handleResetAndClose}
-            className="p-2 text-stone-400 hover:text-white bg-stone-800 hover:bg-stone-700 rounded-xl transition-colors shrink-0"
+            className="p-2 text-stone-400 hover:text-white bg-stone-800 hover:bg-stone-700 rounded-xl transition-colors shrink-0 cursor-pointer"
             aria-label="닫기"
           >
             <X className="w-5 h-5" />
@@ -221,27 +221,27 @@ export const ContactModal: React.FC<ContactModalProps> = ({
         </div>
 
         {/* Modal Body */}
-        <div className="p-5 sm:p-6 overflow-y-auto flex-1 space-y-4 text-xs sm:text-sm">
+        <div className="p-5 sm:p-6 overflow-y-auto flex-1 space-y-4 text-xs sm:text-sm font-sans">
           {/* Error Message Box */}
           {errorMessage && (
-            <div className="p-3.5 bg-rose-950/80 border border-rose-500/50 rounded-xl text-rose-200 text-xs flex items-start gap-2.5 animate-in fade-in duration-200">
+            <div className="p-3.5 bg-rose-950/80 border border-rose-500/50 rounded-xl text-rose-200 text-xs flex items-start gap-2.5 animate-in fade-in duration-200 font-sans">
               <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-              <span className="leading-relaxed">{errorMessage}</span>
+              <span className="leading-relaxed font-sans break-keep">{errorMessage}</span>
             </div>
           )}
 
           {submitted ? (
             /* Submission Completed View */
-            <div className="text-center py-6 sm:py-8 space-y-5 animate-in zoom-in-95 duration-200">
+            <div className="text-center py-6 sm:py-8 space-y-5 animate-in zoom-in-95 duration-200 font-sans">
               <div className="w-16 h-16 bg-amber-500/20 text-amber-400 rounded-2xl flex items-center justify-center mx-auto border border-amber-500/40 shadow-inner">
                 <CheckCircle className="w-9 h-9" />
               </div>
 
-              <div className="space-y-2">
-                <h4 className="text-xl font-bold text-white font-serif">
+              <div className="space-y-2 font-sans">
+                <h4 className="text-xl font-bold text-white font-sans break-keep">
                   실측 상담 신청이 접수되었습니다.
                 </h4>
-                <p className="text-xs sm:text-sm text-stone-300 leading-relaxed max-w-md mx-auto font-medium">
+                <p className="text-xs sm:text-sm text-stone-300 leading-relaxed max-w-md mx-auto font-medium font-sans break-keep">
                   한신인테리어 담당자가 입력하신 연락처로 상담을 안내해 드리겠습니다.
                 </p>
               </div>

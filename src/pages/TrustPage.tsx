@@ -67,21 +67,21 @@ export const TrustPage: React.FC<TrustPageProps> = ({ openContactModal }) => {
       />
 
       {/* Hero Section */}
-      <section className="relative py-20 px-4 lg:px-8 border-b border-stone-800/80 overflow-hidden">
+      <section className="relative py-20 px-4 lg:px-8 border-b border-stone-800/80 overflow-hidden font-sans">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-950/30 via-stone-950 to-stone-950 pointer-events-none" />
-        <div className="max-w-4xl mx-auto text-center space-y-6 relative">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold tracking-widest uppercase">
+        <div className="max-w-4xl mx-auto text-center space-y-6 relative font-sans">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold tracking-widest uppercase font-sans">
             <ShieldCheck className="w-4 h-4 text-amber-400" />
             <span>GENE TRUST SYSTEM</span>
           </div>
 
-          <h1 className="text-3xl sm:text-5xl font-extrabold text-white font-serif tracking-tight leading-tight">
+          <h1 className="text-3xl sm:text-5xl font-extrabold text-white font-sans tracking-tight leading-tight break-keep">
             공사의 시작부터 사후관리까지
             <br />
             <span className="text-amber-400">투명하고 안전한 시공 기준</span>
           </h1>
 
-          <p className="text-stone-400 text-sm sm:text-base leading-relaxed max-w-2xl mx-auto">
+          <p className="text-stone-400 text-sm sm:text-base leading-relaxed max-w-2xl mx-auto font-sans break-keep">
             {SITE_ENTITY.brand.displayName}(법적상호: {SITE_ENTITY.legal.businessName})는 불안과 불신을 없애는
             체계적인 5단계 신뢰 관리 프로세스를 원칙으로 합니다.
           </p>
@@ -89,14 +89,14 @@ export const TrustPage: React.FC<TrustPageProps> = ({ openContactModal }) => {
       </section>
 
       {/* 5 Steps Grid */}
-      <section className="max-w-6xl mx-auto px-4 lg:px-8 py-16 space-y-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <section className="max-w-6xl mx-auto px-4 lg:px-8 py-16 space-y-8 font-sans">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 font-sans">
           {trustSteps.map((step, idx) => (
             <div
               key={idx}
-              className="p-6 rounded-2xl bg-stone-900/70 border border-stone-800 hover:border-amber-500/50 transition-all space-y-4 shadow-md group"
+              className="p-6 rounded-2xl bg-stone-900/70 border border-stone-800 hover:border-amber-500/50 transition-all space-y-4 shadow-md group font-sans"
             >
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between font-sans">
                 <span className="text-amber-400 font-mono font-extrabold text-2xl group-hover:scale-105 transition-transform">
                   {step.step}
                 </span>
@@ -105,11 +105,11 @@ export const TrustPage: React.FC<TrustPageProps> = ({ openContactModal }) => {
                 </div>
               </div>
 
-              <h2 className="text-lg font-bold text-white font-serif">
+              <h2 className="text-lg font-bold text-white font-sans break-keep">
                 {step.title}
               </h2>
 
-              <p className="text-xs sm:text-sm text-stone-400 leading-relaxed">
+              <p className="text-xs sm:text-sm text-stone-400 leading-relaxed font-sans break-keep">
                 {step.desc}
               </p>
             </div>
@@ -117,12 +117,12 @@ export const TrustPage: React.FC<TrustPageProps> = ({ openContactModal }) => {
         </div>
 
         {/* Call to Action */}
-        <div className="p-8 rounded-3xl bg-gradient-to-r from-stone-900 to-stone-850 border border-stone-800 text-center space-y-4 shadow-xl">
-          <div className="flex items-center justify-center gap-1.5 text-amber-400 text-xs font-bold">
+        <div className="p-8 rounded-3xl bg-gradient-to-r from-stone-900 to-stone-850 border border-stone-800 text-center space-y-4 shadow-xl font-sans">
+          <div className="flex items-center justify-center gap-1.5 text-amber-400 text-xs font-bold font-sans">
             <Sparkles className="w-4 h-4" />
             <span>부산 전지역 1:1 맞춤 상담</span>
           </div>
-          <h3 className="text-xl sm:text-2xl font-bold font-serif text-white">
+          <h3 className="text-xl sm:text-2xl font-bold font-sans text-white break-keep">
             정직한 견적과 신뢰할 수 있는 시공을 지금 경험해보세요.
           </h3>
           <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">

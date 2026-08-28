@@ -8,14 +8,12 @@ import {
   X,
   Sparkles,
   ChevronRight,
-  Calculator,
   Home,
   Info,
   Briefcase,
   Images,
   FileText,
   MessageSquare,
-  UserCheck,
   Shield,
 } from "lucide-react";
 
@@ -46,16 +44,15 @@ export const Header: React.FC<HeaderProps> = ({
     { id: "SERVICE", path: "/service", label: "SERVICE", icon: <Briefcase className="w-4 h-4" /> },
     { id: "PROJECT", path: "/projects", label: "PROJECT", icon: <Images className="w-4 h-4" /> },
     { id: "INFORMATION", path: "/information", label: "INFORMATION", icon: <FileText className="w-4 h-4" /> },
-    { id: "TRUST", path: "/trust", label: "안심 시공", icon: <Shield className="w-4 h-4 text-[#B38F4D]" /> },
+    { id: "TRUST", path: "/trust", label: "안심시공", icon: <Shield className="w-4 h-4 text-[#B38F4D]" /> },
     {
       id: "AI_ESTIMATE",
       path: "/ai-estimate",
       label: "AI 상담·견적",
       icon: <Sparkles className="w-4 h-4 text-[#B38F4D]" />,
-      badge: "AI 추천",
+      badge: "AI",
     },
     { id: "CONTACT", path: "/contact", label: "CONTACT", icon: <MessageSquare className="w-4 h-4" /> },
-    { id: "ADMIN", path: "/admin", label: "상담 관리", icon: <UserCheck className="w-4 h-4 text-stone-500" /> },
   ];
 
   const isItemActive = (path: string, id: string) => {
@@ -96,14 +93,14 @@ export const Header: React.FC<HeaderProps> = ({
         </Link>
 
         {/* Desktop Menu */}
-        <nav className="hidden xl:flex items-center space-x-0.5 2xl:space-x-1 shrink-0">
+        <nav className="hidden xl:flex items-center space-x-1 2xl:space-x-1.5 shrink-0">
           {navItems.map((item) => {
             const active = isItemActive(item.path, item.id);
             return (
               <button
                 key={item.id}
                 onClick={() => handleNavClick(item.path, item.id)}
-                className={`relative px-2 2xl:px-2.5 py-1.5 text-xs 2xl:text-[13px] font-medium rounded-lg transition-all flex items-center gap-1 2xl:gap-1.5 cursor-pointer whitespace-nowrap shrink-0 ${
+                className={`relative px-2.5 2xl:px-3 py-2 text-xs 2xl:text-[13.5px] font-medium rounded-lg transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0 ${
                   active
                     ? "text-stone-950 font-bold bg-stone-100"
                     : "text-stone-600 hover:text-stone-950 hover:bg-stone-50"
@@ -117,29 +114,18 @@ export const Header: React.FC<HeaderProps> = ({
                   </span>
                 )}
                 {active && (
-                  <span className="absolute bottom-0 left-2 right-2 h-[2px] bg-[#B38F4D] rounded-full" />
+                  <span className="absolute bottom-0 left-2.5 right-2.5 h-[2px] bg-[#B38F4D] rounded-full" />
                 )}
               </button>
             );
           })}
         </nav>
 
-        {/* CTA Buttons (Desktop) */}
-        <div className="hidden md:flex items-center gap-1.5 2xl:gap-2 shrink-0">
-          <Link
-            to="/ai-estimate"
-            onClick={() => {
-              if (setActiveTab) setActiveTab("AI_ESTIMATE");
-              window.scrollTo({ top: 0, behavior: "smooth" });
-            }}
-            className="px-2.5 2xl:px-3.5 py-1.5 2xl:py-2 text-xs 2xl:text-sm font-medium rounded-lg text-stone-700 hover:text-stone-950 hover:bg-stone-100 border border-stone-200 transition-all flex items-center gap-1 2xl:gap-1.5 shadow-xs whitespace-nowrap shrink-0"
-          >
-            <Calculator className="w-3.5 h-3.5 2xl:w-4 2xl:h-4 text-[#B38F4D] shrink-0" />
-            <span className="whitespace-nowrap">AI 견적</span>
-          </Link>
+        {/* CTA Button (Desktop) */}
+        <div className="hidden md:flex items-center shrink-0">
           <button
             onClick={openContactModal}
-            className="px-3 2xl:px-4 py-1.5 2xl:py-2 text-xs 2xl:text-sm font-bold rounded-lg bg-stone-950 hover:bg-stone-800 text-white shadow-xs transition-all flex items-center gap-1 2xl:gap-1.5 active:scale-[0.98] cursor-pointer whitespace-nowrap shrink-0"
+            className="px-4 2xl:px-5 py-2 text-xs 2xl:text-sm font-bold rounded-lg bg-stone-950 hover:bg-stone-800 text-white shadow-sm transition-all flex items-center gap-1.5 active:scale-[0.98] cursor-pointer whitespace-nowrap shrink-0"
           >
             <span className="whitespace-nowrap">무료 현장 실측</span>
             <ChevronRight className="w-3.5 h-3.5 text-[#D4AF37] shrink-0" />

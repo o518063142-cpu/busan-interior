@@ -16,52 +16,53 @@ export const FloatingContactBar: React.FC<FloatingContactBarProps> = ({
   const navigate = useNavigate();
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-stone-950/95 backdrop-blur-xl border-t border-amber-500/30 p-2.5 sm:p-3 shadow-[0_-10px_25px_-5px_rgba(0,0,0,0.8)] xl:hidden">
-      <div className="max-w-lg mx-auto grid grid-cols-12 gap-2 items-center">
-        {/* Phone Button 1: Representative */}
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-stone-950/95 backdrop-blur-md border-t border-stone-800/90 px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-[0_-8px_20px_rgba(0,0,0,0.3)] xl:hidden">
+      <div className="max-w-md mx-auto grid grid-cols-4 gap-1.5 sm:gap-2 items-center">
+        {/* Action 1: 대표 전화 */}
         <a
           href={`tel:${SITE_CONFIG.company.phone}`}
-          className="col-span-3 flex flex-col items-center justify-center py-2 px-1 bg-stone-900 hover:bg-stone-800 text-amber-300 rounded-xl text-[11px] font-extrabold border border-amber-500/40 shadow-md active:scale-95 transition-all text-center"
+          className="flex flex-col items-center justify-center py-2 px-1 rounded-lg text-stone-200 hover:text-white bg-stone-900/90 hover:bg-stone-800 border border-stone-800 active:scale-95 transition-all text-center"
+          aria-label="회사 전화 상담"
         >
-          <Phone className="w-3.5 h-3.5 text-amber-400 mb-0.5" />
-          <span className="text-[10px] text-stone-400 font-medium">대표</span>
-          <span className="text-amber-300 font-bold truncate">{SITE_CONFIG.company.phone}</span>
+          <Phone className="w-4 h-4 text-[#B38F4D] mb-1" />
+          <span className="text-[11px] font-semibold tracking-tight">전화</span>
         </a>
 
-        {/* Phone Button 2: Direct Mobile */}
+        {/* Action 2: 직통 문의 */}
         <a
           href={`tel:${SITE_CONFIG.company.mobilePhone}`}
-          className="col-span-3 flex flex-col items-center justify-center py-2 px-1 bg-stone-900 hover:bg-stone-800 text-amber-300 rounded-xl text-[11px] font-extrabold border border-amber-500/40 shadow-md active:scale-95 transition-all text-center"
+          className="flex flex-col items-center justify-center py-2 px-1 rounded-lg text-stone-200 hover:text-white bg-stone-900/90 hover:bg-stone-800 border border-stone-800 active:scale-95 transition-all text-center"
+          aria-label="담당자 직통 전화"
         >
-          <Phone className="w-3.5 h-3.5 text-amber-400 mb-0.5" />
-          <span className="text-[10px] text-stone-400 font-medium">직통</span>
-          <span className="text-amber-300 font-bold truncate">{SITE_CONFIG.company.mobilePhone}</span>
+          <Phone className="w-4 h-4 text-[#B38F4D] mb-1" />
+          <span className="text-[11px] font-semibold tracking-tight">직통</span>
         </a>
 
-        {/* AI Estimate Button */}
+        {/* Action 3: AI 견적 */}
         <button
           onClick={() => {
             if (setActiveTab) setActiveTab("AI_ESTIMATE");
             navigate("/ai-estimate");
             window.scrollTo({ top: 0, behavior: "smooth" });
           }}
-          className="col-span-3 flex flex-col items-center justify-center py-2 px-1 bg-stone-900 hover:bg-stone-800 text-stone-200 rounded-xl text-[11px] font-bold border border-stone-800 active:scale-95 transition-all text-center cursor-pointer"
+          className="flex flex-col items-center justify-center py-2 px-1 rounded-lg text-stone-200 hover:text-white bg-stone-900/90 hover:bg-stone-800 border border-stone-800 active:scale-95 transition-all text-center cursor-pointer"
+          aria-label="AI 견적 분석"
         >
-          <Sparkles className="w-3.5 h-3.5 text-amber-400 mb-0.5 animate-pulse" />
-          <span className="text-[10px] text-stone-400 font-medium">AI분석</span>
-          <span className="text-stone-300 font-bold">견적계산</span>
+          <Sparkles className="w-4 h-4 text-[#B38F4D] mb-1" />
+          <span className="text-[11px] font-semibold tracking-tight">AI 견적</span>
         </button>
 
-        {/* Free Measurement Button */}
+        {/* Action 4: 무료 실측 신청 */}
         <button
           onClick={openContactModal}
-          className="col-span-3 flex flex-col items-center justify-center py-2 px-1 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-950 rounded-xl text-[11px] font-black shadow-lg shadow-amber-500/20 active:scale-95 transition-all text-center cursor-pointer"
+          className="flex flex-col items-center justify-center py-2 px-1 rounded-lg bg-stone-900/90 hover:bg-stone-800 text-stone-100 border border-[#B38F4D]/40 shadow-xs active:scale-95 transition-all text-center cursor-pointer"
+          aria-label="무료 현장 실측 신청"
         >
-          <Calendar className="w-3.5 h-3.5 shrink-0 mb-0.5" />
-          <span className="text-[10px] text-stone-900 font-bold">무료</span>
-          <span className="truncate font-black">실측신청</span>
+          <Calendar className="w-4 h-4 text-[#D4AF37] mb-1" />
+          <span className="text-[11px] font-bold text-[#E5D8B8] tracking-tight">무료 실측</span>
         </button>
       </div>
     </div>
   );
 };
+

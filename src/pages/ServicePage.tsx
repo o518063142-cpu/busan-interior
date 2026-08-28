@@ -55,55 +55,55 @@ export const ServicePage: React.FC<ServicePageProps> = ({
   return (
     <div className="max-w-7xl mx-auto px-4 lg:px-8 py-12 space-y-16">
       <MetaManager
-        title="주요 서비스｜아파트·상가·카페·사무실 인테리어｜지니 인테리어"
-        description="지니 인테리어(GENE INTERIOR) 주요 서비스: 부산 아파트·주택 리모델링, 상가·매장, 카페·음식점, 사무실 인테리어 및 실내건축 책임시공."
+        title="서비스 안내 (SERVICE)｜부산 인테리어·리모델링 서비스｜지니 인테리어"
+        description="지니 인테리어(GENE INTERIOR) 주요 서비스: 부산 및 경남·울산 아파트·주택 리모델링, 상가·매장, 카페·음식점, 사무실 인테리어 및 실내건축 책임시공."
         canonicalPath="/service"
       />
       <StructuredData
         type="page"
-        title="주요 서비스 | 지니 인테리어"
-        description="부산진구 전포동 아파트, 상가, 매장, 카페, 사무실 인테리어 및 실내건축 서비스"
+        title="서비스 안내 (SERVICE) | 지니 인테리어"
+        description="부산 및 경남·울산 아파트, 상가, 매장, 카페, 사무실 인테리어 및 실내건축 서비스"
         path="/service"
       />
       {/* Page Header */}
-      <div className="text-center space-y-4 max-w-3xl mx-auto">
-        <span className="text-amber-600 font-bold text-xs uppercase tracking-wider bg-amber-100 px-3 py-1 rounded-full border border-amber-200">
+      <div className="text-center space-y-4 max-w-3xl mx-auto font-sans">
+        <span className="text-amber-600 font-bold text-xs uppercase tracking-wider bg-amber-100 px-3 py-1 rounded-full border border-amber-200 font-sans">
           SERVICES CATEGORY
         </span>
-        <h1 className="text-3xl sm:text-5xl font-extrabold text-stone-900 font-serif">
+        <h1 className="text-3xl sm:text-5xl font-extrabold text-stone-900 font-sans break-keep">
           주요 인테리어 서비스
         </h1>
-        <p className="text-stone-600 text-sm sm:text-base leading-relaxed">
-          지니 인테리어(GENE INTERIOR)는 부산진구 전포동 및 서면, 부산 전역의 주거 및 상업·사무 공간을 위한 5가지 전문 영역의 인테리어 및 실내건축 서비스를 제공합니다.
+        <p className="text-stone-600 text-sm sm:text-base leading-relaxed font-sans break-keep">
+          지니 인테리어(GENE INTERIOR)는 부산 전역을 중심으로 경남·울산까지 주거 및 상업·사무 공간을 위한 5가지 전문 영역의 인테리어 및 실내건축 서비스를 제공합니다.
         </p>
       </div>
 
       {/* 5 Card Categories Grid */}
-      <div className="space-y-12">
+      <div className="space-y-12 font-sans">
         {SERVICES_DATA.map((service, index) => (
           <div
             key={service.id}
             id={service.id}
-            className="bg-white rounded-3xl border border-stone-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow grid grid-cols-1 lg:grid-cols-12 gap-8 p-6 sm:p-8 lg:p-10"
+            className="bg-white rounded-3xl border border-stone-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow grid grid-cols-1 lg:grid-cols-12 gap-8 p-6 sm:p-8 lg:p-10 font-sans"
           >
             {/* Left Info Column */}
-            <div className="lg:col-span-7 space-y-6 flex flex-col justify-between">
+            <div className="lg:col-span-7 space-y-6 flex flex-col justify-between font-sans">
               <div className="space-y-4">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 font-sans">
                   <div className="p-3 bg-amber-50 rounded-2xl border border-amber-200">
                     {getIcon(service.iconName)}
                   </div>
                   <div>
-                    <span className="text-xs font-bold text-amber-700 block">
+                    <span className="text-xs font-bold text-amber-700 block font-sans">
                       Category 0{index + 1}
                     </span>
-                    <h2 className="text-2xl sm:text-3xl font-extrabold text-stone-900 font-serif">
+                    <h2 className="text-2xl sm:text-3xl font-extrabold text-stone-900 font-sans break-keep">
                       {service.title}
                     </h2>
                   </div>
                 </div>
 
-                <p className="text-stone-700 text-sm sm:text-base leading-relaxed">
+                <p className="text-stone-700 text-sm sm:text-base leading-relaxed font-sans break-keep">
                   {service.fullDesc}
                 </p>
 
@@ -171,7 +171,7 @@ export const ServicePage: React.FC<ServicePageProps> = ({
                 <span className="font-bold text-amber-400 block mb-0.5">
                   한신인테리어 맞춤 시공
                 </span>
-                <span>부산진구 전포동 · 서면 및 부산 전지역 출장 가능</span>
+                <span>부산 전역 및 경남·울산 출장 실측 가능</span>
               </div>
             </div>
           </div>

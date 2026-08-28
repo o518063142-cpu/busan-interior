@@ -45,59 +45,59 @@ export const InformationDetailContent: React.FC<InformationDetailContentProps> =
       </div>
 
       {/* Article Header */}
-      <header className="space-y-4">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold px-3 py-1 rounded-full">
+      <header className="space-y-4 font-sans">
+        <div className="flex items-center gap-2 flex-wrap font-sans">
+          <span className="bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold px-3 py-1 rounded-full font-sans">
             {article.category || "인테리어 Q&A"}
           </span>
-          <span className="text-xs text-stone-500 flex items-center gap-1 font-medium">
+          <span className="text-xs text-stone-500 flex items-center gap-1 font-medium font-sans">
             <ShieldCheck className="w-3.5 h-3.5 text-amber-600" />
             {SITE_ENTITY.brand.nameKo} 공식 자문
           </span>
           {article.publishedAt && (
-            <span className="text-xs text-stone-400">
+            <span className="text-xs text-stone-400 font-mono">
               발행: {article.publishedAt}
             </span>
           )}
         </div>
 
-        <h1 className="text-2xl sm:text-4xl font-extrabold text-stone-950 font-serif leading-tight">
+        <h1 className="text-2xl sm:text-4xl font-extrabold text-stone-950 font-sans leading-tight break-keep">
           {article.title}
         </h1>
       </header>
 
       {/* Short Answer / Executive Summary Box */}
       {article.shortAnswer && (
-        <section className="bg-amber-50/80 border-2 border-amber-400/80 rounded-2xl p-6 sm:p-7 space-y-3 shadow-sm">
-          <div className="flex items-center gap-2 text-amber-900 font-bold text-sm">
+        <section className="bg-amber-50/80 border-2 border-amber-400/80 rounded-2xl p-6 sm:p-7 space-y-3 shadow-sm font-sans">
+          <div className="flex items-center gap-2 text-amber-900 font-bold text-sm font-sans">
             <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
             <span>핵심 요약 및 전문 답변</span>
           </div>
-          <p className="text-stone-900 text-sm sm:text-base font-medium leading-relaxed">
+          <p className="text-stone-900 text-sm sm:text-base font-medium leading-relaxed font-sans break-keep">
             {article.shortAnswer}
           </p>
         </section>
       )}
 
       {/* Main Content Body */}
-      <section className="prose prose-stone max-w-none text-stone-800 text-sm sm:text-base leading-relaxed space-y-4 whitespace-pre-line">
+      <section className="prose prose-stone max-w-none text-stone-800 text-sm sm:text-base leading-relaxed space-y-4 whitespace-pre-line font-sans break-keep">
         {article.content}
       </section>
 
       {/* Consumer Checklist */}
       {article.consumerChecklist && article.consumerChecklist.length > 0 && (
-        <section className="bg-white border border-stone-200 rounded-2xl p-6 sm:p-8 space-y-4 shadow-sm">
-          <div className="flex items-center gap-2 text-stone-950 font-bold text-base sm:text-lg font-serif">
+        <section className="bg-white border border-stone-200 rounded-2xl p-6 sm:p-8 space-y-4 shadow-sm font-sans">
+          <div className="flex items-center gap-2 text-stone-950 font-bold text-base sm:text-lg font-sans">
             <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-            <h2>소비자 필수 체크리스트</h2>
+            <h2 className="break-keep">소비자 필수 체크리스트</h2>
           </div>
-          <ul className="space-y-2.5 text-xs sm:text-sm text-stone-700">
+          <ul className="space-y-2.5 text-xs sm:text-sm text-stone-700 font-sans">
             {article.consumerChecklist.map((item, idx) => (
-              <li key={idx} className="flex items-start gap-2.5 bg-stone-50 p-3 rounded-xl border border-stone-100">
+              <li key={idx} className="flex items-start gap-2.5 bg-stone-50 p-3 rounded-xl border border-stone-100 font-sans">
                 <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
                   {idx + 1}
                 </span>
-                <span className="font-medium leading-normal">{item}</span>
+                <span className="font-medium leading-normal break-keep">{item}</span>
               </li>
             ))}
           </ul>
@@ -106,18 +106,18 @@ export const InformationDetailContent: React.FC<InformationDetailContentProps> =
 
       {/* FAQ Accordion or List if available */}
       {article.faq && article.faq.length > 0 && (
-        <section className="bg-stone-50 border border-stone-200 rounded-2xl p-6 sm:p-8 space-y-4">
-          <div className="flex items-center gap-2 text-stone-950 font-bold text-base sm:text-lg font-serif">
+        <section className="bg-stone-50 border border-stone-200 rounded-2xl p-6 sm:p-8 space-y-4 font-sans">
+          <div className="flex items-center gap-2 text-stone-950 font-bold text-base sm:text-lg font-sans">
             <HelpCircle className="w-5 h-5 text-amber-600 shrink-0" />
-            <h2>관련 자주 묻는 질문</h2>
+            <h2 className="break-keep">관련 자주 묻는 질문</h2>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-3 font-sans">
             {article.faq.map((q, idx) => (
-              <div key={idx} className="bg-white p-4 rounded-xl border border-stone-200 space-y-2">
-                <p className="font-bold text-stone-900 text-sm">
+              <div key={idx} className="bg-white p-4 rounded-xl border border-stone-200 space-y-2 font-sans">
+                <p className="font-bold text-stone-900 text-sm font-sans break-keep">
                   Q. {q.question}
                 </p>
-                <p className="text-stone-600 text-xs sm:text-sm leading-relaxed">
+                <p className="text-stone-600 text-xs sm:text-sm leading-relaxed font-sans break-keep">
                   A. {q.answer}
                 </p>
               </div>
@@ -127,15 +127,15 @@ export const InformationDetailContent: React.FC<InformationDetailContentProps> =
       )}
 
       {/* Trust & Consultation Bridge */}
-      <section className="bg-stone-950 text-stone-100 rounded-3xl p-6 sm:p-8 space-y-5 border border-stone-800 shadow-xl">
-        <div className="space-y-2">
-          <span className="text-amber-400 font-bold text-xs uppercase tracking-wider">
+      <section className="bg-stone-950 text-stone-100 rounded-3xl p-6 sm:p-8 space-y-5 border border-stone-800 shadow-xl font-sans">
+        <div className="space-y-2 font-sans">
+          <span className="text-amber-400 font-bold text-xs uppercase tracking-wider font-sans">
             GENE TRUST SYSTEM
           </span>
-          <h3 className="text-xl sm:text-2xl font-bold font-serif text-white">
+          <h3 className="text-xl sm:text-2xl font-bold font-sans text-white break-keep">
             부산 실내건축공사업 등록업체 지니 인테리어의 안심 시공 기준
           </h3>
-          <p className="text-stone-400 text-xs sm:text-sm leading-relaxed">
+          <p className="text-stone-400 text-xs sm:text-sm leading-relaxed font-sans break-keep">
             실내건축공사업 등록업체 {SITE_ENTITY.brand.nameKo}(법적상호: {SITE_ENTITY.legal.businessName})는 표준계약서 작성, 투명한 공정별 내역서, 정직한 마감 점검을 준수합니다.
           </p>
         </div>

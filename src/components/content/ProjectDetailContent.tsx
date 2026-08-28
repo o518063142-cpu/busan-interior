@@ -83,22 +83,22 @@ export const ProjectDetailContent: React.FC<ProjectDetailContentProps> = ({
       </div>
 
       {/* Header Info */}
-      <header className="space-y-3">
-        <div className="flex items-center gap-2">
-          <span className="bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold px-3 py-1 rounded-full">
+      <header className="space-y-3 font-sans">
+        <div className="flex items-center gap-2 font-sans">
+          <span className="bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold px-3 py-1 rounded-full font-sans">
             {project.category}
           </span>
-          <span className="text-xs text-stone-500 flex items-center gap-1 font-medium">
+          <span className="text-xs text-stone-500 flex items-center gap-1 font-medium font-sans">
             <MapPin className="w-3.5 h-3.5 text-amber-600" />
             {project.location}
           </span>
         </div>
 
-        <h1 className="text-2xl sm:text-4xl font-extrabold text-stone-950 font-serif leading-tight">
+        <h1 className="text-2xl sm:text-4xl font-extrabold text-stone-950 font-sans leading-tight break-keep">
           {project.title}
         </h1>
 
-        <div className="flex items-center gap-3 text-xs sm:text-sm text-stone-600 font-medium">
+        <div className="flex items-center gap-3 text-xs sm:text-sm text-stone-600 font-medium font-sans">
           {project.spaceTypeDetail && <span>{project.spaceTypeDetail}</span>}
           {project.area && (
             <>
@@ -238,24 +238,24 @@ export const ProjectDetailContent: React.FC<ProjectDetailContentProps> = ({
       </section>
 
       {/* Description & Key Features */}
-      <section className="space-y-4">
-        <h2 className="text-lg font-bold text-stone-950 font-serif">
+      <section className="space-y-4 font-sans">
+        <h2 className="text-lg font-bold text-stone-950 font-sans break-keep">
           프로젝트 시공 개요 및 마감 디테일
         </h2>
-        <p className="text-stone-700 text-sm sm:text-base leading-relaxed whitespace-pre-line">
+        <p className="text-stone-700 text-sm sm:text-base leading-relaxed whitespace-pre-line font-sans break-keep">
           {project.description}
         </p>
 
         {project.keyFeatures && project.keyFeatures.length > 0 && (
-          <div className="bg-stone-50 p-5 rounded-2xl border border-stone-200 space-y-3">
-            <span className="text-xs font-bold text-amber-800 block">
+          <div className="bg-stone-50 p-5 rounded-2xl border border-stone-200 space-y-3 font-sans">
+            <span className="text-xs font-bold text-amber-800 block font-sans">
               핵심 시공 포인트:
             </span>
-            <ul className="space-y-2 text-xs sm:text-sm text-stone-700">
+            <ul className="space-y-2 text-xs sm:text-sm text-stone-700 font-sans">
               {project.keyFeatures.map((feat, i) => (
-                <li key={i} className="flex items-center gap-2">
+                <li key={i} className="flex items-center gap-2 font-sans">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span className="font-medium">{feat}</span>
+                  <span className="font-medium font-sans break-keep">{feat}</span>
                 </li>
               ))}
             </ul>
@@ -264,12 +264,12 @@ export const ProjectDetailContent: React.FC<ProjectDetailContentProps> = ({
       </section>
 
       {/* Bottom CTA */}
-      <section className="bg-stone-950 text-stone-100 rounded-3xl p-6 sm:p-8 space-y-5 border border-stone-800 shadow-xl">
-        <div className="space-y-1">
-          <h3 className="text-lg sm:text-xl font-bold font-serif text-white">
+      <section className="bg-stone-950 text-stone-100 rounded-3xl p-6 sm:p-8 space-y-5 border border-stone-800 shadow-xl font-sans">
+        <div className="space-y-1 font-sans">
+          <h3 className="text-lg sm:text-xl font-bold font-sans text-white break-keep">
             이 프로젝트와 유사한 공간 리모델링을 고민 중이신가요?
           </h3>
-          <p className="text-stone-400 text-xs sm:text-sm">
+          <p className="text-stone-400 text-xs sm:text-sm font-sans break-keep">
             {SITE_ENTITY.brand.nameKo}는 현장 무료 방문 실측 및 1:1 맞춤 상세 견적을 제공합니다.
           </p>
         </div>

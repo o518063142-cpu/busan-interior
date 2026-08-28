@@ -528,7 +528,7 @@ export const ProjectManagementSection: React.FC = () => {
             <Building className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-xl sm:text-2xl font-bold text-white font-serif">
+            <h2 className="text-xl sm:text-2xl font-bold text-white font-sans break-keep">
               시공사례 포트폴리오 관리 (Firestore & Storage)
             </h2>
             <p className="text-xs sm:text-sm text-stone-400">
@@ -570,7 +570,7 @@ export const ProjectManagementSection: React.FC = () => {
               {editingProjectId ? <Edit3 className="w-4 h-4" /> : <FolderPlus className="w-4 h-4" />}
             </div>
             <div>
-              <h3 className="text-base sm:text-lg font-bold text-white font-serif">
+              <h3 className="text-base sm:text-lg font-bold text-white font-sans break-keep">
                 {editingProjectId ? "시공사례 수정 모드" : "신규 시공사례 등록"}
               </h3>
               <p className="text-xs text-stone-400">
@@ -1245,7 +1245,7 @@ export const ProjectManagementSection: React.FC = () => {
                   </div>
 
                   <div>
-                    <h4 className="text-base font-bold text-white font-serif line-clamp-1">
+                    <h4 className="text-base font-bold text-white font-sans line-clamp-1 break-keep">
                       {proj.title}
                     </h4>
                     <div className="flex items-center gap-1.5 text-xs text-stone-400 mt-1">
@@ -1355,7 +1355,7 @@ export const ProjectManagementSection: React.FC = () => {
                 </div>
 
                 <div>
-                  <h4 className="text-sm font-bold text-white font-serif line-clamp-1">
+                  <h4 className="text-sm font-bold text-white font-sans line-clamp-1 break-keep">
                     {proj.title}
                   </h4>
                   <div className="flex items-center gap-1.5 text-[11px] text-stone-400 mt-0.5">
@@ -1395,7 +1395,7 @@ export const ProjectManagementSection: React.FC = () => {
                 <Trash2 className="w-6 h-6" />
               </div>
               <div className="space-y-1">
-                <h3 className="text-lg font-bold text-white font-serif">시공사례 영구 삭제</h3>
+                <h3 className="text-lg font-bold text-white font-sans break-keep">시공사례 영구 삭제</h3>
                 <p className="text-xs text-stone-400">
                   선택하신 시공사례를 데이터베이스 및 Storage에서 삭제합니다.
                 </p>

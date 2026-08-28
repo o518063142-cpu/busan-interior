@@ -190,11 +190,11 @@ export const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
         <div className="w-12 h-12 rounded-full bg-stone-100 text-stone-600 flex items-center justify-center mx-auto border border-stone-200">
           <AlertCircle className="w-6 h-6" />
         </div>
-        <div className="space-y-2">
-          <h1 className="text-2xl font-bold font-serif text-stone-900">
+        <div className="space-y-2 font-sans">
+          <h1 className="text-2xl font-bold font-sans text-stone-900 break-keep">
             요청하신 시공사례를 찾을 수 없습니다
           </h1>
-          <p className="text-sm text-stone-600">
+          <p className="text-sm text-stone-600 font-sans break-keep">
             삭제된 프로젝트이거나 잘못된 주소일 수 있습니다.
           </p>
         </div>

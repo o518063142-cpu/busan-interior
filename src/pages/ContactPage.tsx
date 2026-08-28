@@ -173,8 +173,8 @@ export const ContactPage: React.FC<ContactPageProps> = ({ initialData }) => {
   return (
     <div className="max-w-7xl mx-auto px-4 lg:px-8 py-12 space-y-16">
       <MetaManager
-        title="무료 현장 실측 & 견적 문의｜지니 인테리어 (GENE INTERIOR)"
-        description="부산진구 전포동 지니 인테리어(GENE INTERIOR) 무료 현장 실측 및 상담 신청. 실내건축공사업 등록 전문가의 1:1 맞춤 견적."
+        title="무료 현장 실측 & 견적 문의｜부산 인테리어 무료 현장 실측·상담｜지니 인테리어"
+        description="지니 인테리어(GENE INTERIOR) 부산 전역 및 경남·울산 무료 현장 실측 및 상담 신청. 실내건축공사업 등록 전문가의 1:1 맞춤 견적."
         canonicalPath="/contact"
       />
       <StructuredData
@@ -184,34 +184,34 @@ export const ContactPage: React.FC<ContactPageProps> = ({ initialData }) => {
         path="/contact"
       />
       {/* Page Header */}
-      <div className="text-center space-y-4 max-w-3xl mx-auto">
-        <span className="text-amber-600 font-bold text-xs uppercase tracking-wider bg-amber-100 px-3 py-1 rounded-full border border-amber-200">
+      <div className="text-center space-y-4 max-w-3xl mx-auto font-sans">
+        <span className="text-amber-600 font-bold text-xs uppercase tracking-wider bg-amber-100 px-3 py-1 rounded-full border border-amber-200 font-sans">
           FREE CONSULTATION
         </span>
-        <h1 className="text-3xl sm:text-5xl font-extrabold text-stone-900 font-serif">
+        <h1 className="text-3xl sm:text-5xl font-extrabold text-stone-900 font-sans break-keep">
           무료 현장 실측 & 견적 문의
         </h1>
-        <p className="text-stone-600 text-sm sm:text-base leading-relaxed">
-          부산진구 전포동, 서면 및 부산 전 지역 현장 실측 방문을 신청하세요.
+        <p className="text-stone-600 text-sm sm:text-base leading-relaxed font-sans break-keep">
+          부산 전역 및 경남·울산 지역 현장 실측 방문을 신청하세요.
           실내건축 면허 전문가가 1:1로 직접 세밀하게 안내해 드립니다.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start font-sans">
         {/* Left: Quick Actions & Company Contact Info */}
-        <div className="lg:col-span-5 space-y-6">
+        <div className="lg:col-span-5 space-y-6 font-sans">
           {/* Quick Call & Naver Place Buttons */}
-          <div className="bg-stone-900 text-white p-6 rounded-3xl border border-stone-800 space-y-4 shadow-lg">
-            <h3 className="text-lg font-bold text-white font-serif flex items-center gap-2">
+          <div className="bg-stone-900 text-white p-6 rounded-3xl border border-stone-800 space-y-4 shadow-lg font-sans">
+            <h3 className="text-lg font-bold text-white font-sans flex items-center gap-2">
               <Phone className="w-5 h-5 text-amber-400" />
               <span>빠른 다이렉트 상담</span>
             </h3>
-            <p className="text-xs text-stone-300 leading-relaxed">
+            <p className="text-xs text-stone-300 leading-relaxed font-sans break-keep">
               전화상담을 이용하시면 더욱 빠르게 현장 실측 일정을 잡으실 수 있습니다.
             </p>
 
-            <div className="space-y-3 pt-2">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div className="space-y-3 pt-2 font-sans">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 font-sans">
                 <a
                   href={`tel:${SITE_CONFIG.company.phone}`}
                   className="flex items-center justify-center gap-2 py-3 px-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-950 font-extrabold rounded-xl text-xs sm:text-sm transition-all shadow"
@@ -233,7 +233,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ initialData }) => {
                 href={SITE_CONFIG.company.naverPlaceUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 w-full py-3 bg-emerald-900 hover:bg-emerald-800 text-emerald-100 font-bold rounded-xl text-xs sm:text-sm transition-all border border-emerald-700/60"
+                className="flex items-center justify-center gap-2 w-full py-3 bg-emerald-900 hover:bg-emerald-800 text-emerald-100 font-bold rounded-xl text-xs sm:text-sm transition-all border border-emerald-700/60 font-sans"
               >
                 <span>네이버 플레이스 연결 (위치 및 리뷰)</span>
                 <ExternalLink className="w-4 h-4" />
@@ -242,28 +242,28 @@ export const ContactPage: React.FC<ContactPageProps> = ({ initialData }) => {
           </div>
 
           {/* Location & Details Box */}
-          <div className="bg-white p-6 rounded-3xl border border-stone-200 space-y-4 shadow-sm text-xs sm:text-sm text-stone-700">
-            <h3 className="text-base font-bold text-stone-900 font-serif flex items-center gap-2 border-b border-stone-200 pb-3">
+          <div className="bg-white p-6 rounded-3xl border border-stone-200 space-y-4 shadow-sm text-xs sm:text-sm text-stone-700 font-sans">
+            <h3 className="text-base font-bold text-stone-900 font-sans flex items-center gap-2 border-b border-stone-200 pb-3">
               <Building className="w-5 h-5 text-amber-600" />
               <span>{SITE_CONFIG.brand.displayName} 안내</span>
             </h3>
 
-            <div className="space-y-2.5">
-              <div className="flex items-start gap-2">
+            <div className="space-y-2.5 font-sans">
+              <div className="flex items-start gap-2 font-sans">
                 <MapPin className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                 <span>
                   <strong>주소:</strong> {SITE_CONFIG.company.address} {SITE_CONFIG.company.addressDetail}
                 </span>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 font-sans">
                 <ShieldCheck className="w-4 h-4 text-amber-600 shrink-0" />
                 <span>
                   <strong>면허:</strong> {SITE_CONFIG.company.licenseStatus} ({SITE_CONFIG.company.licenseNumber})
                 </span>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 font-sans">
                 <Clock className="w-4 h-4 text-amber-600 shrink-0" />
                 <span>
                   <strong>영업시간:</strong> {SITE_CONFIG.company.operatingHours} ({SITE_CONFIG.company.closedDays})
@@ -274,16 +274,16 @@ export const ContactPage: React.FC<ContactPageProps> = ({ initialData }) => {
         </div>
 
         {/* Right: Full Contact Form */}
-        <div className="lg:col-span-7 bg-white p-8 rounded-3xl border border-stone-200 shadow-sm space-y-6">
+        <div className="lg:col-span-7 bg-white p-8 rounded-3xl border border-stone-200 shadow-sm space-y-6 font-sans">
           {submitted ? (
-            <div className="text-center py-12 space-y-4">
-              <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center mx-auto border border-amber-200">
+            <div className="text-center py-12 space-y-4 font-sans">
+              <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center mx-auto border border-amber-200 font-sans">
                 <CheckCircle className="w-10 h-10" />
               </div>
-              <h2 className="text-2xl font-bold text-stone-900 font-serif">
+              <h2 className="text-2xl font-bold text-stone-900 font-sans break-keep">
                 견적 상담 신청이 정상 접수되었습니다!
               </h2>
-              <p className="text-sm text-stone-600 max-w-md mx-auto leading-relaxed">
+              <p className="text-sm text-stone-600 max-w-md mx-auto leading-relaxed font-sans break-keep">
                 작성해주신 정보를 바탕으로 한신인테리어 담당자가 빠르게 연락드려 현장 실측 방문 일정을 잡아드리겠습니다.
               </p>
 
@@ -293,7 +293,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ initialData }) => {
                 </div>
               )}
 
-              <div className="pt-4">
+              <div className="pt-4 font-sans">
                 <button
                   onClick={() => {
                     setSubmitted(false);
@@ -307,16 +307,16 @@ export const ContactPage: React.FC<ContactPageProps> = ({ initialData }) => {
                       details: "",
                     });
                   }}
-                  className="px-6 py-3 bg-stone-900 text-white font-bold text-xs rounded-xl hover:bg-stone-800 transition-colors"
+                  className="px-6 py-3 bg-stone-900 text-white font-bold text-xs rounded-xl hover:bg-stone-800 transition-colors cursor-pointer font-sans"
                 >
                   새로운 문의 작성
                 </button>
               </div>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-5 text-xs sm:text-sm">
-              <div className="border-b border-stone-200 pb-3">
-                <h2 className="text-lg font-bold text-stone-900 font-serif">
+            <form onSubmit={handleSubmit} className="space-y-5 text-xs sm:text-sm font-sans">
+              <div className="border-b border-stone-200 pb-3 font-sans">
+                <h2 className="text-lg font-bold text-stone-900 font-sans">
                   견적 상담 신청서
                 </h2>
                 <p className="text-xs text-stone-500 mt-1">

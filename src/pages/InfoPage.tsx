@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { SITE_CONFIG } from "../config/siteConfig";
 import { NavigationMenu } from "../types";
 import { MetaManager } from "../components/seo/MetaManager";
 import { StructuredData } from "../components/seo/StructuredData";
-import { INFORMATION_ARTICLES } from "../data/informationData";
+import { INFORMATION_ARTICLES, InformationArticleData } from "../data/informationData";
+import { db } from "../firebase";
+import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
 import {
   ShieldCheck,
   HelpCircle,
@@ -31,11 +33,57 @@ export const InfoPage: React.FC<InfoPageProps> = ({
   openContactModal,
 }) => {
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
+  const [dynamicArticles, setDynamicArticles] = useState<InformationArticleData[]>([]);
+
+  // Fetch published articles from Firestore
+  useEffect(() => {
+    try {
+      const q = query(collection(db, "articles"), orderBy("createdAt", "desc"));
+      const unsubscribe = onSnapshot(
+        q,
+        (snapshot) => {
+          const list: InformationArticleData[] = [];
+          snapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            // Filter published only
+            if (data.status !== "draft" && data.status !== "private") {
+              // Avoid duplicate with static articles
+              const isStatic = INFORMATION_ARTICLES.some((sa) => sa.slug === data.slug);
+              if (!isStatic) {
+                list.push({
+                  id: docSnap.id,
+                  slug: data.slug || docSnap.id,
+                  title: data.title || "인테리어 정보",
+                  shortAnswer: data.shortAnswer || data.summary || "",
+                  content: data.content || "",
+                  category: data.category || "인테리어 가이드",
+                  consumerChecklist: Array.isArray(data.consumerChecklist) ? data.consumerChecklist : [],
+                  faq: Array.isArray(data.faq) ? data.faq : [],
+                  featuredImage: data.featuredImage || data.coverImage || "",
+                  publishedAt: data.publishedAt || "",
+                  updatedAt: data.updatedAt || "",
+                });
+              }
+            }
+          });
+          setDynamicArticles(list);
+        },
+        (err) => {
+          console.warn("Firestore articles load notice in InfoPage:", err);
+        }
+      );
+      return () => unsubscribe();
+    } catch (err) {
+      console.warn("Error subscribing to articles:", err);
+    }
+  }, []);
+
+  const combinedArticles = [...INFORMATION_ARTICLES, ...dynamicArticles];
 
   const faqs = [
     {
       q: "현장 실측 및 상담 비용은 무료인가요?",
-      a: "네, 지니 인테리어의 부산진구, 전포동, 서면 및 부산 전 지역 현장 실측과 1:1 상담은 100% 무료로 진행됩니다.",
+      a: "네, 지니 인테리어는 부산 전역을 중심으로 경남·울산까지 현장 실측 및 1:1 상담을 100% 무료로 진행해 드립니다.",
     },
     {
       q: "실내건축면허 보유 업체인가요?",
@@ -62,8 +110,8 @@ export const InfoPage: React.FC<InfoPageProps> = ({
   return (
     <div className="max-w-7xl mx-auto px-4 lg:px-8 py-12 space-y-16">
       <MetaManager
-        title="이용안내 & FAQ｜실내건축공사업 정보 및 부산 인테리어 가이드"
-        description="지니 인테리어(GENE INTERIOR) 실내건축공사업 등록 정보, 공사 진행 수칙, 자주 묻는 질문(FAQ) 및 부산진구 전포동 시공 가이드."
+        title="이용안내 & FAQ｜실내건축 면허 및 부산 인테리어 가이드｜지니 인테리어"
+        description="지니 인테리어(GENE INTERIOR) 실내건축 면허 정보, 공사 진행 수칙, 자주 묻는 질문(FAQ) 및 인테리어 시공 가이드."
         canonicalPath="/information"
       />
       <StructuredData
@@ -73,63 +121,63 @@ export const InfoPage: React.FC<InfoPageProps> = ({
         path="/information"
       />
       {/* Page Header */}
-      <div className="text-center space-y-4 max-w-3xl mx-auto">
-        <span className="text-amber-600 font-bold text-xs uppercase tracking-wider bg-amber-100 px-3 py-1 rounded-full border border-amber-200">
+      <div className="text-center space-y-4 max-w-3xl mx-auto font-sans">
+        <span className="text-amber-600 font-bold text-xs uppercase tracking-wider bg-amber-100 px-3 py-1 rounded-full border border-amber-200 font-sans">
           INFORMATION & FAQ
         </span>
-        <h1 className="text-3xl sm:text-5xl font-extrabold text-stone-900 font-serif">
+        <h1 className="text-3xl sm:text-5xl font-extrabold text-stone-900 font-sans break-keep">
           이용안내 & 시공 가이드
         </h1>
-        <p className="text-stone-600 text-sm sm:text-base leading-relaxed">
+        <p className="text-stone-600 text-sm sm:text-base leading-relaxed font-sans break-keep">
           {SITE_CONFIG.brand.nameKo}({SITE_CONFIG.brand.nameEn})의 신뢰도 안내, 자주 묻는 질문(FAQ) 및 부산 지역 시공에 관한 유용한 수칙을 확인하세요.
         </p>
       </div>
 
       {/* License Trust Banner */}
-      <div className="bg-stone-900 text-white p-8 rounded-3xl border border-stone-800 space-y-4 shadow-lg">
-        <div className="flex items-center gap-3">
+      <div className="bg-stone-900 text-white p-8 rounded-3xl border border-stone-800 space-y-4 shadow-lg font-sans">
+        <div className="flex items-center gap-3 font-sans">
           <ShieldCheck className="w-8 h-8 text-amber-400" />
           <div>
-            <h2 className="text-xl font-bold font-serif text-white">
+            <h2 className="text-xl font-bold font-sans text-white break-keep">
               실내건축공사업 면허 보유 신뢰 보증
             </h2>
-            <p className="text-xs text-amber-300">
+            <p className="text-xs text-amber-300 font-sans">
               {SITE_CONFIG.company.licenseStatus} ({SITE_CONFIG.company.licenseNumber})
             </p>
           </div>
         </div>
-        <p className="text-xs sm:text-sm text-stone-300 leading-relaxed">
+        <p className="text-xs sm:text-sm text-stone-300 leading-relaxed font-sans break-keep">
           실내건축 면허를 보유한 업체로서 불법 무면허 시공으로 인한 부실공사 및 하자 발생 리스크를 방지합니다. 정직한 자재 선택, 도면 준수, 엄격한 감리로 믿을 수 있는 결과물을 선사합니다.
         </p>
       </div>
 
       {/* FAQ Accordion */}
-      <div className="space-y-6">
-        <div className="text-center space-y-2">
-          <h2 className="text-2xl font-bold font-serif text-stone-900 flex items-center justify-center gap-2">
+      <div className="space-y-6 font-sans">
+        <div className="text-center space-y-2 font-sans">
+          <h2 className="text-2xl font-bold font-sans text-stone-900 flex items-center justify-center gap-2 break-keep">
             <HelpCircle className="w-6 h-6 text-amber-600" />
             <span>자주 묻는 질문 (FAQ)</span>
           </h2>
-          <p className="text-stone-600 text-xs sm:text-sm">
+          <p className="text-stone-600 text-xs sm:text-sm font-sans">
             고객님들께서 자주 문의하시는 내용을 정리해 드렸습니다.
           </p>
         </div>
 
-        <div className="max-w-3xl mx-auto space-y-3">
+        <div className="max-w-3xl mx-auto space-y-3 font-sans">
           {faqs.map((faq, index) => {
             const isOpen = openFaqIndex === index;
             return (
               <div
                 key={index}
-                className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-sm transition-all"
+                className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-sm transition-all font-sans"
               >
                 <button
                   onClick={() => setOpenFaqIndex(isOpen ? null : index)}
-                  className="w-full p-5 text-left flex items-center justify-between gap-4 font-bold text-stone-900 text-sm sm:text-base hover:bg-stone-50 transition-colors"
+                  className="w-full p-5 text-left flex items-center justify-between gap-4 font-bold text-stone-900 text-sm sm:text-base hover:bg-stone-50 transition-colors cursor-pointer font-sans"
                 >
-                  <span className="flex items-center gap-2">
-                    <span className="text-amber-600 font-serif">Q.</span>
-                    {faq.q}
+                  <span className="flex items-center gap-2 font-sans">
+                    <span className="text-amber-600 font-bold font-sans">Q.</span>
+                    <span className="break-keep">{faq.q}</span>
                   </span>
                   {isOpen ? (
                     <ChevronUp className="w-5 h-5 text-amber-600 shrink-0" />
@@ -139,12 +187,12 @@ export const InfoPage: React.FC<InfoPageProps> = ({
                 </button>
 
                 {isOpen && (
-                  <div className="p-5 pt-0 text-xs sm:text-sm text-stone-600 border-t border-stone-100 bg-stone-50/50 leading-relaxed">
-                    <p className="flex items-start gap-2">
-                      <span className="text-amber-600 font-bold font-serif shrink-0">
+                  <div className="p-5 pt-0 text-xs sm:text-sm text-stone-600 border-t border-stone-100 bg-stone-50/50 leading-relaxed font-sans">
+                    <p className="flex items-start gap-2 font-sans">
+                      <span className="text-amber-600 font-bold font-sans shrink-0">
                         A.
                       </span>
-                      <span>{faq.a}</span>
+                      <span className="break-keep">{faq.a}</span>
                     </p>
                   </div>
                 )}
@@ -155,34 +203,34 @@ export const InfoPage: React.FC<InfoPageProps> = ({
       </div>
 
       {/* GENE KNOWLEDGE CENTER */}
-      <section className="space-y-8 pt-4">
-        <div className="text-center space-y-3 max-w-2xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-50 border border-amber-300 text-amber-900 text-xs font-bold shadow-xs">
+      <section className="space-y-8 pt-4 font-sans">
+        <div className="text-center space-y-3 max-w-2xl mx-auto font-sans">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-50 border border-amber-300 text-amber-900 text-xs font-bold shadow-xs font-sans">
             <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
             <span>GENE KNOWLEDGE CENTER</span>
             <span className="text-amber-400">·</span>
             <span className="text-amber-800 font-medium">실내건축 전문 지식</span>
           </div>
 
-          <h2 className="text-2xl sm:text-3xl font-bold font-serif text-stone-900 leading-tight">
+          <h2 className="text-2xl sm:text-3xl font-bold font-sans text-stone-900 leading-tight break-keep">
             소비자가 계약 전에 꼭 알아야 할<br className="hidden sm:inline" /> 인테리어 핵심 가이드
           </h2>
 
-          <p className="text-stone-600 text-xs sm:text-sm leading-relaxed">
+          <p className="text-stone-600 text-xs sm:text-sm leading-relaxed font-sans break-keep">
             견적·계약·면허·공사비·시공 과정에서 소비자가 실제로 확인해야 할 내용을 GENE INTERIOR의 실무 기준으로 정리합니다.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {INFORMATION_ARTICLES.map((article) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 font-sans">
+          {combinedArticles.map((article) => (
             <Link
               key={article.slug}
               to={`/information/${article.slug}`}
-              className="group bg-white rounded-3xl p-7 sm:p-8 border border-stone-200 hover:border-amber-400 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-6"
+              className="group bg-white rounded-3xl p-7 sm:p-8 border border-stone-200 hover:border-amber-400 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-6 font-sans text-inherit no-underline"
             >
-              <div className="space-y-4">
-                <div className="flex items-center justify-between gap-2 flex-wrap">
-                  <span className="px-3 py-1 bg-stone-100 group-hover:bg-amber-100 text-stone-700 group-hover:text-amber-900 text-xs font-bold rounded-full transition-colors">
+              <div className="space-y-4 font-sans">
+                <div className="flex items-center justify-between gap-2 flex-wrap font-sans">
+                  <span className="px-3 py-1 bg-stone-100 group-hover:bg-amber-100 text-stone-700 group-hover:text-amber-900 text-xs font-bold rounded-full transition-colors font-sans">
                     {article.category || "인테리어 가이드"}
                   </span>
                   {article.publishedAt && (
@@ -192,16 +240,16 @@ export const InfoPage: React.FC<InfoPageProps> = ({
                   )}
                 </div>
 
-                <h3 className="text-lg sm:text-xl font-bold text-stone-900 font-serif leading-snug group-hover:text-amber-700 transition-colors">
+                <h3 className="text-lg sm:text-xl font-bold text-stone-900 font-sans leading-snug group-hover:text-amber-700 transition-colors break-keep">
                   {article.title}
                 </h3>
 
-                <p className="text-xs sm:text-sm text-stone-600 leading-relaxed line-clamp-3">
+                <p className="text-xs sm:text-sm text-stone-600 leading-relaxed line-clamp-3 font-sans break-keep">
                   {article.shortAnswer}
                 </p>
               </div>
 
-              <div className="pt-4 border-t border-stone-100 flex items-center justify-between text-xs font-bold text-stone-900 group-hover:text-amber-600 transition-colors">
+              <div className="pt-4 border-t border-stone-100 flex items-center justify-between text-xs font-bold text-stone-900 group-hover:text-amber-600 transition-colors font-sans">
                 <span>자세히 읽기</span>
                 <span className="inline-flex items-center gap-1 group-hover:translate-x-1 transition-transform">
                   <span>→</span>
@@ -213,50 +261,50 @@ export const InfoPage: React.FC<InfoPageProps> = ({
       </section>
 
       {/* Regional Guide & Location */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="bg-white p-8 rounded-3xl border border-stone-200 space-y-4">
-          <h3 className="text-xl font-bold text-stone-900 font-serif flex items-center gap-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 font-sans">
+        <div className="bg-white p-8 rounded-3xl border border-stone-200 space-y-4 font-sans">
+          <h3 className="text-xl font-bold text-stone-900 font-sans flex items-center gap-2">
             <Wrench className="w-5 h-5 text-amber-600" />
             <span>부산 지역 시공 공정 수칙</span>
           </h3>
-          <ul className="space-y-3 text-xs sm:text-sm text-stone-700">
-            <li className="flex items-start gap-2">
+          <ul className="space-y-3 text-xs sm:text-sm text-stone-700 font-sans">
+            <li className="flex items-start gap-2 font-sans">
               <span className="w-5 h-5 bg-amber-100 text-amber-800 font-bold rounded-full text-xs flex items-center justify-center shrink-0 mt-0.5">
                 1
               </span>
-              <span>
+              <span className="break-keep">
                 <strong>입주자 동의 및 엘리베이터 보양:</strong> 아파트 및 오피스 공사 전 관리사무소 승인 절차를 진행합니다.
               </span>
             </li>
-            <li className="flex items-start gap-2">
+            <li className="flex items-start gap-2 font-sans">
               <span className="w-5 h-5 bg-amber-100 text-amber-800 font-bold rounded-full text-xs flex items-center justify-center shrink-0 mt-0.5">
                 2
               </span>
-              <span>
+              <span className="break-keep">
                 <strong>소음 공사 시간 준수:</strong> 공동주택 소음 공사 가능 시간(평일 09시~18시)을 엄수하여 이웃 민원을 최소화합니다.
               </span>
             </li>
-            <li className="flex items-start gap-2">
+            <li className="flex items-start gap-2 font-sans">
               <span className="w-5 h-5 bg-amber-100 text-amber-800 font-bold rounded-full text-xs flex items-center justify-center shrink-0 mt-0.5">
                 3
               </span>
-              <span>
+              <span className="break-keep">
                 <strong>상가 주방 방수 및 소방 검사:</strong> 카페, 음식점, 매장 상가의 경우 관계 법령 기준에 맞춰 방수 및 소방 자재를 검수합니다.
               </span>
             </li>
           </ul>
         </div>
 
-        <div className="bg-stone-900 text-white p-8 rounded-3xl border border-stone-800 space-y-4 flex flex-col justify-between">
-          <div className="space-y-3">
-            <h3 className="text-xl font-bold font-serif text-white flex items-center gap-2">
+        <div className="bg-stone-900 text-white p-8 rounded-3xl border border-stone-800 space-y-4 flex flex-col justify-between font-sans">
+          <div className="space-y-3 font-sans">
+            <h3 className="text-xl font-bold font-sans text-white flex items-center gap-2">
               <MapPin className="w-5 h-5 text-amber-400" />
               <span>위치 및 오시는 길</span>
             </h3>
-            <p className="text-xs text-stone-300 leading-relaxed">
+            <p className="text-xs text-stone-300 leading-relaxed font-sans break-keep">
               부산광역시 부산진구 전포동 소재 {SITE_CONFIG.brand.nameKo}({SITE_CONFIG.brand.nameEn}). 서면역 및 전포역 인근에 위치하여 빠르게 현장 실측 방문이 가능합니다.
             </p>
-            <div className="p-4 bg-stone-950 rounded-2xl border border-stone-800 text-xs space-y-1">
+            <div className="p-4 bg-stone-950 rounded-2xl border border-stone-800 text-xs space-y-1 font-sans">
               <p>
                 <strong className="text-amber-400">주소:</strong> {SITE_CONFIG.company.address} {SITE_CONFIG.company.addressDetail}
               </p>

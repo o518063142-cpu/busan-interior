@@ -19,6 +19,7 @@ import {
 } from "firebase/firestore";
 import { Consultation, ConsultationStatus } from "../types";
 import { ProjectManagementSection } from "../components/admin/ProjectManagementSection";
+import { ArticleManagementSection } from "../components/admin/ArticleManagementSection";
 import {
   Lock,
   LogOut,
@@ -30,6 +31,7 @@ import {
   Ruler,
   FileText,
   FolderPlus,
+  BookOpen,
   Image as ImageIcon,
   CheckCircle2,
   Clock,
@@ -95,10 +97,10 @@ export const AdminPage: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
 
-  // Sub-tab Navigation state ("consultations" | "projects")
-  const [activeSubTab, setActiveSubTab] = useState<"consultations" | "projects">(
-    "consultations"
-  );
+  // Sub-tab Navigation state ("consultations" | "projects" | "articles")
+  const [activeSubTab, setActiveSubTab] = useState<
+    "consultations" | "projects" | "articles"
+  >("consultations");
 
   // Login form state
   const [email, setEmail] = useState("");
@@ -353,7 +355,7 @@ export const AdminPage: React.FC = () => {
             <span className="text-[11px] font-extrabold uppercase tracking-widest text-amber-400">
               한신인테리어 관리자 시스템
             </span>
-            <h2 className="text-2xl font-bold font-serif text-white">
+            <h2 className="text-2xl font-bold font-sans text-white break-keep">
               상담 관리 로그인
             </h2>
             <p className="text-xs text-stone-400">
@@ -453,7 +455,7 @@ export const AdminPage: React.FC = () => {
               <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest block">
                 한신인테리어 공식 관리 시스템
               </span>
-              <h1 className="text-lg sm:text-xl font-bold text-white font-serif">
+              <h1 className="text-lg sm:text-xl font-bold text-white font-sans break-keep">
                 실측 및 견적 상담 관리
               </h1>
             </div>
@@ -477,17 +479,17 @@ export const AdminPage: React.FC = () => {
 
       {/* Admin Sub-Tabs Navigation Bar */}
       <div className="bg-stone-900 border-b border-stone-800 sticky top-[65px] sm:top-[73px] z-30 shadow-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-2">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-2 overflow-x-auto whitespace-nowrap scrollbar-none py-1 sm:py-0">
           <button
             type="button"
             onClick={() => setActiveSubTab("consultations")}
-            className={`py-3.5 px-4 sm:px-6 font-bold text-xs sm:text-sm border-b-2 transition-all flex items-center gap-2 ${
+            className={`py-3.5 px-3.5 sm:px-6 font-bold text-xs sm:text-sm border-b-2 transition-all flex items-center gap-2 shrink-0 ${
               activeSubTab === "consultations"
                 ? "border-amber-400 text-amber-400 bg-stone-800/40"
                 : "border-transparent text-stone-400 hover:text-stone-200 hover:bg-stone-800/20"
             }`}
           >
-            <FileText className="w-4 h-4" />
+            <FileText className="w-4 h-4 shrink-0" />
             <span>상담 신청 관리</span>
             <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-stone-800 text-stone-300 border border-stone-700">
               {consultations.length}
@@ -497,16 +499,32 @@ export const AdminPage: React.FC = () => {
           <button
             type="button"
             onClick={() => setActiveSubTab("projects")}
-            className={`py-3.5 px-4 sm:px-6 font-bold text-xs sm:text-sm border-b-2 transition-all flex items-center gap-2 ${
+            className={`py-3.5 px-3.5 sm:px-6 font-bold text-xs sm:text-sm border-b-2 transition-all flex items-center gap-2 shrink-0 ${
               activeSubTab === "projects"
                 ? "border-amber-400 text-amber-400 bg-stone-800/40"
                 : "border-transparent text-stone-400 hover:text-stone-200 hover:bg-stone-800/20"
             }`}
           >
-            <FolderPlus className="w-4 h-4" />
+            <FolderPlus className="w-4 h-4 shrink-0" />
             <span>시공사례 관리</span>
             <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-400/20 text-amber-300 border border-amber-400/30">
-              신규
+              포트폴리오
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveSubTab("articles")}
+            className={`py-3.5 px-3.5 sm:px-6 font-bold text-xs sm:text-sm border-b-2 transition-all flex items-center gap-2 shrink-0 ${
+              activeSubTab === "articles"
+                ? "border-amber-400 text-amber-400 bg-stone-800/40"
+                : "border-transparent text-stone-400 hover:text-stone-200 hover:bg-stone-800/20"
+            }`}
+          >
+            <BookOpen className="w-4 h-4 shrink-0" />
+            <span>정보글 관리</span>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+              지식센터
             </span>
           </button>
         </div>
@@ -516,6 +534,8 @@ export const AdminPage: React.FC = () => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
         {activeSubTab === "projects" ? (
           <ProjectManagementSection />
+        ) : activeSubTab === "articles" ? (
+          <ArticleManagementSection />
         ) : (
           <>
             {/* Stat Cards Overview */}
@@ -804,7 +824,7 @@ export const AdminPage: React.FC = () => {
                         <span className="text-[10px] text-stone-400 font-medium block">
                           신청일: {formatDate(item.createdAt)}
                         </span>
-                        <h3 className="text-base font-bold text-white font-serif mt-0.5">
+                        <h3 className="text-base font-bold text-white font-sans mt-0.5 break-keep">
                           {item.name}
                         </h3>
                       </div>
@@ -923,7 +943,7 @@ export const AdminPage: React.FC = () => {
                 <span className="text-[11px] font-bold text-amber-400 uppercase tracking-widest">
                   상담 신청 상세 정보
                 </span>
-                <h3 className="text-lg font-bold text-white font-serif mt-0.5">
+                <h3 className="text-lg font-bold text-white font-sans mt-0.5 break-keep">
                   {selectedConsultation.name} 고객님
                 </h3>
               </div>
@@ -1171,7 +1191,7 @@ export const AdminPage: React.FC = () => {
               <Trash2 className="w-6 h-6" />
             </div>
             <div className="space-y-1">
-              <h4 className="text-base font-bold text-white font-serif">
+              <h4 className="text-base font-bold text-white font-sans break-keep">
                 상담 기록을 삭제하시겠습니까?
               </h4>
               <p className="text-xs text-stone-400">

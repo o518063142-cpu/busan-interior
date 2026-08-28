@@ -150,33 +150,33 @@ export const ProjectPage: React.FC<ProjectPageProps> = ({
         path="/projects"
       />
       {/* Page Header */}
-      <div className="text-center space-y-4 max-w-3xl mx-auto">
-        <span className="text-amber-600 font-bold text-xs uppercase tracking-wider bg-amber-100 px-3 py-1 rounded-full border border-amber-200">
+      <div className="text-center space-y-4 max-w-3xl mx-auto font-sans">
+        <span className="text-amber-600 font-bold text-xs uppercase tracking-wider bg-amber-100 px-3 py-1 rounded-full border border-amber-200 font-sans">
           PORTFOLIO GALLERY
         </span>
-        <h1 className="text-3xl sm:text-5xl font-extrabold text-stone-900 font-serif">
+        <h1 className="text-3xl sm:text-5xl font-extrabold text-stone-900 font-sans break-keep">
           지니 인테리어 대표 시공사례
         </h1>
-        <p className="text-stone-600 text-sm sm:text-base leading-relaxed">
+        <p className="text-stone-600 text-sm sm:text-base leading-relaxed font-sans break-keep">
           부산진구 전포동, 서면, 동래구 등 부산 주요 공간의 완공 사례를 확인해보세요.
           <br />
-          <span className="text-amber-700 font-semibold text-xs">
+          <span className="text-amber-700 font-semibold text-xs font-sans">
             * 지니 인테리어(GENE INTERIOR)의 실제 시공 현장 및 추천 포트폴리오를 실시간으로 투명하게 공개합니다.
           </span>
         </p>
       </div>
 
       {/* Filter Tabs & Search Bar */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-stone-200 shadow-sm">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-stone-200 shadow-sm font-sans">
         {/* Category Tabs */}
-        <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 scrollbar-none">
+        <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 scrollbar-none font-sans">
           {categories.map((cat) => {
             const isActive = selectedCategory === cat;
             return (
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all ${
+                className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer font-sans ${
                   isActive
                     ? "bg-stone-900 text-amber-300 shadow"
                     : "bg-stone-100 text-stone-600 hover:bg-stone-200"
@@ -189,28 +189,28 @@ export const ProjectPage: React.FC<ProjectPageProps> = ({
         </div>
 
         {/* Search Bar */}
-        <div className="relative w-full md:w-64">
+        <div className="relative w-full md:w-64 font-sans">
           <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             placeholder="지역, 프로젝트 검색..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-stone-50 border border-stone-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:border-amber-500"
+            className="w-full pl-9 pr-4 py-2 bg-stone-50 border border-stone-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:border-amber-500 font-sans"
           />
         </div>
       </div>
 
       {/* Projects Grid */}
       {filteredProjects.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-3xl border border-stone-200 space-y-3">
+        <div className="text-center py-16 bg-white rounded-3xl border border-stone-200 space-y-3 font-sans">
           <Info className="w-10 h-10 text-stone-400 mx-auto" />
-          <p className="text-stone-600 font-semibold text-sm">
+          <p className="text-stone-600 font-semibold text-sm font-sans">
             검색 결과에 해당하는 시공사례가 없습니다.
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 font-sans">
           {filteredProjects.map((project) => {
             const hasMainPhoto =
               project.afterImages &&
@@ -226,7 +226,7 @@ export const ProjectPage: React.FC<ProjectPageProps> = ({
               <Link
                 key={project.id}
                 to={`/projects/${project.id}`}
-                className="bg-white rounded-3xl overflow-hidden border border-stone-200 shadow-md hover:shadow-2xl transition-all cursor-pointer group flex flex-col justify-between hover:-translate-y-1 block text-inherit no-underline"
+                className="bg-white rounded-3xl overflow-hidden border border-stone-200 shadow-md hover:shadow-2xl transition-all cursor-pointer group flex flex-col justify-between hover:-translate-y-1 block text-inherit no-underline font-sans"
               >
                 <div>
                   {/* Main Large Photo Box (h-72 sm:h-80) */}
@@ -240,9 +240,9 @@ export const ProjectPage: React.FC<ProjectPageProps> = ({
                         referrerPolicy="no-referrer"
                       />
                     ) : (
-                      <div className="text-center text-stone-500 p-6 space-y-2">
+                      <div className="text-center text-stone-500 p-6 space-y-2 font-sans">
                         <ImageIcon className="w-10 h-10 mx-auto opacity-40" />
-                        <span className="text-xs font-semibold block text-stone-400">
+                        <span className="text-xs font-semibold block text-stone-400 font-sans">
                           완공 현장 사진 준비 중
                         </span>
                       </div>
@@ -250,9 +250,9 @@ export const ProjectPage: React.FC<ProjectPageProps> = ({
                     <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-black/30 pointer-events-none" />
 
                     {/* Top Badges */}
-                    <div className="absolute top-4 left-4 flex items-center gap-2 z-10">
+                    <div className="absolute top-4 left-4 flex items-center gap-2 z-10 font-sans">
                       <span
-                        className={`font-black text-[11px] px-3 py-1 rounded-full shadow ${
+                        className={`font-black text-[11px] px-3 py-1 rounded-full shadow font-sans ${
                           project.isSample
                             ? "bg-amber-500 text-stone-950"
                             : "bg-emerald-500 text-white"
@@ -260,20 +260,20 @@ export const ProjectPage: React.FC<ProjectPageProps> = ({
                       >
                         {project.isSample ? "샘플 프로젝트" : "실제 시공사례"}
                       </span>
-                      <span className="bg-stone-950/80 text-white text-xs px-3 py-1 rounded-full backdrop-blur-md font-semibold border border-stone-700">
+                      <span className="bg-stone-950/80 text-white text-xs px-3 py-1 rounded-full backdrop-blur-md font-semibold border border-stone-700 font-sans">
                         {project.category}
                       </span>
                     </div>
 
                     {/* Photo Count */}
-                    <div className="absolute top-4 right-4 bg-stone-900/90 text-amber-300 text-xs px-2.5 py-1 rounded-full backdrop-blur-md border border-amber-500/30 font-semibold flex items-center gap-1">
+                    <div className="absolute top-4 right-4 bg-stone-900/90 text-amber-300 text-xs px-2.5 py-1 rounded-full backdrop-blur-md border border-amber-500/30 font-semibold flex items-center gap-1 font-sans">
                       <Images className="w-3.5 h-3.5" />
                       <span>{totalPhotosCount > 0 ? `총 ${totalPhotosCount}장` : "상세 스펙"}</span>
                     </div>
 
                     {/* Bottom Text Overlay */}
-                    <div className="absolute bottom-4 left-4 right-4 text-white space-y-1">
-                      <div className="flex items-center gap-2 text-xs text-amber-300 font-semibold">
+                    <div className="absolute bottom-4 left-4 right-4 text-white space-y-1 font-sans">
+                      <div className="flex items-center gap-2 text-xs text-amber-300 font-semibold font-sans">
                         <MapPin className="w-3.5 h-3.5" />
                         <span>{project.location}</span>
                         <span>•</span>
@@ -281,19 +281,19 @@ export const ProjectPage: React.FC<ProjectPageProps> = ({
                         <span>•</span>
                         <span>{project.duration}</span>
                       </div>
-                      <h3 className="text-lg font-extrabold text-white font-serif line-clamp-1 group-hover:text-amber-300 transition-colors">
+                      <h3 className="text-lg font-extrabold text-white font-sans line-clamp-1 group-hover:text-amber-300 transition-colors break-keep">
                         {project.title}
                       </h3>
                     </div>
                   </div>
 
                   {/* Content */}
-                  <div className="p-6 space-y-3">
-                    <p className="text-xs text-stone-600 line-clamp-2 leading-relaxed">
+                  <div className="p-6 space-y-3 font-sans">
+                    <p className="text-xs text-stone-600 line-clamp-2 leading-relaxed font-sans break-keep">
                       {project.description}
                     </p>
-                    <div className="p-2.5 bg-stone-50 rounded-xl border border-stone-100 text-xs text-stone-600 space-y-1">
-                      <span className="font-bold text-amber-800 block text-[11px]">
+                    <div className="p-2.5 bg-stone-50 rounded-xl border border-stone-100 text-xs text-stone-600 space-y-1 font-sans">
+                      <span className="font-bold text-amber-800 block text-[11px] font-sans">
                         시공범위: {project.scope}
                       </span>
                     </div>
@@ -301,7 +301,7 @@ export const ProjectPage: React.FC<ProjectPageProps> = ({
                 </div>
 
                 {/* Bottom detail action */}
-                <div className="p-5 border-t border-stone-100 flex items-center justify-between text-xs text-stone-900 font-black group-hover:text-amber-600 transition-colors">
+                <div className="p-5 border-t border-stone-100 flex items-center justify-between text-xs text-stone-900 font-black group-hover:text-amber-600 transition-colors font-sans">
                   <span className="flex items-center gap-1.5">
                     <Maximize2 className="w-3.5 h-3.5 text-amber-600" />
                     <span>공사 전/후 사진 & 세부 도면 스펙</span>
@@ -316,14 +316,14 @@ export const ProjectPage: React.FC<ProjectPageProps> = ({
 
       {/* Detail Modal */}
       {selectedProject && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="relative w-full max-w-5xl bg-stone-900 border border-stone-800 rounded-3xl shadow-2xl overflow-hidden text-stone-100 max-h-[92vh] flex flex-col">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200 font-sans">
+          <div className="relative w-full max-w-5xl bg-stone-900 border border-stone-800 rounded-3xl shadow-2xl overflow-hidden text-stone-100 max-h-[92vh] flex flex-col font-sans">
             {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-stone-800 bg-stone-950">
-              <div className="space-y-0.5">
-                <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-stone-800 bg-stone-950 font-sans">
+              <div className="space-y-0.5 font-sans">
+                <div className="flex items-center gap-2 font-sans">
                   <span
-                    className={`text-[11px] px-2.5 py-0.5 rounded font-bold border ${
+                    className={`text-[11px] px-2.5 py-0.5 rounded font-bold border font-sans ${
                       selectedProject.isSample
                         ? "bg-amber-500/20 text-amber-300 border-amber-500/30"
                         : "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
@@ -333,11 +333,11 @@ export const ProjectPage: React.FC<ProjectPageProps> = ({
                       ? "샘플 포트폴리오 상세보기"
                       : "실제 시공사례 상세보기"}
                   </span>
-                  <span className="text-xs text-stone-400">
+                  <span className="text-xs text-stone-400 font-sans">
                     {selectedProject.category} · {selectedProject.location}
                   </span>
                 </div>
-                <h3 className="text-lg sm:text-xl font-bold text-white font-serif">
+                <h3 className="text-lg sm:text-xl font-bold text-white font-sans break-keep">
                   {selectedProject.title}
                 </h3>
               </div>
@@ -515,11 +515,11 @@ export const ProjectPage: React.FC<ProjectPageProps> = ({
               </div>
 
               {/* Key Features & Description */}
-              <div className="space-y-3">
-                <h4 className="text-base font-bold text-white font-serif">
+              <div className="space-y-3 font-sans">
+                <h4 className="text-base font-bold text-white font-sans break-keep">
                   프로젝트 설명 및 핵심 시공 마감
                 </h4>
-                <p className="text-stone-300 leading-relaxed">
+                <p className="text-stone-300 leading-relaxed font-sans break-keep">
                   {selectedProject.description}
                 </p>
                 {selectedProject.keyFeatures && selectedProject.keyFeatures.length > 0 && (

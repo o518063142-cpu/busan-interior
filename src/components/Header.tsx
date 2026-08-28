@@ -75,7 +75,7 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md text-stone-900 border-b border-stone-200/90 shadow-sm transition-all">
       {/* Main Navigation Header */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 lg:py-4 flex items-center justify-between">
+      <div className="max-w-7xl 2xl:max-w-[1440px] mx-auto px-3 sm:px-5 lg:px-6 2xl:px-8 py-3 lg:py-3.5 flex items-center justify-between gap-2 xl:gap-3 2xl:gap-4">
         {/* Brand Official Logo */}
         <Link
           to="/"
@@ -83,41 +83,41 @@ export const Header: React.FC<HeaderProps> = ({
             if (setActiveTab) setActiveTab("HOME");
             window.scrollTo({ top: 0, behavior: "smooth" });
           }}
-          className="text-left group flex items-baseline gap-2 sm:gap-2.5 focus:outline-none shrink-0"
+          className="text-left group flex items-baseline gap-1.5 sm:gap-2 focus:outline-none shrink-0"
         >
           <div className="flex items-baseline gap-1.5 sm:gap-2">
-            <span className="text-lg sm:text-xl lg:text-2xl font-extrabold tracking-tight text-stone-950 group-hover:text-stone-700 transition-colors font-sans whitespace-nowrap">
+            <span className="text-base sm:text-lg lg:text-xl 2xl:text-2xl font-extrabold tracking-tight text-stone-950 group-hover:text-stone-700 transition-colors font-sans whitespace-nowrap">
               {SITE_CONFIG.brand.nameKo}
             </span>
-            <span className="text-[11px] sm:text-xs lg:text-sm font-bold tracking-[0.14em] text-[#B38F4D] font-sans uppercase whitespace-nowrap">
+            <span className="text-[10px] sm:text-[11px] lg:text-xs 2xl:text-sm font-bold tracking-[0.12em] text-[#B38F4D] font-sans uppercase whitespace-nowrap">
               {SITE_CONFIG.brand.nameEn}
             </span>
           </div>
         </Link>
 
         {/* Desktop Menu */}
-        <nav className="hidden xl:flex items-center space-x-1 lg:space-x-1.5">
+        <nav className="hidden xl:flex items-center space-x-0.5 2xl:space-x-1 shrink-0">
           {navItems.map((item) => {
             const active = isItemActive(item.path, item.id);
             return (
               <button
                 key={item.id}
                 onClick={() => handleNavClick(item.path, item.id)}
-                className={`relative px-3 py-2 text-xs lg:text-sm font-medium rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                className={`relative px-2 2xl:px-2.5 py-1.5 text-xs 2xl:text-[13px] font-medium rounded-lg transition-all flex items-center gap-1 2xl:gap-1.5 cursor-pointer whitespace-nowrap shrink-0 ${
                   active
                     ? "text-stone-950 font-bold bg-stone-100"
                     : "text-stone-600 hover:text-stone-950 hover:bg-stone-50"
                 }`}
               >
-                {item.icon}
-                <span>{item.label}</span>
+                <span className="shrink-0">{item.icon}</span>
+                <span className="whitespace-nowrap">{item.label}</span>
                 {item.badge && (
-                  <span className="bg-[#FAF6EC] text-[#9A7424] text-[10px] font-semibold px-1.5 py-0.2 rounded border border-[#E9D9B2] ml-0.5">
+                  <span className="bg-[#FAF6EC] text-[#9A7424] text-[9px] 2xl:text-[10px] font-semibold px-1.5 py-0.5 rounded border border-[#E9D9B2] shrink-0 whitespace-nowrap">
                     {item.badge}
                   </span>
                 )}
                 {active && (
-                  <span className="absolute bottom-0 left-2.5 right-2.5 h-[2px] bg-[#B38F4D] rounded-full" />
+                  <span className="absolute bottom-0 left-2 right-2 h-[2px] bg-[#B38F4D] rounded-full" />
                 )}
               </button>
             );
@@ -125,24 +125,24 @@ export const Header: React.FC<HeaderProps> = ({
         </nav>
 
         {/* CTA Buttons (Desktop) */}
-        <div className="hidden md:flex items-center gap-2.5">
+        <div className="hidden md:flex items-center gap-1.5 2xl:gap-2 shrink-0">
           <Link
             to="/ai-estimate"
             onClick={() => {
               if (setActiveTab) setActiveTab("AI_ESTIMATE");
               window.scrollTo({ top: 0, behavior: "smooth" });
             }}
-            className="px-3.5 py-2 text-xs lg:text-sm font-medium rounded-lg text-stone-700 hover:text-stone-950 hover:bg-stone-100 border border-stone-200 transition-all flex items-center gap-1.5 shadow-sm"
+            className="px-2.5 2xl:px-3.5 py-1.5 2xl:py-2 text-xs 2xl:text-sm font-medium rounded-lg text-stone-700 hover:text-stone-950 hover:bg-stone-100 border border-stone-200 transition-all flex items-center gap-1 2xl:gap-1.5 shadow-xs whitespace-nowrap shrink-0"
           >
-            <Calculator className="w-4 h-4 text-[#B38F4D]" />
-            <span>AI 견적</span>
+            <Calculator className="w-3.5 h-3.5 2xl:w-4 2xl:h-4 text-[#B38F4D] shrink-0" />
+            <span className="whitespace-nowrap">AI 견적</span>
           </Link>
           <button
             onClick={openContactModal}
-            className="px-4 py-2 text-xs lg:text-sm font-bold rounded-lg bg-stone-950 hover:bg-stone-800 text-white shadow-sm transition-all flex items-center gap-1.5 active:scale-[0.98] cursor-pointer"
+            className="px-3 2xl:px-4 py-1.5 2xl:py-2 text-xs 2xl:text-sm font-bold rounded-lg bg-stone-950 hover:bg-stone-800 text-white shadow-xs transition-all flex items-center gap-1 2xl:gap-1.5 active:scale-[0.98] cursor-pointer whitespace-nowrap shrink-0"
           >
-            <span>무료 현장 실측</span>
-            <ChevronRight className="w-3.5 h-3.5 text-[#D4AF37]" />
+            <span className="whitespace-nowrap">무료 현장 실측</span>
+            <ChevronRight className="w-3.5 h-3.5 text-[#D4AF37] shrink-0" />
           </button>
         </div>
 

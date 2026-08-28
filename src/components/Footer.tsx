@@ -31,24 +31,38 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab, openContactModal }
     { path: "/admin", label: "상담 관리자", tabId: "ADMIN" },
   ];
 
+  const footerServiceTags = [
+    "지니인테리어",
+    "지니 인테리어",
+    "GENEINTERIOR",
+    "부산인테리어",
+    "부산아파트리모델링",
+    "부산실내건축",
+    "부산상가인테리어",
+    "부산사무실인테리어",
+    "부산카페인테리어",
+    "경남인테리어",
+    "울산인테리어",
+  ];
+
   return (
     <footer className="bg-stone-950 text-stone-300 border-t border-stone-800 pt-12 pb-24 md:pb-12 text-sm">
       <div className="max-w-7xl mx-auto px-4 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-10 pb-10 border-b border-stone-800/80">
           {/* Company Identity */}
-          <div className="space-y-4">
+          <div className="space-y-4 font-sans">
             <div className="flex flex-col">
-              <span className="text-2xl font-bold text-white tracking-tight font-serif">
+              <span className="text-2xl font-bold text-white tracking-tight font-sans">
                 {SITE_CONFIG.brand.nameKo}
               </span>
               <span className="text-xs font-semibold tracking-widest text-amber-400 font-sans uppercase">
                 {SITE_CONFIG.brand.nameEn}
               </span>
             </div>
-            <p className="text-xs text-stone-400 leading-relaxed">
-              부산진구 전포동 실내건축·인테리어 전문 지니 인테리어(GENE INTERIOR). 아파트, 주택, 상가, 매장, 카페, 사무실 리모델링 및 실내건축 책임시공.
+            <p className="text-xs text-stone-400 leading-relaxed font-sans">
+              부산 실내건축·인테리어 전문 지니 인테리어(GENE INTERIOR). 아파트, 주택, 상가, 매장, 카페, 사무실 리모델링 및 실내건축 책임시공.
             </p>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-950/60 text-amber-400 border border-amber-800/50 rounded text-xs font-semibold">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-950/60 text-amber-400 border border-amber-800/50 rounded text-xs font-semibold font-sans">
               <ShieldCheck className="w-4 h-4 text-amber-400" />
               <span>{SITE_CONFIG.company.licenseStatus}</span>
             </div>
@@ -150,16 +164,16 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab, openContactModal }
           </div>
         </div>
 
-        {/* Busan Regional SEO Tags Footer */}
+        {/* Regional & Service Tags Footer */}
         <div className="mb-6 pt-2">
-          <p className="text-[11px] font-semibold text-stone-400 mb-2">
-            주요 서비스 부산 지역 안내:
+          <p className="text-[11px] font-semibold text-stone-400 mb-2 font-sans">
+            주요 서비스 지역 안내:
           </p>
-          <div className="flex flex-wrap gap-1.5 text-[11px] text-stone-400">
-            {SITE_CONFIG.seo.keywords.map((kw, idx) => (
+          <div className="flex flex-wrap gap-1.5 text-[11px] text-stone-400 font-sans">
+            {footerServiceTags.map((kw, idx) => (
               <span
                 key={idx}
-                className="bg-stone-900 px-2 py-0.5 rounded border border-stone-800 hover:border-stone-700 text-stone-400"
+                className="bg-stone-900 px-2 py-0.5 rounded border border-stone-800 hover:border-stone-700 text-stone-400 font-sans"
               >
                 #{kw}
               </span>
@@ -168,12 +182,12 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab, openContactModal }
         </div>
 
         {/* Copyright */}
-        <div className="flex flex-col sm:flex-row items-center justify-between text-xs text-stone-400 pt-4 border-t border-stone-900 gap-2">
+        <div className="flex flex-col sm:flex-row items-center justify-between text-xs text-stone-400 pt-4 border-t border-stone-900 gap-2 font-sans">
           <p>
             © {new Date().getFullYear()} {SITE_CONFIG.brand.nameEn} ({SITE_CONFIG.legal.businessName}). All rights reserved.
           </p>
-          <p className="text-stone-400 text-[11px]">
-            부산진구 전포동 · 서면 실내건축 · 리모델링 전문 공식 홈페이지
+          <p className="text-stone-400 text-[11px] font-sans">
+            부산 및 경남·울산 실내건축 · 리모델링 전문 공식 홈페이지
           </p>
         </div>
       </div>

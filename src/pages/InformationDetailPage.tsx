@@ -66,7 +66,6 @@ export const InformationDetailPage: React.FC<InformationDetailPageProps> = ({
         const q = query(
           collection(db, "articles"),
           where("slug", "==", slug),
-          where("status", "==", "public"),
           limit(1)
         );
         const snapshot = await getDocs(q);
@@ -74,18 +73,25 @@ export const InformationDetailPage: React.FC<InformationDetailPageProps> = ({
         if (!isMounted) return;
 
         if (!snapshot.empty) {
-          const doc = snapshot.docs[0];
-          const data = doc.data();
+          const docSnap = snapshot.docs[0];
+          const data = docSnap.data();
+
+          // Reject draft or private articles for public visitor view
+          if (data.status === "draft" || data.status === "private") {
+            setNotFound(true);
+            return;
+          }
+
           setArticle({
-            id: doc.id,
+            id: docSnap.id,
             slug: data.slug || slug,
             title: data.title || "인테리어 지식 안내",
-            shortAnswer: data.shortAnswer || "",
+            shortAnswer: data.shortAnswer || data.summary || "",
             content: data.content || "",
             category: data.category || "인테리어 가이드",
             consumerChecklist: Array.isArray(data.consumerChecklist) ? data.consumerChecklist : [],
             faq: Array.isArray(data.faq) ? data.faq : [],
-            featuredImage: data.featuredImage || "",
+            featuredImage: data.featuredImage || data.coverImage || "",
             publishedAt: data.publishedAt || "",
             updatedAt: data.updatedAt || "",
           });
@@ -130,11 +136,11 @@ export const InformationDetailPage: React.FC<InformationDetailPageProps> = ({
         <div className="w-12 h-12 rounded-full bg-stone-100 text-stone-600 flex items-center justify-center mx-auto border border-stone-200">
           <AlertCircle className="w-6 h-6" />
         </div>
-        <div className="space-y-2">
-          <h1 className="text-2xl font-bold font-serif text-stone-900">
+        <div className="space-y-2 font-sans">
+          <h1 className="text-2xl font-bold font-sans text-stone-900 break-keep">
             요청하신 콘텐츠를 찾을 수 없습니다
           </h1>
-          <p className="text-sm text-stone-600">
+          <p className="text-sm text-stone-600 font-sans break-keep">
             해당 글이 삭제되었거나 주소가 변경되었을 수 있습니다.
           </p>
         </div>

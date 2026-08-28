@@ -4,7 +4,7 @@ export const SERVICES_DATA: ServiceCategoryItem[] = [
   {
     id: "residential",
     title: "아파트·주택 리모델링",
-    shortDesc: "부산진구, 전포동, 서면 및 부산 전 지역 아파트·단독주택·빌라 맞춤형 공간 리모델링",
+    shortDesc: "부산 전역을 중심으로 경남·울산의 아파트·단독주택·빌라 맞춤형 공간 리모델링",
     fullDesc:
       "라이프스타일에 맞춘 실용적이고 감각적인 동선 구성과 정교한 단열·창호·목공 마감으로 안락하고 품격 있는 주거 공간을 만듭니다. 노후 아파트 개선부터 올 리모델링까지 실내건축 면허 전문가가 책임 시공합니다.",
     targetCategory: "주거",

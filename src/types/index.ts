@@ -102,6 +102,30 @@ export interface ContactFormInput {
   attachedPhotos?: File[];
 }
 
+export type ArticleStatus = "published" | "draft";
+
+export interface AdminArticleItem {
+  id: string;
+  slug: string;
+  title: string;
+  shortAnswer: string;
+  summary?: string;
+  content: string;
+  seoTitle?: string;
+  seoDescription?: string;
+  category?: string;
+  featuredImage?: string;
+  coverImage?: string;
+  tags?: string[];
+  consumerChecklist?: string[];
+  author?: string;
+  status: ArticleStatus;
+  createdAt?: any;
+  updatedAt?: any;
+  publishedAt?: string;
+  isStaticDefault?: boolean;
+}
+
 declare global {
   interface Window {
     __GENE_INITIAL_DATA__?: {

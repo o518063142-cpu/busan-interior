@@ -68,10 +68,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       // Articles (지식센터) 조회
       try {
-        const articlesSnap = await db.collection("articles").where("status", "==", "public").get();
+        const articlesSnap = await db.collection("articles").get();
         if (!articlesSnap.empty) {
           for (const doc of articlesSnap.docs) {
             const data = doc.data();
+            // Include only published articles
+            if (data.status === "draft" || data.status === "private") {
+              continue;
+            }
             const urlKey = data.slug || doc.id;
             let lastmod: string | undefined;
             if (data.updatedAt) {

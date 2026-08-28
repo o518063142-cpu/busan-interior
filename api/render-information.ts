@@ -17,7 +17,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     try {
       const db = await getFirestoreAdmin();
       if (db) {
-        let snapshot = await db.collection("articles").where("slug", "==", slugStr).where("status", "==", "public").limit(1).get();
+        let snapshot = await db.collection("articles").where("slug", "==", slugStr).where("status", "==", "published").limit(1).get();
+        if (snapshot.empty) {
+          snapshot = await db.collection("articles").where("slug", "==", slugStr).where("status", "==", "public").limit(1).get();
+        }
         if (snapshot.empty) {
           snapshot = await db.collection("information_articles").where("slug", "==", slugStr).limit(1).get();
         }

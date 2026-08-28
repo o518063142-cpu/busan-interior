@@ -111,7 +111,14 @@ export const SITE_ENTITY: SiteEntity = {
     region: "부산광역시",
     country: "KR",
   },
-  serviceArea: ["부산진구", "전포동", "서면", "부산광역시"],
+  serviceArea: [
+    "부산광역시",
+    "경상남도",
+    "울산광역시",
+    "부산진구",
+    "양산시",
+    "김해시",
+  ],
   license: {
     name: "실내건축공사업",
     isHolder: true,
@@ -132,7 +139,7 @@ export const SITE_CONFIG = {
   // 3. 기존 코드와의 호환성을 위한 company 객체 (브랜드 + 법적정보 매핑)
   company: {
     name: "지니 인테리어",
-    title: "부산진구 전포동 실내건축·인테리어 전문",
+    title: "부산 실내건축·인테리어·리모델링 전문",
     subTitle: "아파트·주택 리모델링부터 상가·매장·사무실 인테리어까지",
     heroDescription: "실내건축공사업 등록업체로서 현장 실측부터 설계·견적·시공까지 책임지고 제안합니다.",
     industry: "실내건축·인테리어 전문",
@@ -161,13 +168,17 @@ export const SITE_CONFIG = {
       "수영구",
       "해운대구",
       "부산 전 지역",
+      "경남",
+      "울산",
+      "양산",
+      "김해",
     ],
   } as CompanyInfo,
 
   seo: {
-    mainTitle: "지니 인테리어 (GENE INTERIOR)｜부산진구 전포동·서면 실내건축·리모델링",
+    mainTitle: "지니 인테리어 (GENE INTERIOR)｜부산 실내건축·인테리어·리모델링",
     metaDescription:
-      "지니 인테리어(GENE INTERIOR / 법적상호: 한신인테리어)는 부산의 주거·소형 상업공간 인테리어·리모델링을 전문으로 하는 실내건축공사업 등록업체입니다. 아파트·주택·상가·카페 맞춤 시공 및 무료 현장 실측.",
+      "부산을 중심으로 경남·울산까지 아파트, 주택, 상가, 매장, 카페, 사무실의 실내건축·인테리어·리모델링을 진행하는 지니 인테리어(GENE INTERIOR)입니다. 실내건축공사업 등록업체로 현장 실측과 맞춤 견적 상담을 제공합니다.",
     canonicalUrl: "https://gene-interior.vercel.app/",
     keywords: [
       "지니 인테리어",

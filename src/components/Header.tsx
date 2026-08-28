@@ -4,7 +4,6 @@ import { SITE_CONFIG } from "../config/siteConfig";
 import { NavigationMenu } from "../types";
 import {
   Phone,
-  ShieldCheck,
   Menu,
   X,
   Sparkles,
@@ -47,16 +46,16 @@ export const Header: React.FC<HeaderProps> = ({
     { id: "SERVICE", path: "/service", label: "SERVICE", icon: <Briefcase className="w-4 h-4" /> },
     { id: "PROJECT", path: "/projects", label: "PROJECT", icon: <Images className="w-4 h-4" /> },
     { id: "INFORMATION", path: "/information", label: "INFORMATION", icon: <FileText className="w-4 h-4" /> },
-    { id: "TRUST", path: "/trust", label: "안심 시공", icon: <Shield className="w-4 h-4 text-amber-400" /> },
+    { id: "TRUST", path: "/trust", label: "안심 시공", icon: <Shield className="w-4 h-4 text-[#B38F4D]" /> },
     {
       id: "AI_ESTIMATE",
       path: "/ai-estimate",
       label: "AI 상담·견적",
-      icon: <Sparkles className="w-4 h-4 text-amber-400" />,
+      icon: <Sparkles className="w-4 h-4 text-[#B38F4D]" />,
       badge: "AI 추천",
     },
     { id: "CONTACT", path: "/contact", label: "CONTACT", icon: <MessageSquare className="w-4 h-4" /> },
-    { id: "ADMIN", path: "/admin", label: "상담 관리", icon: <UserCheck className="w-4 h-4 text-amber-400" /> },
+    { id: "ADMIN", path: "/admin", label: "상담 관리", icon: <UserCheck className="w-4 h-4 text-stone-500" /> },
   ];
 
   const isItemActive = (path: string, id: string) => {
@@ -74,70 +73,24 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-stone-900/95 backdrop-blur-md text-stone-100 border-b border-stone-800 shadow-xl transition-all">
-      {/* Top Banner Bar */}
-      <div className="bg-stone-950 text-stone-300 text-xs py-2 px-4 border-b border-stone-800/80">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
-          <div className="flex items-center gap-3 flex-wrap justify-center sm:justify-start">
-            <span className="flex items-center gap-1 text-amber-400 font-semibold bg-amber-950/60 px-2 py-0.5 rounded border border-amber-800/50">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              {SITE_CONFIG.company.licenseStatus}
-            </span>
-            <span className="hidden md:inline text-stone-400">|</span>
-            <span className="text-stone-300 hidden md:inline">
-              부산진구 · 전포동 · 서면 · 부산 전 지역 전문
-            </span>
-          </div>
-          <div className="flex items-center gap-4 text-xs">
-            {SITE_CONFIG.company.phone ? (
-              <a
-                href={`tel:${SITE_CONFIG.company.phone}`}
-                className="flex items-center gap-1.5 text-stone-200 hover:text-amber-400 transition-colors font-medium"
-              >
-                <Phone className="w-3.5 h-3.5 text-amber-400" />
-                <span>전화상담 {SITE_CONFIG.company.phoneDisplay}</span>
-              </a>
-            ) : (
-              <a
-                href={SITE_CONFIG.company.naverPlaceUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 text-amber-300 hover:text-amber-200 transition-colors font-medium"
-              >
-                <Phone className="w-3.5 h-3.5 text-amber-400" />
-                <span>네이버 플레이스 정보</span>
-              </a>
-            )}
-            <span className="text-stone-600">|</span>
-            <span className="text-stone-400 hidden sm:inline">
-              {SITE_CONFIG.company.operatingHours}
-            </span>
-          </div>
-        </div>
-      </div>
-
+    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md text-stone-900 border-b border-stone-200/90 shadow-sm transition-all">
       {/* Main Navigation Header */}
-      <div className="max-w-7xl mx-auto px-4 lg:px-8 py-3 lg:py-4 flex items-center justify-between">
-        {/* Brand Logo */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 lg:py-4 flex items-center justify-between">
+        {/* Brand Official Logo */}
         <Link
           to="/"
           onClick={() => {
             if (setActiveTab) setActiveTab("HOME");
             window.scrollTo({ top: 0, behavior: "smooth" });
           }}
-          className="text-left group flex items-baseline gap-2.5 focus:outline-none"
+          className="text-left group flex items-baseline gap-2 sm:gap-2.5 focus:outline-none shrink-0"
         >
-          <div className="flex flex-col">
-            <div className="flex items-baseline gap-2">
-              <span className="text-2xl lg:text-3xl font-bold tracking-tight text-white group-hover:text-amber-200 transition-colors font-serif">
-                {SITE_CONFIG.brand.nameKo}
-              </span>
-              <span className="text-xs lg:text-sm font-semibold tracking-widest text-amber-400/90 font-sans uppercase">
-                {SITE_CONFIG.brand.nameEn}
-              </span>
-            </div>
-            <span className="text-[11px] lg:text-xs text-stone-400 font-medium tracking-wider">
-              부산진구 전포동 · 서면 실내건축 리모델링
+          <div className="flex items-baseline gap-1.5 sm:gap-2">
+            <span className="text-lg sm:text-xl lg:text-2xl font-extrabold tracking-tight text-stone-950 group-hover:text-stone-700 transition-colors font-sans whitespace-nowrap">
+              {SITE_CONFIG.brand.nameKo}
+            </span>
+            <span className="text-[11px] sm:text-xs lg:text-sm font-bold tracking-[0.14em] text-[#B38F4D] font-sans uppercase whitespace-nowrap">
+              {SITE_CONFIG.brand.nameEn}
             </span>
           </div>
         </Link>
@@ -152,19 +105,19 @@ export const Header: React.FC<HeaderProps> = ({
                 onClick={() => handleNavClick(item.path, item.id)}
                 className={`relative px-3 py-2 text-xs lg:text-sm font-medium rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
                   active
-                    ? "text-amber-400 bg-stone-800/80 shadow-inner"
-                    : "text-stone-300 hover:text-white hover:bg-stone-800/40"
+                    ? "text-stone-950 font-bold bg-stone-100"
+                    : "text-stone-600 hover:text-stone-950 hover:bg-stone-50"
                 }`}
               >
                 {item.icon}
                 <span>{item.label}</span>
                 {item.badge && (
-                  <span className="bg-amber-500/20 text-amber-300 text-[10px] font-semibold px-1.5 py-0.2 rounded border border-amber-500/30 ml-0.5">
+                  <span className="bg-[#FAF6EC] text-[#9A7424] text-[10px] font-semibold px-1.5 py-0.2 rounded border border-[#E9D9B2] ml-0.5">
                     {item.badge}
                   </span>
                 )}
                 {active && (
-                  <span className="absolute bottom-0 left-2.5 right-2.5 h-0.5 bg-amber-400 rounded-full" />
+                  <span className="absolute bottom-0 left-2.5 right-2.5 h-[2px] bg-[#B38F4D] rounded-full" />
                 )}
               </button>
             );
@@ -179,21 +132,21 @@ export const Header: React.FC<HeaderProps> = ({
               if (setActiveTab) setActiveTab("AI_ESTIMATE");
               window.scrollTo({ top: 0, behavior: "smooth" });
             }}
-            className="px-3.5 py-2 text-xs lg:text-sm font-semibold rounded-lg bg-stone-800 hover:bg-stone-700 text-amber-300 border border-amber-500/30 hover:border-amber-400/60 transition-all flex items-center gap-1.5 shadow-sm"
+            className="px-3.5 py-2 text-xs lg:text-sm font-medium rounded-lg text-stone-700 hover:text-stone-950 hover:bg-stone-100 border border-stone-200 transition-all flex items-center gap-1.5 shadow-sm"
           >
-            <Calculator className="w-4 h-4 text-amber-400" />
-            <span>AI 견적 상담</span>
+            <Calculator className="w-4 h-4 text-[#B38F4D]" />
+            <span>AI 견적</span>
           </Link>
           <button
             onClick={openContactModal}
-            className="px-4 py-2 text-xs lg:text-sm font-bold rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-950 shadow-md transition-all flex items-center gap-1 hover:shadow-amber-500/20 active:scale-[0.98] cursor-pointer"
+            className="px-4 py-2 text-xs lg:text-sm font-bold rounded-lg bg-stone-950 hover:bg-stone-800 text-white shadow-sm transition-all flex items-center gap-1.5 active:scale-[0.98] cursor-pointer"
           >
             <span>무료 현장 실측</span>
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="w-3.5 h-3.5 text-[#D4AF37]" />
           </button>
         </div>
 
-        {/* Mobile Hamburger Toggle */}
+        {/* Mobile Hamburger Toggle & AI estimate CTA */}
         <div className="flex items-center gap-2 xl:hidden">
           <Link
             to="/ai-estimate"
@@ -201,15 +154,15 @@ export const Header: React.FC<HeaderProps> = ({
               if (setActiveTab) setActiveTab("AI_ESTIMATE");
               window.scrollTo({ top: 0, behavior: "smooth" });
             }}
-            className="p-2 text-amber-400 bg-stone-800/90 rounded-lg border border-amber-500/30 text-xs font-semibold flex items-center gap-1"
+            className="p-2 text-[#8C6D23] bg-[#FAF8F5] rounded-lg border border-[#E5D8B8] text-xs font-semibold flex items-center gap-1"
           >
-            <Sparkles className="w-3.5 h-3.5" />
+            <Sparkles className="w-3.5 h-3.5 text-[#B38F4D]" />
             <span className="hidden sm:inline">AI견적</span>
           </Link>
 
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 text-stone-200 hover:text-white bg-stone-800 rounded-lg focus:outline-none cursor-pointer"
+            className="p-2 text-stone-700 hover:text-stone-950 bg-stone-100 hover:bg-stone-200 rounded-lg focus:outline-none cursor-pointer transition-colors"
             aria-label="메뉴 열기"
           >
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -219,17 +172,7 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Mobile Drawer Menu Overlay */}
       {mobileMenuOpen && (
-        <div className="xl:hidden bg-stone-900 border-b border-stone-800 px-4 pt-3 pb-6 space-y-3 animate-in slide-in-from-top duration-200">
-          <div className="p-3 bg-stone-950 rounded-lg border border-stone-800 mb-2">
-            <p className="text-xs text-amber-400 font-semibold mb-1 flex items-center gap-1">
-              <ShieldCheck className="w-4 h-4" />
-              {SITE_CONFIG.company.licenseStatus}
-            </p>
-            <p className="text-xs text-stone-300">
-              부산진구 전포동 · 서면 · 부산 전 지역 무료 방문 실측
-            </p>
-          </div>
-
+        <div className="xl:hidden bg-white border-b border-stone-200 px-4 pt-3 pb-6 space-y-3 animate-in slide-in-from-top duration-200 shadow-xl">
           <div className="grid grid-cols-1 gap-1">
             {navItems.map((item) => {
               const active = isItemActive(item.path, item.id);
@@ -239,8 +182,8 @@ export const Header: React.FC<HeaderProps> = ({
                   onClick={() => handleNavClick(item.path, item.id)}
                   className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-sm font-medium transition-all ${
                     active
-                      ? "bg-amber-500/10 text-amber-400 border border-amber-500/30"
-                      : "text-stone-300 hover:bg-stone-800 hover:text-white"
+                      ? "bg-[#FAF8F5] text-[#8C6D23] font-semibold border border-[#E5D8B8]"
+                      : "text-stone-700 hover:bg-stone-50 hover:text-stone-950"
                   }`}
                 >
                   <div className="flex items-center gap-3">
@@ -248,7 +191,7 @@ export const Header: React.FC<HeaderProps> = ({
                     <span>{item.label}</span>
                   </div>
                   {item.badge && (
-                    <span className="bg-amber-500/20 text-amber-300 text-xs px-2 py-0.5 rounded font-semibold border border-amber-500/40">
+                    <span className="bg-[#FAF6EC] text-[#9A7424] text-xs px-2 py-0.5 rounded font-semibold border border-[#E9D9B2]">
                       {item.badge}
                     </span>
                   )}
@@ -261,9 +204,9 @@ export const Header: React.FC<HeaderProps> = ({
             {SITE_CONFIG.company.phone ? (
               <a
                 href={`tel:${SITE_CONFIG.company.phone}`}
-                className="py-2.5 px-3 bg-stone-800 text-stone-100 rounded-lg text-xs font-bold flex items-center justify-center gap-2 border border-stone-700 active:bg-stone-700"
+                className="py-2.5 px-3 bg-stone-100 hover:bg-stone-200 text-stone-900 rounded-lg text-xs font-bold flex items-center justify-center gap-2 border border-stone-200 transition-colors"
               >
-                <Phone className="w-4 h-4 text-amber-400" />
+                <Phone className="w-4 h-4 text-[#B38F4D]" />
                 <span>전화 상담</span>
               </a>
             ) : (
@@ -271,9 +214,9 @@ export const Header: React.FC<HeaderProps> = ({
                 href={SITE_CONFIG.company.naverPlaceUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="py-2.5 px-3 bg-stone-800 text-amber-300 rounded-lg text-xs font-bold flex items-center justify-center gap-2 border border-stone-700 active:bg-stone-700"
+                className="py-2.5 px-3 bg-stone-100 hover:bg-stone-200 text-stone-900 rounded-lg text-xs font-bold flex items-center justify-center gap-2 border border-stone-200 transition-colors"
               >
-                <Phone className="w-4 h-4 text-amber-400" />
+                <Phone className="w-4 h-4 text-[#B38F4D]" />
                 <span>네이버 지도</span>
               </a>
             )}
@@ -282,10 +225,10 @@ export const Header: React.FC<HeaderProps> = ({
                 setMobileMenuOpen(false);
                 openContactModal();
               }}
-              className="py-2.5 px-3 bg-amber-500 text-stone-950 rounded-lg text-xs font-bold flex items-center justify-center gap-1 shadow active:bg-amber-600 cursor-pointer"
+              className="py-2.5 px-3 bg-stone-950 hover:bg-stone-800 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-1 shadow-sm active:bg-stone-900 cursor-pointer transition-colors"
             >
               <span>무료 실측 신청</span>
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-4 h-4 text-[#D4AF37]" />
             </button>
           </div>
         </div>

@@ -136,6 +136,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   <title>${pageTitle}</title>
   <meta name="description" content="${pageDesc}" />
   <link rel="canonical" href="${canonicalUrl}" />
+  <meta name="robots" content="index, follow" />
   <meta property="og:title" content="${pageTitle}" />
   <meta property="og:description" content="${pageDesc}" />
   <meta property="og:url" content="${canonicalUrl}" />

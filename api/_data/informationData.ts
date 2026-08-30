@@ -62,8 +62,8 @@ export const INFORMATION_ARTICLES: InformationArticleData[] = [
     ],
   },
   {
-    id: "busanjin-remodeling-checklist",
-    slug: "busanjin-remodeling-checklist",
+    id: "busan-interior-remodeling-checklist",
+    slug: "busan-interior-remodeling-checklist",
     title: "부산진구 전포동·서면 아파트·상가 인테리어 완벽 체크리스트",
     description: "부산진구 전포동 카페거리 및 서면 상권 매장, 주거 공간 리모델링 시 필수 점검 사항. 실측, 철거, 단열, 방수, 전기 증설 가이드.",
     category: "시공 가이드",
@@ -109,3 +109,8 @@ export const PILLAR_ARTICLES: Record<string, InformationArticleData> = INFORMATI
   },
   {} as Record<string, InformationArticleData>
 );
+
+// Backward-compatibility alias for legacy slug
+if (PILLAR_ARTICLES["busan-interior-remodeling-checklist"]) {
+  PILLAR_ARTICLES["busanjin-remodeling-checklist"] = PILLAR_ARTICLES["busan-interior-remodeling-checklist"];
+}

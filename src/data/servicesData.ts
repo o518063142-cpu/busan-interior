@@ -106,6 +106,32 @@ export const SERVICES_DATA: ServiceCategoryItem[] = [
       "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1200&q=80",
   },
   {
+    id: "public-educational",
+    title: "공공·교육시설",
+    shortDesc: "학교 교실·특별실 및 교육공간 실내건축공사",
+    fullDesc:
+      "학교 교실·특별실과 교육공간 등 사용 목적과 현장 조건에 맞춘 실내건축공사를 제공합니다. 철거부터 벽체·천장·목공·도장·바닥·전기·조명·가구까지 공간 조성에 필요한 공정을 체계적으로 진행합니다.",
+    targetCategory: "공공·교육시설",
+    iconName: "School",
+    scopeList: [
+      "교실·교육공간",
+      "벽체·천장",
+      "목공·도장",
+      "바닥",
+      "전기·조명",
+      "맞춤 가구",
+    ],
+    processSteps: [
+      "1. 현장 실측 및 공간 목적 분석",
+      "2. 교육환경 맞춤 시공 설계",
+      "3. 철거 및 구조·목공 골조 작업",
+      "4. 바닥·도장·전기·조명 및 가구 마감",
+      "5. 완공 검수 및 안전 점검",
+    ],
+    bannerImage:
+      "https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&w=1200&q=80",
+  },
+  {
     id: "interior-construction",
     title: "실내건축·리모델링",
     shortDesc: "실내건축공사업 면허 보유 업체로서 안전하고 합법적인 정석 인테리어 시공",

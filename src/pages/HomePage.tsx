@@ -1,5 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
+import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
+import { db } from "../firebase";
 import { SITE_CONFIG } from "../config/siteConfig";
 import { NavigationMenu, ProjectItem } from "../types";
 import { SERVICES_DATA } from "../data/servicesData";
@@ -53,7 +55,7 @@ const getCategoryTabLabel = (proj: ProjectItem) => {
     case "sample-proj-6":
       return "다이닝";
     default:
-      return proj.category;
+      return proj.spaceTypeDetail || proj.category || proj.title;
   }
 };
 
@@ -62,9 +64,89 @@ export const HomePage: React.FC<HomePageProps> = ({
   openContactModal,
   onSelectProject,
 }) => {
+  const [firestoreProjects, setFirestoreProjects] = useState<ProjectItem[]>([]);
   const [activeFeaturedIndex, setActiveFeaturedIndex] = useState(0);
   const [showBeforePhoto, setShowBeforePhoto] = useState(false);
-  const featuredProject = PROJECTS_DATA[activeFeaturedIndex] || PROJECTS_DATA[0];
+
+  // Real-time subscription to Firestore 'projects' collection
+  useEffect(() => {
+    let unsubscribe = () => {};
+    try {
+      const q = query(collection(db, "projects"), orderBy("createdAt", "desc"));
+      unsubscribe = onSnapshot(
+        q,
+        (snapshot) => {
+          const items: ProjectItem[] = snapshot.docs.map((docSnap) => {
+            const data = docSnap.data();
+            return {
+              id: docSnap.id,
+              slug: data.slug || (docSnap.id === "wkv0to3v3LYzluyUtBU2" ? "busan-sajik-villa-remodeling" : ""),
+              isSample: data.isSample ?? false,
+              title: data.title || "시공 프로젝트",
+              location: data.location || "부산",
+              category: (data.category as "주거" | "상가·매장" | "카페·음식점" | "사무실" | "공공·교육시설") || "주거",
+              spaceTypeDetail: data.spaceTypeDetail || "",
+              area: data.area || "",
+              duration: data.duration || "",
+              scope: data.scope || "",
+              clientRequest: data.clientRequest || "",
+              description: data.description || "",
+              keyFeatures: Array.isArray(data.keyFeatures) ? data.keyFeatures : [],
+              beforeImage: data.beforeImage || "",
+              inProgressImage: data.inProgressImage || "",
+              afterImages: Array.isArray(data.afterImages) ? data.afterImages : [],
+            };
+          });
+          setFirestoreProjects(items);
+        },
+        (error) => {
+          console.warn("Firestore projects onSnapshot notice (using base data fallback):", error);
+        }
+      );
+    } catch (err) {
+      console.warn("Firestore projects subscription exception:", err);
+    }
+
+    return () => unsubscribe();
+  }, []);
+
+  // Merge Firestore Projects + Built-in PROJECTS_DATA with prioritization of actual projects
+  const allProjects = useMemo(() => {
+    const seenIds = new Set<string>();
+    const seenSlugs = new Set<string>();
+    const realProjects: ProjectItem[] = [];
+    const sampleProjects: ProjectItem[] = [];
+
+    // 1. Process Firestore real-time projects
+    for (const fp of firestoreProjects) {
+      if (!seenIds.has(fp.id) && (!fp.slug || !seenSlugs.has(fp.slug))) {
+        seenIds.add(fp.id);
+        if (fp.slug) seenSlugs.add(fp.slug);
+        if (fp.isSample) {
+          sampleProjects.push(fp);
+        } else {
+          realProjects.push(fp);
+        }
+      }
+    }
+
+    // 2. Add base PROJECTS_DATA (preserving sample projects afterwards)
+    for (const bp of PROJECTS_DATA) {
+      if (!seenIds.has(bp.id) && (!bp.slug || !seenSlugs.has(bp.slug))) {
+        seenIds.add(bp.id);
+        if (bp.slug) seenSlugs.add(bp.slug);
+        if (bp.isSample) {
+          sampleProjects.push(bp);
+        } else {
+          realProjects.push(bp);
+        }
+      }
+    }
+
+    return [...realProjects, ...sampleProjects];
+  }, [firestoreProjects]);
+
+  const featuredProject = allProjects[activeFeaturedIndex] || allProjects[0] || PROJECTS_DATA[0];
 
   return (
     <div className="space-y-16 lg:space-y-24 pb-12">
@@ -429,7 +511,7 @@ export const HomePage: React.FC<HomePageProps> = ({
             }}
             className="inline-flex items-center gap-2 px-6 py-3 bg-stone-950 hover:bg-stone-800 text-stone-100 text-xs sm:text-sm font-extrabold rounded-xl transition-all shadow-xs self-start md:self-auto border border-stone-800 active:scale-[0.98] cursor-pointer font-sans"
           >
-            <span>전체 시공사례 포트폴리오 ({PROJECTS_DATA.length})</span>
+            <span>전체 시공사례 포트폴리오 ({allProjects.length})</span>
             <ChevronRight className="w-4 h-4 text-[#D4AF37]" />
           </button>
         </div>
@@ -443,7 +525,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                 <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
                 <span>추천 프로젝트:</span>
               </span>
-              {PROJECTS_DATA.map((proj, idx) => (
+              {allProjects.map((proj, idx) => (
                 <button
                   key={proj.id}
                   onClick={() => {
@@ -473,8 +555,8 @@ export const HomePage: React.FC<HomePageProps> = ({
                 <img
                   src={
                     showBeforePhoto
-                      ? featuredProject.beforeImage
-                      : featuredProject.afterImages[0]
+                      ? (featuredProject.beforeImage || featuredProject.afterImages[0])
+                      : (featuredProject.afterImages[0] || featuredProject.beforeImage)
                   }
                   alt={featuredProject.title}
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
@@ -503,13 +585,15 @@ export const HomePage: React.FC<HomePageProps> = ({
                   </div>
 
                   {/* Before / After Toggle Switcher Button */}
-                  <button
-                    onClick={() => setShowBeforePhoto(!showBeforePhoto)}
-                    className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full bg-stone-900/90 text-amber-300 border border-amber-500/40 hover:border-amber-400 text-[10px] sm:text-xs font-bold backdrop-blur-md shadow-lg transition-all active:scale-95 whitespace-nowrap shrink-0 cursor-pointer"
-                  >
-                    <ArrowLeftRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-400 shrink-0" />
-                    <span className="whitespace-nowrap">{showBeforePhoto ? "✨ 완공 모습 보기" : "🏚️ 시공 전 상태 보기"}</span>
-                  </button>
+                  {featuredProject.beforeImage && (
+                    <button
+                      onClick={() => setShowBeforePhoto(!showBeforePhoto)}
+                      className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full bg-stone-900/90 text-amber-300 border border-amber-500/40 hover:border-amber-400 text-[10px] sm:text-xs font-bold backdrop-blur-md shadow-lg transition-all active:scale-95 whitespace-nowrap shrink-0 cursor-pointer"
+                    >
+                      <ArrowLeftRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-400 shrink-0" />
+                      <span className="whitespace-nowrap">{showBeforePhoto ? "✨ 완공 모습 보기" : "🏚️ 시공 전 상태 보기"}</span>
+                    </button>
+                  )}
                 </div>
 
                 {/* Bottom Overlay Info on Photo */}
@@ -517,8 +601,8 @@ export const HomePage: React.FC<HomePageProps> = ({
                   <div className="space-y-1 max-w-xl">
                     <div className="flex items-center gap-2 text-xs text-amber-300 font-semibold font-sans">
                       <span>{featuredProject.area}</span>
-                      <span>•</span>
-                      <span>{featuredProject.duration}</span>
+                      {featuredProject.duration && <span>•</span>}
+                      {featuredProject.duration && <span>{featuredProject.duration}</span>}
                     </div>
                     <h3 className="text-xl sm:text-2xl font-extrabold text-white font-sans drop-shadow-md break-keep">
                       {featuredProject.title}
@@ -538,18 +622,20 @@ export const HomePage: React.FC<HomePageProps> = ({
               {/* Thumbnail Strip underneath Main Photo */}
               <div className="p-3 bg-stone-950 border-t border-stone-800/80 flex items-center gap-3 overflow-x-auto scrollbar-none">
                 <span className="text-[11px] text-stone-400 font-medium shrink-0 px-1 font-sans">
-                  갤러리 사진 {featuredProject.afterImages.length + 1}장:
+                  갤러리 사진 {(featuredProject.afterImages?.length || 0) + (featuredProject.beforeImage ? 1 : 0)}장:
                 </span>
-                <button
-                  onClick={() => setShowBeforePhoto(true)}
-                  className={`relative w-20 h-14 rounded-lg overflow-hidden border shrink-0 transition-all cursor-pointer ${
-                    showBeforePhoto ? "border-amber-400 ring-2 ring-amber-400/50" : "border-stone-800 opacity-60 hover:opacity-100"
-                  }`}
-                >
-                  <img src={featuredProject.beforeImage} alt="시공전" className="w-full h-full object-cover filter grayscale" />
-                  <span className="absolute bottom-0 inset-x-0 bg-stone-950/80 text-[9px] text-center text-stone-300 font-bold py-0.5 font-sans">시공전</span>
-                </button>
-                {featuredProject.afterImages.map((imgUrl, i) => (
+                {featuredProject.beforeImage && (
+                  <button
+                    onClick={() => setShowBeforePhoto(true)}
+                    className={`relative w-20 h-14 rounded-lg overflow-hidden border shrink-0 transition-all cursor-pointer ${
+                      showBeforePhoto ? "border-amber-400 ring-2 ring-amber-400/50" : "border-stone-800 opacity-60 hover:opacity-100"
+                    }`}
+                  >
+                    <img src={featuredProject.beforeImage} alt="시공전" className="w-full h-full object-cover filter grayscale" />
+                    <span className="absolute bottom-0 inset-x-0 bg-stone-950/80 text-[9px] text-center text-stone-300 font-bold py-0.5 font-sans">시공전</span>
+                  </button>
+                )}
+                {featuredProject.afterImages?.map((imgUrl, i) => (
                   <button
                     key={i}
                     onClick={() => setShowBeforePhoto(false)}
@@ -576,24 +662,28 @@ export const HomePage: React.FC<HomePageProps> = ({
                   </h4>
                 </div>
 
-                <div className="p-4 bg-stone-950 rounded-2xl border border-stone-800 space-y-2 font-sans">
-                  <p className="text-xs text-amber-300 font-bold">고객 요청사항:</p>
-                  <p className="text-xs text-stone-300 leading-relaxed italic break-keep">
-                    "{featuredProject.clientRequest}"
-                  </p>
-                </div>
+                {featuredProject.clientRequest && (
+                  <div className="p-4 bg-stone-950 rounded-2xl border border-stone-800 space-y-2 font-sans">
+                    <p className="text-xs text-amber-300 font-bold">고객 요청사항:</p>
+                    <p className="text-xs text-stone-300 leading-relaxed italic break-keep">
+                      "{featuredProject.clientRequest}"
+                    </p>
+                  </div>
+                )}
 
-                <div className="space-y-2 font-sans">
-                  <p className="text-xs text-stone-400 font-bold">핵심 시공 공정:</p>
-                  <ul className="space-y-2">
-                    {featuredProject.keyFeatures.map((feat, idx) => (
-                      <li key={idx} className="flex items-start gap-2 text-xs text-stone-200">
-                        <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-                        <span className="break-keep">{feat}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                {featuredProject.keyFeatures && featuredProject.keyFeatures.length > 0 && (
+                  <div className="space-y-2 font-sans">
+                    <p className="text-xs text-stone-400 font-bold">핵심 시공 공정:</p>
+                    <ul className="space-y-2">
+                      {featuredProject.keyFeatures.map((feat, idx) => (
+                        <li key={idx} className="flex items-start gap-2 text-xs text-stone-200">
+                          <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                          <span className="break-keep">{feat}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
 
                 <p className="text-xs text-stone-400 font-sans leading-relaxed pt-2 break-keep">
                   {featuredProject.description}
@@ -632,7 +722,7 @@ export const HomePage: React.FC<HomePageProps> = ({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {PROJECTS_DATA.map((project) => (
+            {allProjects.map((project) => (
               <Link
                 key={project.id}
                 to={`/projects/${project.slug || project.id}`}
@@ -642,7 +732,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                   {/* Large High-Impact Image Box (h-72 sm:h-80) */}
                   <div className="relative h-72 sm:h-80 overflow-hidden bg-stone-950">
                     <img
-                      src={project.afterImages[0]}
+                      src={project.afterImages?.[0] || project.beforeImage}
                       alt={project.title}
                       className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-700"
                       loading="lazy"
@@ -652,8 +742,14 @@ export const HomePage: React.FC<HomePageProps> = ({
 
                     {/* Category & Badge */}
                     <div className="absolute top-4 left-4 flex items-center gap-2 z-10 font-sans">
-                      <span className="bg-amber-500 text-stone-950 font-black text-[11px] px-3 py-1 rounded-full shadow">
-                        샘플 프로젝트
+                      <span
+                        className={`text-[11px] font-black px-3 py-1 rounded-full shadow ${
+                          project.isSample
+                            ? "bg-amber-500 text-stone-950"
+                            : "bg-emerald-500 text-white"
+                        }`}
+                      >
+                        {project.isSample ? "샘플 프로젝트" : "실제 시공사례"}
                       </span>
                       <span className="bg-stone-900/90 text-white text-xs px-3 py-1 rounded-full backdrop-blur-md font-semibold border border-stone-700">
                         {project.category}
@@ -663,15 +759,15 @@ export const HomePage: React.FC<HomePageProps> = ({
                     {/* Photo Count Pill */}
                     <div className="absolute top-4 right-4 bg-stone-900/80 text-amber-300 text-xs px-2.5 py-1 rounded-full backdrop-blur-md border border-amber-500/30 font-semibold flex items-center gap-1 font-sans">
                       <Images className="w-3.5 h-3.5" />
-                      <span>{project.afterImages.length + 1}장</span>
+                      <span>{(project.afterImages?.length || 0) + (project.beforeImage ? 1 : 0)}장</span>
                     </div>
 
                     {/* Bottom overlay text */}
                     <div className="absolute bottom-4 left-4 right-4 text-white space-y-1 font-sans">
                       <div className="flex items-center gap-2 text-xs text-amber-300 font-semibold font-sans">
                         <span>{project.area}</span>
-                        <span>•</span>
-                        <span>{project.duration}</span>
+                        {project.duration && <span>•</span>}
+                        {project.duration && <span>{project.duration}</span>}
                       </div>
                       <h4 className="text-lg font-bold text-white font-sans line-clamp-1 group-hover:text-amber-300 transition-colors break-keep">
                         {project.title}
@@ -683,10 +779,12 @@ export const HomePage: React.FC<HomePageProps> = ({
                     <p className="text-xs text-stone-600 line-clamp-2 leading-relaxed break-keep">
                       {project.description}
                     </p>
-                    <div className="flex items-center gap-2 text-xs text-stone-500 pt-1">
-                      <span className="font-semibold text-stone-800">주요공정:</span>
-                      <span className="truncate">{project.scope}</span>
-                    </div>
+                    {project.scope && (
+                      <div className="flex items-center gap-2 text-xs text-stone-500 pt-1">
+                        <span className="font-semibold text-stone-800">주요공정:</span>
+                        <span className="truncate">{project.scope}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 

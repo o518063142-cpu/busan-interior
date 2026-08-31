@@ -42,14 +42,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             }
           }
         }
+
+        // C. Fallback for Sajik-dong villa project if slug hasn't been written to Firestore yet
+        if (!projectData && slugStr === "busan-sajik-villa-remodeling") {
+          const sajikDoc = await db.collection("projects").doc("wkv0to3v3LYzluyUtBU2").get();
+          if (sajikDoc.exists) {
+            const raw = sajikDoc.data();
+            if (isProjectPublic(raw)) {
+              projectData = { id: sajikDoc.id, slug: "busan-sajik-villa-remodeling", ...raw };
+            }
+          }
+        }
       }
     } catch (err) {
       console.warn("Firestore project fetch warning:", err);
     }
   }
-
-  const baseUrl = SITE_ENTITY.url.replace(/\/$/, "");
-  const canonicalUrl = `${baseUrl}/projects/${slugStr}`;
 
   if (!projectData) {
     const notFoundHtml = `<!DOCTYPE html>
@@ -66,6 +74,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 </html>`;
     return res.status(404).setHeader("Content-Type", "text/html; charset=utf-8").send(notFoundHtml);
   }
+
+  const baseUrl = SITE_ENTITY.url.replace(/\/$/, "");
+  const canonicalSlug =
+    projectData.slug ||
+    (projectData.id === "wkv0to3v3LYzluyUtBU2" ? "busan-sajik-villa-remodeling" : projectData.id);
+
+  // 301 Permanent Redirect if accessed via old docId or non-slug URL and a valid slug exists
+  if (slugStr !== canonicalSlug && (projectData.slug || projectData.id === "wkv0to3v3LYzluyUtBU2")) {
+    res.setHeader("Location", `/projects/${canonicalSlug}`);
+    return res.status(301).send("");
+  }
+
+  const canonicalUrl = `${baseUrl}/projects/${canonicalSlug}`;
 
   const primaryImage =
     (projectData.afterImages && projectData.afterImages[0]) ||
@@ -128,6 +149,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${pageTitle}</title>
   <meta name="description" content="${pageDesc}" />
+  <meta name="robots" content="index, follow" />
   <link rel="canonical" href="${canonicalUrl}" />
   <meta property="og:title" content="${pageTitle}" />
   <meta property="og:description" content="${pageDesc}" />

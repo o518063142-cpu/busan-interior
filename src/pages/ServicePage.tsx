@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { SERVICES_DATA } from "../data/servicesData";
 import { NavigationMenu, ProjectCategory } from "../types";
 import { MetaManager } from "../components/seo/MetaManager";
@@ -10,6 +11,7 @@ import {
   Store,
   Coffee,
   Building2,
+  School,
   ShieldCheck,
   ArrowRight,
   Layers,
@@ -37,6 +39,8 @@ export const ServicePage: React.FC<ServicePageProps> = ({
         return <Coffee className="w-6 h-6 text-amber-500" />;
       case "Building2":
         return <Building2 className="w-6 h-6 text-amber-500" />;
+      case "School":
+        return <School className="w-6 h-6 text-amber-500" />;
       case "ShieldCheck":
         return <ShieldCheck className="w-6 h-6 text-amber-500" />;
       default:
@@ -137,6 +141,25 @@ export const ServicePage: React.FC<ServicePageProps> = ({
                     ))}
                   </div>
                 </div>
+
+                {/* Specific Real Project Link for Public & Educational */}
+                {service.id === "public-educational" && (
+                  <div className="p-3.5 bg-amber-50/80 border border-amber-200 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                        실제 시공사례
+                      </span>
+                      <span className="text-xs font-medium text-stone-600">대표 프로젝트:</span>
+                    </div>
+                    <Link
+                      to="/projects/gyeongnam-elementary-school-vr-classroom-remodeling"
+                      className="text-xs font-bold text-amber-900 hover:text-amber-700 underline decoration-amber-400 underline-offset-2 flex items-center gap-1 group"
+                    >
+                      <span>경남 ○○초등학교 VR교실 실제 시공사례</span>
+                      <ChevronRight className="w-3.5 h-3.5 text-amber-600 group-hover:translate-x-0.5 transition-transform" />
+                    </Link>
+                  </div>
+                )}
               </div>
 
               {/* Related Project Action Buttons */}

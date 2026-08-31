@@ -45,6 +45,10 @@ import {
   Edit3,
   RotateCcw,
   X,
+  Globe,
+  Link2,
+  Copy,
+  ExternalLink,
 } from "lucide-react";
 
 export const ProjectManagementSection: React.FC = () => {
@@ -53,6 +57,7 @@ export const ProjectManagementSection: React.FC = () => {
   // Form State
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
+  const [slug, setSlug] = useState("");
   const [location, setLocation] = useState("");
   const [category, setCategory] = useState<ProjectCategory>("주거");
   const [spaceTypeDetail, setSpaceTypeDetail] = useState("");
@@ -62,6 +67,7 @@ export const ProjectManagementSection: React.FC = () => {
   const [clientRequest, setClientRequest] = useState("");
   const [description, setDescription] = useState("");
   const [isSample, setIsSample] = useState(false);
+  const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
 
   // Key Features list state
   const [keyFeatures, setKeyFeatures] = useState<string[]>([
@@ -115,6 +121,7 @@ export const ProjectManagementSection: React.FC = () => {
           const data = docSnap.data();
           return {
             id: docSnap.id,
+            slug: data.slug || (docSnap.id === "wkv0to3v3LYzluyUtBU2" ? "busan-sajik-villa-remodeling" : ""),
             isSample: data.isSample ?? false,
             title: data.title || "무제 프로젝트",
             location: data.location || "",
@@ -143,6 +150,86 @@ export const ProjectManagementSection: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
+  // SEO Slug Generation Helper
+  const generateSlugFromDetails = (titleStr: string, locationStr: string, spaceStr: string) => {
+    let base = `${locationStr} ${spaceStr} ${titleStr}`.toLowerCase();
+    const dictionary: Record<string, string> = {
+      부산: "busan",
+      사직동: "sajik",
+      사직: "sajik",
+      전포동: "jeonpo",
+      전포: "jeonpo",
+      서면: "seomyeon",
+      부전동: "bujeon",
+      부전: "bujeon",
+      가야동: "gaya",
+      가야: "gaya",
+      범천동: "beomcheon",
+      범천: "beomcheon",
+      동래구: "dongnae",
+      동래: "dongnae",
+      부산진구: "busanjin",
+      해운대구: "haeundae",
+      해운대: "haeundae",
+      수영구: "suyeong",
+      남구: "namgu",
+      북구: "bukgu",
+      금정구: "geumjeong",
+      연제구: "yeonje",
+      중구: "junggu",
+      영도구: "yeongdo",
+      빌라: "villa",
+      아파트: "apt",
+      주택: "house",
+      원룸: "studio",
+      오피스텔: "officetel",
+      상가: "store",
+      매장: "shop",
+      카페: "cafe",
+      음식점: "restaurant",
+      식당: "restaurant",
+      사무실: "office",
+      오피스: "office",
+      리모델링: "remodeling",
+      인테리어: "interior",
+      구축: "old",
+      신축: "new",
+    };
+
+    for (const [k, v] of Object.entries(dictionary)) {
+      base = base.split(k).join(` ${v} `);
+    }
+
+    const clean = base
+      .replace(/[^a-z0-9\s-]/g, "")
+      .trim()
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-");
+    return clean || `project-${Date.now().toString(36)}`;
+  };
+
+  const handleAutoGenerateSlug = () => {
+    const auto = generateSlugFromDetails(title, location, spaceTypeDetail);
+    setSlug(auto);
+  };
+
+  const handleSlugInputChange = (val: string) => {
+    const cleaned = val
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "")
+      .replace(/-+/g, "-");
+    setSlug(cleaned);
+  };
+
+  const handleCopyUrl = (urlSlug: string) => {
+    const fullUrl = `https://gene-interior.vercel.app/projects/${urlSlug}`;
+    navigator.clipboard.writeText(fullUrl).then(() => {
+      setCopiedSlug(urlSlug);
+      setTimeout(() => setCopiedSlug(null), 2000);
+    });
+  };
+
   // Add feature helper
   const handleAddFeature = () => {
     if (newFeatureInput.trim()) {
@@ -165,6 +252,7 @@ export const ProjectManagementSection: React.FC = () => {
   const resetFormState = () => {
     setEditingProjectId(null);
     setTitle("");
+    setSlug("");
     setLocation("");
     setCategory("주거");
     setSpaceTypeDetail("");
@@ -200,6 +288,7 @@ export const ProjectManagementSection: React.FC = () => {
   const handleStartEdit = (proj: ProjectItem) => {
     setEditingProjectId(proj.id);
     setTitle(proj.title || "");
+    setSlug(proj.slug || (proj.id === "wkv0to3v3LYzluyUtBU2" ? "busan-sajik-villa-remodeling" : ""));
     setLocation(proj.location || "");
     setCategory((proj.category as ProjectCategory) || "주거");
     setSpaceTypeDetail(proj.spaceTypeDetail || "");
@@ -460,10 +549,17 @@ export const ProjectManagementSection: React.FC = () => {
       // 7. Save to Firestore (setDoc or updateDoc)
       setUploadProgressText("Firestore 'projects' 데이터베이스 동기화 중...");
 
+      const finalSlug =
+        slug.trim() ||
+        (projectId === "wkv0to3v3LYzluyUtBU2"
+          ? "busan-sajik-villa-remodeling"
+          : generateSlugFromDetails(title, location, spaceTypeDetail));
+
       if (isEditMode) {
         // Update existing document
         await updateDoc(projectDocRef, {
           title: title.trim(),
+          slug: finalSlug,
           location: location.trim(),
           category,
           spaceTypeDetail: spaceTypeDetail.trim(),
@@ -480,11 +576,12 @@ export const ProjectManagementSection: React.FC = () => {
           updatedAt: serverTimestamp(),
         });
 
-        setSubmitSuccess(`시공사례 "${title.trim()}" 가 성공적으로 수정되었습니다! (ID: ${projectId})`);
+        setSubmitSuccess(`시공사례 "${title.trim()}" 가 성공적으로 수정되었습니다! (URL: /projects/${finalSlug})`);
       } else {
         // Create new document
         const projectPayload = {
           id: projectId,
+          slug: finalSlug,
           title: title.trim(),
           location: location.trim(),
           category,
@@ -504,7 +601,7 @@ export const ProjectManagementSection: React.FC = () => {
 
         await setDoc(projectDocRef, projectPayload);
         setSubmitSuccess(
-          `시공사례 "${title.trim()}" 가 성공적으로 등록되었습니다! (사진 ${finalAfterImages.length}장 등록 완료, 문서 ID: ${projectId})`
+          `시공사례 "${title.trim()}" 가 성공적으로 등록되었습니다! (URL: /projects/${finalSlug}, 사진 ${finalAfterImages.length}장 등록 완료)`
         );
       }
 
@@ -640,6 +737,41 @@ export const ProjectManagementSection: React.FC = () => {
                   disabled={isSubmitting}
                   className="w-full px-4 py-2.5 bg-stone-950 border border-stone-800 rounded-xl text-stone-100 text-xs sm:text-sm focus:outline-none focus:border-amber-500"
                 />
+              </div>
+
+              {/* SEO 영문 Slug (고정 URL) */}
+              <div className="sm:col-span-2 space-y-2 bg-stone-900/60 border border-stone-800/80 p-3.5 rounded-2xl">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <label className="block text-xs font-semibold text-stone-200 flex items-center gap-1.5">
+                    <Globe className="w-3.5 h-3.5 text-amber-400" />
+                    <span>SEO 고정 영문 Slug (검색엔진 최적화 정규 URL)</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleAutoGenerateSlug}
+                    disabled={isSubmitting || (!title && !location)}
+                    className="px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 rounded-lg text-[11px] font-bold border border-amber-500/30 flex items-center gap-1 transition-all cursor-pointer disabled:opacity-40"
+                  >
+                    <Sparkles className="w-3 h-3" />
+                    <span>슬러그 자동 생성</span>
+                  </button>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="px-3 py-2 bg-stone-950 border border-stone-800 rounded-xl text-stone-500 text-xs font-mono select-none hidden sm:block">
+                    /projects/
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="예: busan-sajik-villa-remodeling (미입력 시 자동 생성)"
+                    value={slug}
+                    onChange={(e) => handleSlugInputChange(e.target.value)}
+                    disabled={isSubmitting}
+                    className="flex-1 px-4 py-2 bg-stone-950 border border-stone-800 rounded-xl text-amber-300 font-mono text-xs sm:text-sm focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+                <p className="text-[11px] text-stone-400 font-sans">
+                  미입력 시 지역명, 공간유형, 제목을 분석하여 <span className="text-stone-300 font-mono">/projects/busan-sajik-villa-remodeling</span> 형태의 정규 URL이 자동 부여됩니다.
+                </p>
               </div>
 
               {/* 시공 지역 */}
@@ -1278,6 +1410,46 @@ export const ProjectManagementSection: React.FC = () => {
                       </span>
                     )}
                   </div>
+
+                  {/* SEO Slug URL badge */}
+                  {(() => {
+                    const activeSlug =
+                      proj.slug ||
+                      (proj.id === "wkv0to3v3LYzluyUtBU2"
+                        ? "busan-sajik-villa-remodeling"
+                        : proj.id);
+                    return (
+                      <div className="bg-stone-900/90 border border-stone-800/90 p-2.5 rounded-xl flex items-center justify-between gap-2 text-xs font-mono">
+                        <div className="flex items-center gap-1.5 text-stone-300 truncate">
+                          <Globe className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                          <span className="truncate text-[11px] text-amber-200">/projects/{activeSlug}</span>
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => handleCopyUrl(activeSlug)}
+                            className="p-1 text-stone-400 hover:text-stone-100 rounded hover:bg-stone-800 transition-colors"
+                            title="정규 URL 복사"
+                          >
+                            {copiedSlug === activeSlug ? (
+                              <Check className="w-3.5 h-3.5 text-emerald-400" />
+                            ) : (
+                              <Copy className="w-3.5 h-3.5" />
+                            )}
+                          </button>
+                          <a
+                            href={`/projects/${activeSlug}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-1 text-stone-400 hover:text-amber-400 rounded hover:bg-stone-800 transition-colors"
+                            title="새 창에서 보기"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* Bottom Action Bar: Edit & Delete */}
@@ -1369,6 +1541,46 @@ export const ProjectManagementSection: React.FC = () => {
                 <p className="text-[11px] text-stone-400 line-clamp-2 leading-relaxed">
                   {proj.description}
                 </p>
+
+                {/* SEO Slug URL badge */}
+                {(() => {
+                  const activeSlug =
+                    proj.slug ||
+                    (proj.id === "wkv0to3v3LYzluyUtBU2"
+                      ? "busan-sajik-villa-remodeling"
+                      : proj.id);
+                  return (
+                    <div className="bg-stone-900/90 border border-stone-800/90 p-2 rounded-xl flex items-center justify-between gap-1.5 text-[11px] font-mono">
+                      <div className="flex items-center gap-1.5 text-stone-300 truncate">
+                        <Globe className="w-3 h-3 text-amber-400 shrink-0" />
+                        <span className="truncate text-amber-200">/projects/{activeSlug}</span>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => handleCopyUrl(activeSlug)}
+                          className="p-1 text-stone-400 hover:text-stone-100 rounded hover:bg-stone-800 transition-colors"
+                          title="정규 URL 복사"
+                        >
+                          {copiedSlug === activeSlug ? (
+                            <Check className="w-3 h-3 text-emerald-400" />
+                          ) : (
+                            <Copy className="w-3 h-3" />
+                          )}
+                        </button>
+                        <a
+                          href={`/projects/${activeSlug}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-1 text-stone-400 hover:text-amber-400 rounded hover:bg-stone-800 transition-colors"
+                          title="새 창에서 보기"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
 
               <div className="pt-2 border-t border-stone-900 flex items-center justify-between text-[11px] text-stone-500">

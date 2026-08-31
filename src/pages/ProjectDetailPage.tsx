@@ -89,6 +89,7 @@ export const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
           }
           const item: ProjectItem = {
             id: docSnap.id,
+            slug: data.slug || (docSnap.id === "wkv0to3v3LYzluyUtBU2" ? "busan-sajik-villa-remodeling" : ""),
             isSample: data.isSample ?? false,
             title: data.title || "시공 프로젝트",
             location: data.location || "부산",
@@ -133,6 +134,7 @@ export const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
           }
           const item: ProjectItem = {
             id: d.id,
+            slug: data.slug || (d.id === "wkv0to3v3LYzluyUtBU2" ? "busan-sajik-villa-remodeling" : ""),
             isSample: data.isSample ?? false,
             title: data.title || "시공 프로젝트",
             location: data.location || "부산",
@@ -150,9 +152,41 @@ export const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
           };
           setProject(item);
           setNotFound(false);
-        } else {
-          setNotFound(true);
+          return;
         }
+
+        // Fallback for Sajik-dong villa project if slug is busan-sajik-villa-remodeling
+        if (slug === "busan-sajik-villa-remodeling") {
+          const sajikRef = doc(db, "projects", "wkv0to3v3LYzluyUtBU2");
+          const sajikSnap = await getDoc(sajikRef);
+          if (!isMounted) return;
+          if (sajikSnap.exists()) {
+            const data = sajikSnap.data();
+            const item: ProjectItem = {
+              id: sajikSnap.id,
+              slug: "busan-sajik-villa-remodeling",
+              isSample: data.isSample ?? false,
+              title: data.title || "부산 사직동 구축 빌라 리모델링",
+              location: data.location || "부산 동래구 사직동",
+              category: (data.category as "주거" | "상가·매장" | "카페·음식점" | "사무실") || "주거",
+              spaceTypeDetail: data.spaceTypeDetail || "구축 빌라 주거공간",
+              area: data.area || "",
+              duration: data.duration || "",
+              scope: data.scope || "",
+              clientRequest: data.clientRequest || "",
+              description: data.description || "",
+              keyFeatures: Array.isArray(data.keyFeatures) ? data.keyFeatures : [],
+              beforeImage: data.beforeImage || "",
+              inProgressImage: data.inProgressImage || "",
+              afterImages: Array.isArray(data.afterImages) ? data.afterImages : [],
+            };
+            setProject(item);
+            setNotFound(false);
+            return;
+          }
+        }
+
+        setNotFound(true);
       } catch (err) {
         console.warn("Notice: Firestore project lookup notice:", err);
         if (isMounted) setNotFound(true);
@@ -216,12 +250,16 @@ export const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
     project.beforeImage ||
     "/images/hanshin_hero_bg_1784852933011.jpg";
 
+  const canonicalSlug =
+    project.slug ||
+    (project.id === "wkv0to3v3LYzluyUtBU2" ? "busan-sajik-villa-remodeling" : (slug || project.id));
+
   return (
     <>
       <MetaManager
         title={`${project.title}｜${project.location} ${project.category} 시공사례`}
         description={project.description || `${project.location} ${project.spaceTypeDetail || project.category} 맞춤 리모델링 시공사례`}
-        canonicalPath={`/projects/${slug || project.id}`}
+        canonicalPath={`/projects/${canonicalSlug}`}
         ogType="article"
         ogImage={primaryImage}
       />
@@ -229,7 +267,7 @@ export const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
         type="project"
         title={project.title}
         description={project.description || `${project.location} ${project.spaceTypeDetail || project.category} 맞춤 리모델링`}
-        slug={slug || project.id}
+        slug={canonicalSlug}
         category={project.category}
         location={project.location}
         images={project.afterImages}

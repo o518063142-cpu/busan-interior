@@ -1,6 +1,10 @@
-let adminDb: any = null;
+import { getApps, initializeApp, cert, type App } from "firebase-admin/app";
+import { getFirestore, type Firestore } from "firebase-admin/firestore";
 
-export async function getFirestoreAdmin(): Promise<any> {
+let adminApp: App | null = null;
+let adminDb: Firestore | null = null;
+
+export async function getFirestoreAdmin(): Promise<Firestore | null> {
   if (adminDb) return adminDb;
 
   const projectId = process.env.FIREBASE_ADMIN_PROJECT_ID;
@@ -14,20 +18,27 @@ export async function getFirestoreAdmin(): Promise<any> {
 
   try {
     privateKey = privateKey.replace(/\\n/g, "\n");
-    const admin: any = await import("firebase-admin");
-    if (!admin.apps || admin.apps.length === 0) {
-      admin.initializeApp({
-        credential: admin.credential.cert({
+    if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
+      privateKey = privateKey.slice(1, -1);
+    }
+
+    const apps = getApps();
+    if (apps.length === 0) {
+      adminApp = initializeApp({
+        credential: cert({
           projectId,
           clientEmail,
           privateKey,
         }),
       });
+    } else {
+      adminApp = apps[0];
     }
-    adminDb = admin.firestore();
+
+    adminDb = getFirestore(adminApp);
     return adminDb;
-  } catch (err) {
-    console.error("Firebase Admin initialization error:", err);
+  } catch (err: any) {
+    console.error("Firebase Admin initialization error:", err?.message || err);
     return null;
   }
 }

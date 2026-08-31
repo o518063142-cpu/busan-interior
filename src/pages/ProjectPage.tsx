@@ -63,6 +63,7 @@ export const ProjectPage: React.FC<ProjectPageProps> = ({
             const data = docSnap.data();
             return {
               id: docSnap.id,
+              slug: data.slug || (docSnap.id === "wkv0to3v3LYzluyUtBU2" ? "busan-sajik-villa-remodeling" : ""),
               isSample: data.isSample ?? false,
               title: data.title || "시공 프로젝트",
               location: data.location || "부산",
@@ -222,10 +223,14 @@ export const ProjectPage: React.FC<ProjectPageProps> = ({
               (project.beforeImage ? 1 : 0) +
               (project.inProgressImage ? 1 : 0);
 
+            const projectSlugUrl =
+              project.slug ||
+              (project.id === "wkv0to3v3LYzluyUtBU2" ? "busan-sajik-villa-remodeling" : project.id);
+
             return (
               <Link
                 key={project.id}
-                to={`/projects/${project.id}`}
+                to={`/projects/${projectSlugUrl}`}
                 className="bg-white rounded-3xl overflow-hidden border border-stone-200 shadow-md hover:shadow-2xl transition-all cursor-pointer group flex flex-col justify-between hover:-translate-y-1 block text-inherit no-underline font-sans"
               >
                 <div>

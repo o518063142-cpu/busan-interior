@@ -46,7 +46,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         for (const doc of projectsSnap.docs) {
           const data = doc.data();
           if (isProjectPublic(data)) {
-            const urlKey = data.slug || doc.id;
+            const urlKey = data.slug || (doc.id === "wkv0to3v3LYzluyUtBU2" ? "busan-sajik-villa-remodeling" : doc.id);
             let lastmod: string | undefined;
             if (data.updatedAt) {
               lastmod = typeof data.updatedAt.toDate === "function" 

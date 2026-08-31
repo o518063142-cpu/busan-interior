@@ -11,7 +11,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).send("Invalid slug parameter");
   }
 
-  let articleData = PILLAR_ARTICLES[slugStr] || null;
+  let articleData: any = PILLAR_ARTICLES[slugStr] || null;
 
   if (!articleData) {
     try {

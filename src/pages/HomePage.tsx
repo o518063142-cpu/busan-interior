@@ -602,7 +602,7 @@ export const HomePage: React.FC<HomePageProps> = ({
 
               <div className="pt-4 border-t border-stone-800 space-y-3 font-sans">
                 <Link
-                  to={`/projects/${featuredProject.id}`}
+                  to={`/projects/${featuredProject.slug || featuredProject.id}`}
                   className="w-full py-3.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-950 font-black rounded-xl text-xs sm:text-sm transition-all shadow-lg flex items-center justify-center gap-2 text-inherit no-underline"
                 >
                   <Eye className="w-4 h-4" />
@@ -635,7 +635,7 @@ export const HomePage: React.FC<HomePageProps> = ({
             {PROJECTS_DATA.map((project) => (
               <Link
                 key={project.id}
-                to={`/projects/${project.id}`}
+                to={`/projects/${project.slug || project.id}`}
                 className="bg-white rounded-3xl overflow-hidden border border-stone-200/90 shadow-md hover:shadow-2xl transition-all cursor-pointer group flex flex-col justify-between hover:-translate-y-1 block text-inherit no-underline"
               >
                 <div>

@@ -804,6 +804,7 @@ export const ProjectManagementSection: React.FC = () => {
                   <option value="상가·매장">상가·매장 (로드숍·쇼룸·뷰티)</option>
                   <option value="카페·음식점">카페·음식점 (베이커리·식당)</option>
                   <option value="사무실">사무실 (오피스·스튜디오)</option>
+                  <option value="공공·교육시설">공공·교육시설 (학교·교육시설·공공기관)</option>
                 </select>
               </div>
 

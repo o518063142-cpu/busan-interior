@@ -33,7 +33,7 @@ export interface Consultation {
 }
 
 
-export type ProjectCategory = "전체" | "주거" | "상가·매장" | "카페·음식점" | "사무실";
+export type ProjectCategory = "전체" | "주거" | "상가·매장" | "카페·음식점" | "사무실" | "공공·교육시설";
 
 export interface ProjectItem {
   id: string;
@@ -41,7 +41,7 @@ export interface ProjectItem {
   isSample: boolean; // 샘플 프로젝트 표시 표지 (true)
   title: string; // 프로젝트명
   location: string; // 지역 (예: 부산진구 전포동)
-  category: "주거" | "상가·매장" | "카페·음식점" | "사무실"; // 공간 유형 카테고리
+  category: "주거" | "상가·매장" | "카페·음식점" | "사무실" | "공공·교육시설"; // 공간 유형 카테고리
   spaceTypeDetail: string; // 상세 공간 유형 (예: 아파트, 디저트카페, 뷰티숍, IT사무실)
   area: string; // 면적 (예: 32평 / 105m²)
   duration: string; // 공사기간 (예: 3주)

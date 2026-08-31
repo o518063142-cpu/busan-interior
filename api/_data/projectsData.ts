@@ -1,5 +1,6 @@
 export interface ProjectItem {
   id: string;
+  slug?: string; // SEO 고정 영문 슬러그
   isSample: boolean; // 샘플 프로젝트 표시 표지 (true)
   title: string; // 프로젝트명
   location: string; // 지역 (예: 부산진구 전포동)

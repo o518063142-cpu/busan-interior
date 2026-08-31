@@ -125,7 +125,7 @@ export const SITE_ENTITY: SiteEntity = {
     officialTitle: "실내건축공사업 등록업체",
   },
   socialLinks: {
-    naverPlace: "https://map.naver.com/p/search/%ED%95%9C%EC%8B%A0%EC%9D%B8%ED%85%8C%EB%A6%AC%EC%96%B4",
+    naverPlace: "https://m.place.naver.com/place/13556704/home",
   },
 };
 
@@ -153,7 +153,7 @@ export const SITE_CONFIG = {
     businessNumber: "상담 시 확인 가능",
     representative: "정혜은",
     email: "상담 시 안내",
-    naverPlaceUrl: "https://map.naver.com/p/search/%ED%95%9C%EC%8B%A0%EC%9D%B8%ED%85%8C%EB%A6%AC%EC%96%B4",
+    naverPlaceUrl: "https://m.place.naver.com/place/13556704/home",
     kakaoTalkUrl: "https://pf.kakao.com",
     operatingHours: "월~토요일 08:30 - 18:30",
     closedDays: "일요일 및 공휴일 휴무",

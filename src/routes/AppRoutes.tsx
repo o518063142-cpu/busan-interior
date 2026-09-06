@@ -102,6 +102,11 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
           />
         }
       />
+      {/* 301/Permanent Redirect from legacy slug to official representative slug */}
+      <Route
+        path="/information/busanjin-remodeling-checklist"
+        element={<Navigate to="/information/busan-interior-remodeling-checklist" replace />}
+      />
       <Route
         path="/information/:slug"
         element={

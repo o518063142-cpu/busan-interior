@@ -126,6 +126,68 @@ export const InformationDetailContent: React.FC<InformationDetailContentProps> =
         </section>
       )}
 
+      {/* Related Real Projects (관련 실제 시공사례) */}
+      {article.slug === "busan-interior-remodeling-checklist" && (
+        <section className="bg-white border border-stone-200 rounded-2xl p-6 sm:p-8 space-y-4 shadow-sm font-sans">
+          <div className="flex items-center gap-2 text-stone-950 font-bold text-base sm:text-lg font-sans">
+            <CheckCircle2 className="w-5 h-5 text-amber-600 shrink-0" />
+            <h2 className="break-keep">관련 실제 시공사례</h2>
+          </div>
+          <p className="text-xs sm:text-sm text-stone-600 font-sans break-keep">
+            지니 인테리어의 실제 부산 구축 주거 공간 리모델링 시공사례를 확인하실 수 있습니다.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1 font-sans">
+            <Link
+              to="/projects/busan-sajik-villa-remodeling"
+              className="group p-4 bg-stone-50 hover:bg-amber-50/50 rounded-xl border border-stone-200 hover:border-amber-400 transition-all flex flex-col justify-between gap-3"
+            >
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                    실제 시공사례
+                  </span>
+                  <span className="text-xs text-stone-500 font-medium">부산 동래구 사직동</span>
+                </div>
+                <h3 className="text-sm sm:text-base font-bold text-stone-900 group-hover:text-amber-700 transition-colors break-keep">
+                  부산 사직동 구축 빌라 리모델링
+                </h3>
+                <p className="text-xs text-stone-600 line-clamp-2">
+                  29평 구축 빌라 올리모델링 (화이트 톤 공간 구성 및 실용적 동선 개선)
+                </p>
+              </div>
+              <div className="inline-flex items-center gap-1 text-xs font-bold text-stone-700 group-hover:text-amber-700 pt-1">
+                <span>사직동 시공사례 보러가기</span>
+                <ChevronRight className="w-4 h-4 text-amber-500 group-hover:translate-x-0.5 transition-transform" />
+              </div>
+            </Link>
+
+            <Link
+              to="/projects/busan-mangmi-jugong-apartment-remodeling"
+              className="group p-4 bg-stone-50 hover:bg-amber-50/50 rounded-xl border border-stone-200 hover:border-amber-400 transition-all flex flex-col justify-between gap-3"
+            >
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                    실제 시공사례
+                  </span>
+                  <span className="text-xs text-stone-500 font-medium">부산 수영구 망미동</span>
+                </div>
+                <h3 className="text-sm sm:text-base font-bold text-stone-900 group-hover:text-amber-700 transition-colors break-keep">
+                  부산 망미 주공 아파트 27평 리모델링
+                </h3>
+                <p className="text-xs text-stone-600 line-clamp-2">
+                  27평 구축 아파트 주거 리모델링 (맞춤 주방 가구 및 시스템 수납 설계)
+                </p>
+              </div>
+              <div className="inline-flex items-center gap-1 text-xs font-bold text-stone-700 group-hover:text-amber-700 pt-1">
+                <span>망미주공 시공사례 보러가기</span>
+                <ChevronRight className="w-4 h-4 text-amber-500 group-hover:translate-x-0.5 transition-transform" />
+              </div>
+            </Link>
+          </div>
+        </section>
+      )}
+
       {/* Trust & Consultation Bridge */}
       <section className="bg-stone-950 text-stone-100 rounded-3xl p-6 sm:p-8 space-y-5 border border-stone-800 shadow-xl font-sans">
         <div className="space-y-2 font-sans">

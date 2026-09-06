@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, Navigate } from "react-router-dom";
 import { MetaManager } from "../components/seo/MetaManager";
 import { StructuredData } from "../components/seo/StructuredData";
 import { InformationDetailContent } from "../components/content/InformationDetailContent";
@@ -21,6 +21,11 @@ export const InformationDetailPage: React.FC<InformationDetailPageProps> = ({
   openContactModal,
 }) => {
   const { slug } = useParams<{ slug: string }>();
+
+  // Consolidate legacy slug with immediate client redirect to official representative URL
+  if (slug === "busanjin-remodeling-checklist") {
+    return <Navigate to="/information/busan-interior-remodeling-checklist" replace />;
+  }
 
   // Determine initial state: prop > global window initial data > pillar > null
   const [article, setArticle] = useState<InformationArticleData | null>(() => {

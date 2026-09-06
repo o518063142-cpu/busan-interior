@@ -77,6 +77,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               continue;
             }
             const urlKey = data.slug || doc.id;
+            // Exclude redirected legacy slugs to prevent duplicate canonical issues in sitemap
+            if (urlKey === "busanjin-remodeling-checklist") {
+              continue;
+            }
             let lastmod: string | undefined;
             if (data.updatedAt) {
               lastmod = typeof data.updatedAt.toDate === "function" 

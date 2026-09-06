@@ -11,6 +11,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).send("Invalid slug parameter");
   }
 
+  // 301 Permanent Redirect for consolidated legacy slug to canonical URL
+  if (slugStr === "busanjin-remodeling-checklist") {
+    res.setHeader("Location", "/information/busan-interior-remodeling-checklist");
+    return res.status(301).end();
+  }
+
   let articleData: any = PILLAR_ARTICLES[slugStr] || null;
 
   if (!articleData) {
@@ -100,8 +106,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .map(
         (sec: any) => `
       <section style="margin-bottom: 24px;">
-        <h2 style="font-size: 1.25rem; font-weight: bold; margin-bottom: 8px;">${sec.heading}</h2>
-        <p style="font-size: 0.95rem; line-height: 1.6; color: #44403c;">${sec.content}</p>
+        ${sec.heading ? `<h2 style="font-size: 1.25rem; font-weight: bold; margin-bottom: 8px;">${sec.heading}</h2>` : ""}
+        <div style="font-size: 0.95rem; line-height: 1.6; color: #44403c; white-space: pre-line;">${sec.content}</div>
       </section>
     `
       )
@@ -118,6 +124,36 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         <ul style="margin:0; padding-left:20px; color:#44403c; font-size:0.9rem; line-height:1.6;">
           ${articleData.consumerChecklist.map((item: string) => `<li style="margin-bottom:6px;">${item}</li>`).join("")}
         </ul>
+      </section>
+    `;
+  }
+
+  let relatedProjectsHtml = "";
+  if (slugStr === "busan-interior-remodeling-checklist") {
+    relatedProjectsHtml = `
+      <section style="background-color:#ffffff; border:1px solid #e7e5e4; border-radius:16px; padding:24px; margin-top:24px;">
+        <h2 style="font-size:1.15rem; font-weight:bold; color:#1c1917; margin-top:0; margin-bottom:8px;">관련 실제 시공사례</h2>
+        <p style="font-size:0.875rem; color:#57534e; margin-bottom:16px;">지니 인테리어의 실제 부산 구축 주거 공간 리모델링 시공사례를 확인하실 수 있습니다.</p>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:16px;">
+          <div style="background-color:#fafaf9; border:1px solid #e7e5e4; border-radius:12px; padding:16px;">
+            <span style="background-color:#d1fae5; color:#065f46; font-size:0.75rem; font-weight:bold; padding:2px 8px; border-radius:9999px;">실제 시공사례</span>
+            <span style="font-size:0.75rem; color:#78716c; margin-left:6px;">부산 동래구 사직동</span>
+            <h3 style="font-size:1rem; font-weight:bold; margin:8px 0 4px 0;">
+              <a href="/projects/busan-sajik-villa-remodeling" style="color:#1c1917; text-decoration:none;">부산 사직동 구축 빌라 리모델링</a>
+            </h3>
+            <p style="font-size:0.8rem; color:#57534e; margin:0 0 10px 0;">29평 구축 빌라 올리모델링 (화이트 톤 공간 구성 및 실용적 동선 개선)</p>
+            <a href="/projects/busan-sajik-villa-remodeling" style="color:#b45309; font-weight:bold; font-size:0.8rem; text-decoration:underline;">사직동 시공사례 보러가기 &rarr;</a>
+          </div>
+          <div style="background-color:#fafaf9; border:1px solid #e7e5e4; border-radius:12px; padding:16px;">
+            <span style="background-color:#d1fae5; color:#065f46; font-size:0.75rem; font-weight:bold; padding:2px 8px; border-radius:9999px;">실제 시공사례</span>
+            <span style="font-size:0.75rem; color:#78716c; margin-left:6px;">부산 수영구 망미동</span>
+            <h3 style="font-size:1rem; font-weight:bold; margin:8px 0 4px 0;">
+              <a href="/projects/busan-mangmi-jugong-apartment-remodeling" style="color:#1c1917; text-decoration:none;">부산 망미 주공 아파트 27평 리모델링</a>
+            </h3>
+            <p style="font-size:0.8rem; color:#57534e; margin:0 0 10px 0;">27평 구축 아파트 주거 리모델링 (맞춤 주방 가구 및 시스템 수납 설계)</p>
+            <a href="/projects/busan-mangmi-jugong-apartment-remodeling" style="color:#b45309; font-weight:bold; font-size:0.8rem; text-decoration:underline;">망미주공 시공사례 보러가기 &rarr;</a>
+          </div>
+        </div>
       </section>
     `;
   }
@@ -174,6 +210,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           ${sectionsHtml}
         </div>
         ${checklistHtml}
+        ${relatedProjectsHtml}
       </article>
     </main>
     <footer style="background-color:#0c0a09; color:#a8a29e; padding:32px; font-size:0.75rem; text-align:center;">

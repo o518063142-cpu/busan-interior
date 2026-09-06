@@ -15,6 +15,13 @@
       ]
     }
   ],
+  "redirects": [
+    {
+      "source": "/information/busanjin-remodeling-checklist",
+      "destination": "/information/busan-interior-remodeling-checklist",
+      "statusCode": 301
+    }
+  ],
   "rewrites": [
     {
       "source": "/sitemap.xml",

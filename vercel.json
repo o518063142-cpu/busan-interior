@@ -4,9 +4,10 @@
       "includeFiles": "api/**"
     }
   },
+
   "headers": [
     {
-      "source": "/admin(.*)",
+      "source": "/admin/(.*)",
       "headers": [
         {
           "key": "X-Robots-Tag",
@@ -15,6 +16,7 @@
       ]
     }
   ],
+
   "redirects": [
     {
       "source": "/information/busanjin-remodeling-checklist",
@@ -22,30 +24,30 @@
       "statusCode": 301
     }
   ],
-  "rewrites": [
+
+  "routes": [
     {
-      "source": "/sitemap.xml",
-      "destination": "/api/sitemap"
+      "src": "/projects/?$",
+      "dest": "/api/render-listing?page=projects"
     },
     {
-      "source": "/information/:slug",
-      "destination": "/api/render-information?slug=:slug"
+      "src": "/projects/([^/]+)/?$",
+      "dest": "/api/render-project?slug=$1"
     },
     {
-      "source": "/projects/:slug",
-      "destination": "/api/render-project?slug=:slug"
+      "src": "/sitemap.xml",
+      "dest": "/api/sitemap"
     },
     {
-      "source": "/projects",
-      "destination": "/api/render-listing?page=projects"
+      "src": "/information/([^/]+)/?$",
+      "dest": "/api/render-information?slug=$1"
     },
     {
-      "source": "/",
-      "destination": "/api/render-listing?page=home"
+      "handle": "filesystem"
     },
     {
-      "source": "/((?!api/.*|sitemap\\.xml|robots\\.txt).*)",
-      "destination": "/index.html"
+      "src": "/(.*)",
+      "dest": "/api/render-listing?page=home"
     }
   ]
 }

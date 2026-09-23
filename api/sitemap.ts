@@ -21,12 +21,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const dynamicUrls: Array<{ loc: string; lastmod?: string }> = [];
 
-  // 2. 정적 6대 시공사례 프로젝트 상세 URL
-  for (const proj of PROJECTS_DATA) {
-    dynamicUrls.push({
-      loc: `${baseUrl}/projects/${proj.id}`,
-    });
-  }
+// 2. 정적 시공사례 프로젝트 상세 URL
+// slug가 있으면 SEO slug 사용, 없으면 기존 id 사용
+for (const proj of PROJECTS_DATA) {
+  const urlKey = proj.slug || proj.id;
+
+  dynamicUrls.push({
+    loc: `${baseUrl}/projects/${urlKey}`,
+  });
+}
 
   // 3. 정적 지식센터(KNOWLEDGE CENTER) 질문형 콘텐츠 상세 URL
   for (const art of INFORMATION_ARTICLES) {

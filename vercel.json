@@ -26,7 +26,11 @@
   ],
 
   "routes": [
-      {
+    {
+      "src": "/projects/?$",
+      "dest": "/api/render-listing?page=projects"
+    },
+    {
       "src": "/projects/([^/]+)/?$",
       "dest": "/api/render-project?slug=$1"
     },

@@ -1025,10 +1025,10 @@ export const HomePage: React.FC<HomePageProps> = ({
 
           <div className="pt-2 flex flex-col sm:flex-row items-center gap-4 justify-between border-t border-stone-800 text-xs font-sans">
             <span className="text-stone-400">
-              * 위치 주소: {SITE_CONFIG.company.address} {SITE_CONFIG.company.addressDetail}
+              * 위치 주소: {siteSettings.address} {siteSettings.addressDetail}
             </span>
             <a
-              href={SITE_CONFIG.company.naverPlaceUrl}
+              href={siteSettings.naverPlace}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-900/80 hover:bg-emerald-800 text-emerald-200 rounded-lg font-bold border border-emerald-700/60 font-sans"
@@ -1092,7 +1092,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               <Phone className="w-8 h-8 text-emerald-600 mx-auto" />
               <h3 className="font-bold text-stone-900 text-base font-sans">전화 빠른 상담</h3>
               <p className="text-xs text-stone-600 font-sans">
-                상담 대표번호: <strong className="text-stone-900">{SITE_CONFIG.company.phoneDisplay}</strong>
+                상담 대표번호: <strong className="text-stone-900">{siteSettings.phone}</strong>
               </p>
             </div>
             <a

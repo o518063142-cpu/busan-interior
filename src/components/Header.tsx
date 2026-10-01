@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { SITE_CONFIG } from "../config/siteConfig";
+import { useSiteSettings } from "../hooks/useSiteSettings";
 import { NavigationMenu } from "../types";
 import {
   Phone,
@@ -31,6 +32,7 @@ export const Header: React.FC<HeaderProps> = ({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const { settings: siteSettings } = useSiteSettings();
 
   const navItems: {
     id: NavigationMenu | "TRUST";
@@ -187,9 +189,9 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           <div className="pt-2 grid grid-cols-2 gap-2">
-            {SITE_CONFIG.company.phone ? (
+            {siteSettings.phone ? (
               <a
-                href={`tel:${SITE_CONFIG.company.phone}`}
+                href={`tel:${siteSettings.phone}`}
                 className="py-2.5 px-3 bg-stone-100 hover:bg-stone-200 text-stone-900 rounded-lg text-xs font-bold flex items-center justify-center gap-2 border border-stone-200 transition-colors"
               >
                 <Phone className="w-4 h-4 text-[#B38F4D]" />
@@ -197,7 +199,7 @@ export const Header: React.FC<HeaderProps> = ({
               </a>
             ) : (
               <a
-                href={SITE_CONFIG.company.naverPlaceUrl}
+                href={siteSettings.naverPlace}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="py-2.5 px-3 bg-stone-100 hover:bg-stone-200 text-stone-900 rounded-lg text-xs font-bold flex items-center justify-center gap-2 border border-stone-200 transition-colors"

@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
-import { doc, onSnapshot } from "firebase/firestore";
-import { SITE_CONFIG, SITE_ENTITY } from "../config/siteConfig";
-import { db } from "../firebase";
+import { SITE_CONFIG } from "../config/siteConfig";
 import { NavigationMenu } from "../types";
+import { useSiteSettings } from "../hooks/useSiteSettings";
 import {
   MapPin,
   Phone,
@@ -20,75 +19,11 @@ interface FooterProps {
   openContactModal: () => void;
 }
 
-interface RuntimeSiteSettings {
-  phone: string;
-  mobilePhone: string;
-  email: string;
-  address: string;
-  addressDetail: string;
-  operatingHours: string;
-  closedDays: string;
-  naverPlace: string;
-}
-
-const DEFAULT_SETTINGS: RuntimeSiteSettings = {
-  phone: SITE_CONFIG.company.phone,
-  mobilePhone: SITE_CONFIG.company.mobilePhone,
-  email: "8063143@naver.com",
-  address: SITE_CONFIG.company.address,
-  addressDetail: SITE_CONFIG.company.addressDetail,
-  operatingHours: SITE_CONFIG.company.operatingHours,
-  closedDays: SITE_CONFIG.company.closedDays,
-  naverPlace:
-    SITE_ENTITY.socialLinks.naverPlace ||
-    SITE_CONFIG.company.naverPlaceUrl ||
-    "",
-};
-
 export const Footer: React.FC<FooterProps> = ({
   setActiveTab,
   openContactModal,
 }) => {
-  const [siteSettings, setSiteSettings] =
-    useState<RuntimeSiteSettings>(DEFAULT_SETTINGS);
-
-  useEffect(() => {
-    const settingsRef = doc(db, "siteSettings", "main");
-
-    const unsubscribe = onSnapshot(
-      settingsRef,
-      (snapshot) => {
-        if (!snapshot.exists()) {
-          setSiteSettings(DEFAULT_SETTINGS);
-          return;
-        }
-
-        const data = snapshot.data();
-
-        setSiteSettings({
-          phone: data.phone || DEFAULT_SETTINGS.phone,
-          mobilePhone: data.mobilePhone || DEFAULT_SETTINGS.mobilePhone,
-          email: data.email || DEFAULT_SETTINGS.email,
-          address: data.address || DEFAULT_SETTINGS.address,
-          addressDetail: data.addressDetail || DEFAULT_SETTINGS.addressDetail,
-          operatingHours:
-            data.operatingHours || DEFAULT_SETTINGS.operatingHours,
-          closedDays: data.closedDays || DEFAULT_SETTINGS.closedDays,
-          naverPlace: data.naverPlace || DEFAULT_SETTINGS.naverPlace,
-        });
-      },
-      (error) => {
-        console.error("Footer 사이트 설정 불러오기 오류:", error);
-        setSiteSettings(DEFAULT_SETTINGS);
-      }
-    );
-
-    return () => unsubscribe();
-  }, []);
-
-  const phoneDisplay = [siteSettings.phone, siteSettings.mobilePhone]
-    .filter(Boolean)
-    .join(" / ");
+  const { settings: siteSettings, phoneDisplay } = useSiteSettings();
 
   const quickLinks: {
     path: string;

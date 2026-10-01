@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { SITE_CONFIG } from "../config/siteConfig";
+import { doc, onSnapshot } from "firebase/firestore";
+import { SITE_CONFIG, SITE_ENTITY } from "../config/siteConfig";
+import { db } from "../firebase";
 import { NavigationMenu } from "../types";
 import {
   MapPin,
@@ -18,10 +20,76 @@ interface FooterProps {
   openContactModal: () => void;
 }
 
+interface RuntimeSiteSettings {
+  phone: string;
+  mobilePhone: string;
+  email: string;
+  address: string;
+  addressDetail: string;
+  operatingHours: string;
+  closedDays: string;
+  naverPlace: string;
+}
+
+const DEFAULT_SETTINGS: RuntimeSiteSettings = {
+  phone: SITE_CONFIG.company.phone,
+  mobilePhone: SITE_CONFIG.company.mobilePhone,
+  email: "8063143@naver.com",
+  address: SITE_CONFIG.company.address,
+  addressDetail: SITE_CONFIG.company.addressDetail,
+  operatingHours: SITE_CONFIG.company.operatingHours,
+  closedDays: SITE_CONFIG.company.closedDays,
+  naverPlace:
+    SITE_ENTITY.socialLinks.naverPlace ||
+    SITE_CONFIG.company.naverPlaceUrl ||
+    "",
+};
+
 export const Footer: React.FC<FooterProps> = ({
   setActiveTab,
   openContactModal,
 }) => {
+  const [siteSettings, setSiteSettings] =
+    useState<RuntimeSiteSettings>(DEFAULT_SETTINGS);
+
+  useEffect(() => {
+    const settingsRef = doc(db, "siteSettings", "main");
+
+    const unsubscribe = onSnapshot(
+      settingsRef,
+      (snapshot) => {
+        if (!snapshot.exists()) {
+          setSiteSettings(DEFAULT_SETTINGS);
+          return;
+        }
+
+        const data = snapshot.data();
+
+        setSiteSettings({
+          phone: data.phone || DEFAULT_SETTINGS.phone,
+          mobilePhone: data.mobilePhone || DEFAULT_SETTINGS.mobilePhone,
+          email: data.email || DEFAULT_SETTINGS.email,
+          address: data.address || DEFAULT_SETTINGS.address,
+          addressDetail: data.addressDetail || DEFAULT_SETTINGS.addressDetail,
+          operatingHours:
+            data.operatingHours || DEFAULT_SETTINGS.operatingHours,
+          closedDays: data.closedDays || DEFAULT_SETTINGS.closedDays,
+          naverPlace: data.naverPlace || DEFAULT_SETTINGS.naverPlace,
+        });
+      },
+      (error) => {
+        console.error("Footer 사이트 설정 불러오기 오류:", error);
+        setSiteSettings(DEFAULT_SETTINGS);
+      }
+    );
+
+    return () => unsubscribe();
+  }, []);
+
+  const phoneDisplay = [siteSettings.phone, siteSettings.mobilePhone]
+    .filter(Boolean)
+    .join(" / ");
+
   const quickLinks: {
     path: string;
     label: string;
@@ -101,28 +169,25 @@ export const Footer: React.FC<FooterProps> = ({
               <li className="flex items-start gap-2">
                 <MapPin className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                 <span>
-                  주소: {SITE_CONFIG.company.address}{" "}
-                  {SITE_CONFIG.company.addressDetail}
+                  주소: {siteSettings.address} {siteSettings.addressDetail}
                 </span>
               </li>
 
               <li className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-amber-400 shrink-0" />
-                <span>
-                  대표전화: {SITE_CONFIG.company.phoneDisplay}
-                </span>
+                <span>대표전화: {phoneDisplay}</span>
               </li>
 
               <li className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-amber-400 shrink-0" />
-                <span>이메일: {SITE_CONFIG.company.email}</span>
+                <span>이메일: {siteSettings.email}</span>
               </li>
 
               <li className="flex items-start gap-2">
                 <Clock className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                 <span>
-                  영업시간: {SITE_CONFIG.company.operatingHours} (
-                  {SITE_CONFIG.company.closedDays})
+                  영업시간: {siteSettings.operatingHours} (
+                  {siteSettings.closedDays})
                 </span>
               </li>
             </ul>
@@ -166,7 +231,7 @@ export const Footer: React.FC<FooterProps> = ({
             </div>
 
             <a
-              href={SITE_CONFIG.company.naverPlaceUrl}
+              href={siteSettings.naverPlace}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-2 w-full px-3 py-2 bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border border-emerald-700/60 rounded text-xs font-bold transition-all shadow-sm"

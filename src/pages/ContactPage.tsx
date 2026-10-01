@@ -14,8 +14,16 @@ import {
   Loader2,
   AlertCircle,
 } from "lucide-react";
-import { db, firebaseProjectId, firebaseDatabaseId } from "../firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import {
+  db,
+  firebaseProjectId,
+  firebaseDatabaseId,
+} from "../firebase";
+import {
+  collection,
+  addDoc,
+  serverTimestamp,
+} from "firebase/firestore";
 
 interface ContactPageProps {
   initialData?: {
@@ -26,11 +34,13 @@ interface ContactPageProps {
   };
 }
 
-export const ContactPage: React.FC<ContactPageProps> = ({ initialData }) => {
+export const ContactPage: React.FC<ContactPageProps> = ({
+  initialData,
+}) => {
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
-    location: initialData?.location || "부산진구 전포동",
+    location: initialData?.location || "",
     spaceType: initialData?.spaceType || "아파트",
     area: initialData?.area || "30",
     startDate: "가장 빠른 일자",
@@ -40,15 +50,21 @@ export const ContactPage: React.FC<ContactPageProps> = ({ initialData }) => {
   const [privacyAgreed, setPrivacyAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [savedDocPath, setSavedDocPath] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(
+    null
+  );
+  const [savedDocPath, setSavedDocPath] = useState<string | null>(
+    null
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
 
     if (!privacyAgreed) {
-      setErrorMessage("개인정보 수집 및 이용 동의에 체크해 주세요.");
+      setErrorMessage(
+        "개인정보 수집 및 이용 동의에 체크해 주세요."
+      );
       return;
     }
 
@@ -60,10 +76,14 @@ export const ContactPage: React.FC<ContactPageProps> = ({ initialData }) => {
     setLoading(true);
 
     try {
-      console.log("1. ContactPage 상담 신청 시작 (busan-interior Firestore)");
+      console.log(
+        "1. ContactPage 상담 신청 시작 (busan-interior Firestore)"
+      );
 
       if (!db) {
-        throw new Error("Firebase 초기화 오류: Firestore DB 인스턴스가 존재하지 않습니다.");
+        throw new Error(
+          "Firebase 초기화 오류: Firestore DB 인스턴스가 존재하지 않습니다."
+        );
       }
 
       // Save document to Firestore consultations collection using addDoc
@@ -87,8 +107,13 @@ export const ContactPage: React.FC<ContactPageProps> = ({ initialData }) => {
       console.log("=== FIRESTORE WRITE START ===");
 
       let docRef;
+
       try {
-        docRef = await addDoc(collection(db, "consultations"), consultationData);
+        docRef = await addDoc(
+          collection(db, "consultations"),
+          consultationData
+        );
+
         console.log("=== FIRESTORE WRITE SUCCESS ===");
         console.log("Document ID:", docRef.id);
         console.log("Document Path:", docRef.path);
@@ -105,24 +130,32 @@ export const ContactPage: React.FC<ContactPageProps> = ({ initialData }) => {
       setSavedDocPath(docRef.path);
       setSubmitted(true);
 
-      // Auxiliary Admin Email Notification (does not block client submission success)
+      // Auxiliary Admin Email Notification
+      // does not block client submission success
       try {
-        const notifyRes = await fetch("/api/notify-consultation", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: formData.name.trim(),
-            phone: formData.phone.trim(),
-            location: formData.location.trim(),
-            spaceType: formData.spaceType,
-            area: formData.area.trim(),
-            startDate: formData.startDate.trim(),
-            details: formData.details.trim(),
-            docPath: docRef.path,
-            createdAt: new Date().toLocaleString("ko-KR"),
-          }),
-        });
+        const notifyRes = await fetch(
+          "/api/notify-consultation",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              name: formData.name.trim(),
+              phone: formData.phone.trim(),
+              location: formData.location.trim(),
+              spaceType: formData.spaceType,
+              area: formData.area.trim(),
+              startDate: formData.startDate.trim(),
+              details: formData.details.trim(),
+              docPath: docRef.path,
+              createdAt: new Date().toLocaleString("ko-KR"),
+            }),
+          }
+        );
+
         const notifyData = await notifyRes.json();
+
         if (notifyData?.success) {
           console.log("EMAIL NOTIFICATION SUCCESS");
         } else {
@@ -132,11 +165,14 @@ export const ContactPage: React.FC<ContactPageProps> = ({ initialData }) => {
         console.error("EMAIL NOTIFICATION FAILED");
       }
 
-      // Auxiliary Admin Kakao Notification (does not block client submission success)
+      // Auxiliary Admin Kakao Notification
+      // does not block client submission success
       try {
         const kakaoRes = await fetch("/api/notify-kakao", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify({
             name: formData.name.trim(),
             phone: formData.phone.trim(),
@@ -148,22 +184,33 @@ export const ContactPage: React.FC<ContactPageProps> = ({ initialData }) => {
             docPath: docRef.path,
           }),
         });
+
         const kakaoData = await kakaoRes.json();
+
         if (kakaoData?.success) {
           console.log("KAKAO NOTIFICATION SUCCESS");
         } else {
           console.warn("KAKAO NOTIFICATION FAILED");
         }
       } catch (kakaoErr) {
-        console.warn("KAKAO NOTIFICATION FAILED", kakaoErr);
+        console.warn(
+          "KAKAO NOTIFICATION FAILED",
+          kakaoErr
+        );
       }
-
     } catch (error: any) {
       setSubmitted(false);
       setSavedDocPath(null);
-      console.error("REAL FIRESTORE WRITE FAILED:", error);
+
+      console.error(
+        "REAL FIRESTORE WRITE FAILED:",
+        error
+      );
+
       setErrorMessage(
-        `상담 신청 중 오류가 발생했습니다 (${error?.message || "네트워크 오류"}). 잠시 후 다시 시도해 주세요.`
+        `상담 신청 중 오류가 발생했습니다 (${
+          error?.message || "네트워크 오류"
+        }). 잠시 후 다시 시도해 주세요.`
       );
     } finally {
       setLoading(false);
@@ -173,27 +220,33 @@ export const ContactPage: React.FC<ContactPageProps> = ({ initialData }) => {
   return (
     <div className="max-w-7xl mx-auto px-4 lg:px-8 py-12 space-y-16">
       <MetaManager
-        title="무료 현장 실측 & 견적 문의｜부산 인테리어 무료 현장 실측·상담｜지니 인테리어"
-        description="지니 인테리어(GENE INTERIOR) 부산 전역 및 경남·울산 무료 현장 실측 및 상담 신청. 실내건축공사업 등록 전문가의 1:1 맞춤 견적."
+        title="현장 실측 & 견적 문의｜부산 인테리어 상담｜지니 인테리어"
+        description="부산 동래구 명륜동 지니 인테리어(GENE INTERIOR) 현장 실측 및 견적 상담 신청. 부산 전 지역을 중심으로 공간 유형, 현장 상태와 공사 범위에 맞춰 인테리어·리모델링 상담을 안내합니다."
         canonicalPath="/contact"
       />
+
       <StructuredData
         type="page"
-        title="무료 현장 실측 & 견적 문의 | 지니 인테리어"
-        description="지니 인테리어 무료 현장 실측 및 견적 문의"
+        title="현장 실측 & 견적 문의 | 지니 인테리어"
+        description="부산 동래구 명륜동 지니 인테리어 현장 실측 및 인테리어·리모델링 견적 상담"
         path="/contact"
       />
+
       {/* Page Header */}
       <div className="text-center space-y-4 max-w-3xl mx-auto font-sans">
         <span className="text-amber-600 font-bold text-xs uppercase tracking-wider bg-amber-100 px-3 py-1 rounded-full border border-amber-200 font-sans">
-          FREE CONSULTATION
+          CONSULTATION
         </span>
+
         <h1 className="text-3xl sm:text-5xl font-extrabold text-stone-900 font-sans break-keep">
-          무료 현장 실측 & 견적 문의
+          현장 실측 & 견적 문의
         </h1>
+
         <p className="text-stone-600 text-sm sm:text-base leading-relaxed font-sans break-keep">
-          부산 전역 및 경남·울산 지역 현장 실측 방문을 신청하세요.
-          실내건축 면허 전문가가 1:1로 직접 세밀하게 안내해 드립니다.
+          부산 전 지역을 중심으로 인테리어·리모델링 현장
+          상담을 진행합니다. 공간 유형과 공사 범위,
+          희망 일정을 남겨주시면 상담 내용을 확인해
+          안내드립니다.
         </p>
       </div>
 
@@ -204,10 +257,13 @@ export const ContactPage: React.FC<ContactPageProps> = ({ initialData }) => {
           <div className="bg-stone-900 text-white p-6 rounded-3xl border border-stone-800 space-y-4 shadow-lg font-sans">
             <h3 className="text-lg font-bold text-white font-sans flex items-center gap-2">
               <Phone className="w-5 h-5 text-amber-400" />
-              <span>빠른 다이렉트 상담</span>
+              <span>빠른 상담</span>
             </h3>
+
             <p className="text-xs text-stone-300 leading-relaxed font-sans break-keep">
-              전화상담을 이용하시면 더욱 빠르게 현장 실측 일정을 잡으실 수 있습니다.
+              전화 상담을 이용하시면 현장과 공사 범위를
+              빠르게 확인하고 상담 일정을 안내받으실 수
+              있습니다.
             </p>
 
             <div className="space-y-3 pt-2 font-sans">
@@ -217,7 +273,9 @@ export const ContactPage: React.FC<ContactPageProps> = ({ initialData }) => {
                   className="flex items-center justify-center gap-2 py-3 px-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-950 font-extrabold rounded-xl text-xs sm:text-sm transition-all shadow"
                 >
                   <Phone className="w-4 h-4 shrink-0" />
-                  <span>대표: {SITE_CONFIG.company.phone}</span>
+                  <span>
+                    대표: {SITE_CONFIG.company.phone}
+                  </span>
                 </a>
 
                 <a
@@ -225,7 +283,9 @@ export const ContactPage: React.FC<ContactPageProps> = ({ initialData }) => {
                   className="flex items-center justify-center gap-2 py-3 px-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-950 font-extrabold rounded-xl text-xs sm:text-sm transition-all shadow"
                 >
                   <Phone className="w-4 h-4 shrink-0" />
-                  <span>직통: {SITE_CONFIG.company.mobilePhone}</span>
+                  <span>
+                    직통: {SITE_CONFIG.company.mobilePhone}
+                  </span>
                 </a>
               </div>
 
@@ -235,7 +295,9 @@ export const ContactPage: React.FC<ContactPageProps> = ({ initialData }) => {
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2 w-full py-3 bg-emerald-900 hover:bg-emerald-800 text-emerald-100 font-bold rounded-xl text-xs sm:text-sm transition-all border border-emerald-700/60 font-sans"
               >
-                <span>네이버 플레이스 연결 (위치 및 리뷰)</span>
+                <span>
+                  네이버 플레이스 연결 (위치 및 리뷰)
+                </span>
                 <ExternalLink className="w-4 h-4" />
               </a>
             </div>
@@ -245,28 +307,39 @@ export const ContactPage: React.FC<ContactPageProps> = ({ initialData }) => {
           <div className="bg-white p-6 rounded-3xl border border-stone-200 space-y-4 shadow-sm text-xs sm:text-sm text-stone-700 font-sans">
             <h3 className="text-base font-bold text-stone-900 font-sans flex items-center gap-2 border-b border-stone-200 pb-3">
               <Building className="w-5 h-5 text-amber-600" />
-              <span>{SITE_CONFIG.brand.displayName} 안내</span>
+              <span>
+                {SITE_CONFIG.brand.displayName} 안내
+              </span>
             </h3>
 
             <div className="space-y-2.5 font-sans">
               <div className="flex items-start gap-2 font-sans">
                 <MapPin className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+
                 <span>
-                  <strong>주소:</strong> {SITE_CONFIG.company.address} {SITE_CONFIG.company.addressDetail}
+                  <strong>주소:</strong>{" "}
+                  {SITE_CONFIG.company.address}{" "}
+                  {SITE_CONFIG.company.addressDetail}
                 </span>
               </div>
 
               <div className="flex items-center gap-2 font-sans">
                 <ShieldCheck className="w-4 h-4 text-amber-600 shrink-0" />
+
                 <span>
-                  <strong>면허:</strong> {SITE_CONFIG.company.licenseStatus} ({SITE_CONFIG.company.licenseNumber})
+                  <strong>등록:</strong>{" "}
+                  {SITE_CONFIG.company.licenseStatus} (
+                  {SITE_CONFIG.company.licenseNumber})
                 </span>
               </div>
 
               <div className="flex items-center gap-2 font-sans">
                 <Clock className="w-4 h-4 text-amber-600 shrink-0" />
+
                 <span>
-                  <strong>영업시간:</strong> {SITE_CONFIG.company.operatingHours} ({SITE_CONFIG.company.closedDays})
+                  <strong>영업시간:</strong>{" "}
+                  {SITE_CONFIG.company.operatingHours} (
+                  {SITE_CONFIG.company.closedDays})
                 </span>
               </div>
             </div>
@@ -280,16 +353,20 @@ export const ContactPage: React.FC<ContactPageProps> = ({ initialData }) => {
               <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center mx-auto border border-amber-200 font-sans">
                 <CheckCircle className="w-10 h-10" />
               </div>
+
               <h2 className="text-2xl font-bold text-stone-900 font-sans break-keep">
                 견적 상담 신청이 정상 접수되었습니다!
               </h2>
+
               <p className="text-sm text-stone-600 max-w-md mx-auto leading-relaxed font-sans break-keep">
-                작성해주신 정보를 바탕으로 한신인테리어 담당자가 빠르게 연락드려 현장 실측 방문 일정을 잡아드리겠습니다.
+                작성해주신 정보를 바탕으로 지니 인테리어
+                담당자가 상담 내용을 확인한 뒤 연락드리겠습니다.
               </p>
 
               {savedDocPath && (
                 <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl max-w-md mx-auto text-xs text-emerald-800 font-mono">
-                  <strong>접수 문서 경로:</strong> {savedDocPath}
+                  <strong>접수 문서 경로:</strong>{" "}
+                  {savedDocPath}
                 </div>
               )}
 
@@ -297,15 +374,18 @@ export const ContactPage: React.FC<ContactPageProps> = ({ initialData }) => {
                 <button
                   onClick={() => {
                     setSubmitted(false);
+
                     setFormData({
                       name: "",
                       phone: "",
-                      location: "부산진구 전포동",
+                      location: "",
                       spaceType: "아파트",
                       area: "30",
                       startDate: "가장 빠른 일자",
                       details: "",
                     });
+
+                    setPrivacyAgreed(false);
                   }}
                   className="px-6 py-3 bg-stone-900 text-white font-bold text-xs rounded-xl hover:bg-stone-800 transition-colors cursor-pointer font-sans"
                 >
@@ -314,41 +394,59 @@ export const ContactPage: React.FC<ContactPageProps> = ({ initialData }) => {
               </div>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-5 text-xs sm:text-sm font-sans">
+            <form
+              onSubmit={handleSubmit}
+              className="space-y-5 text-xs sm:text-sm font-sans"
+            >
               <div className="border-b border-stone-200 pb-3 font-sans">
                 <h2 className="text-lg font-bold text-stone-900 font-sans">
                   견적 상담 신청서
                 </h2>
+
                 <p className="text-xs text-stone-500 mt-1">
-                  모든 현장 방문 및 상담은 100% 무료입니다.
+                  공사 예정 지역과 공간 정보를 입력해 주세요.
                 </p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block font-bold text-stone-800 mb-1">
-                    이름 <span className="text-amber-600">*</span>
+                    이름{" "}
+                    <span className="text-amber-600">*</span>
                   </label>
+
                   <input
                     type="text"
                     required
                     placeholder="홍길동"
                     value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        name: e.target.value,
+                      })
+                    }
                     className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 focus:outline-none focus:border-amber-500"
                   />
                 </div>
 
                 <div>
                   <label className="block font-bold text-stone-800 mb-1">
-                    연락처 <span className="text-amber-600">*</span>
+                    연락처{" "}
+                    <span className="text-amber-600">*</span>
                   </label>
+
                   <input
                     type="tel"
                     required
                     placeholder="010-0000-0000"
                     value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        phone: e.target.value,
+                      })
+                    }
                     className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 focus:outline-none focus:border-amber-500"
                   />
                 </div>
@@ -357,23 +455,38 @@ export const ContactPage: React.FC<ContactPageProps> = ({ initialData }) => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block font-bold text-stone-800 mb-1">
-                    공사 지역 <span className="text-amber-600">*</span>
+                    공사 지역{" "}
+                    <span className="text-amber-600">*</span>
                   </label>
+
                   <input
                     type="text"
                     required
                     value={formData.location}
-                    placeholder="예: 부산진구 전포동, 서면"
-                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                    placeholder="예: 동래구 명륜동, 해운대구 우동"
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        location: e.target.value,
+                      })
+                    }
                     className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 focus:outline-none focus:border-amber-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-bold text-stone-800 mb-1">공간 유형</label>
+                  <label className="block font-bold text-stone-800 mb-1">
+                    공간 유형
+                  </label>
+
                   <select
                     value={formData.spaceType}
-                    onChange={(e) => setFormData({ ...formData, spaceType: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        spaceType: e.target.value,
+                      })
+                    }
                     className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 focus:outline-none focus:border-amber-500"
                   >
                     <option value="아파트">아파트</option>
@@ -382,6 +495,9 @@ export const ContactPage: React.FC<ContactPageProps> = ({ initialData }) => {
                     <option value="카페">카페</option>
                     <option value="음식점">음식점</option>
                     <option value="사무실">사무실</option>
+                    <option value="학교·교육시설">
+                      학교·교육시설
+                    </option>
                     <option value="기타">기타</option>
                   </select>
                 </div>
@@ -389,35 +505,59 @@ export const ContactPage: React.FC<ContactPageProps> = ({ initialData }) => {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block font-bold text-stone-800 mb-1">예상 면적 (평수)</label>
+                  <label className="block font-bold text-stone-800 mb-1">
+                    예상 면적 (평수)
+                  </label>
+
                   <input
                     type="number"
                     value={formData.area}
                     placeholder="30"
-                    onChange={(e) => setFormData({ ...formData, area: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        area: e.target.value,
+                      })
+                    }
                     className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 focus:outline-none focus:border-amber-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-bold text-stone-800 mb-1">희망 공사일</label>
+                  <label className="block font-bold text-stone-800 mb-1">
+                    희망 공사일
+                  </label>
+
                   <input
                     type="text"
                     value={formData.startDate}
                     placeholder="가장 빠른 일자"
-                    onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        startDate: e.target.value,
+                      })
+                    }
                     className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 focus:outline-none focus:border-amber-500"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block font-bold text-stone-800 mb-1">상담 내용</label>
+                <label className="block font-bold text-stone-800 mb-1">
+                  상담 내용
+                </label>
+
                 <textarea
                   rows={4}
                   value={formData.details}
-                  placeholder="공사 범위 (전체/부분) 및 원하시는 디자인 스타일, 요청사항을 작성해 주세요."
-                  onChange={(e) => setFormData({ ...formData, details: e.target.value })}
+                  placeholder="공사 범위(전체/부분), 원하시는 디자인 스타일과 요청사항을 작성해 주세요."
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      details: e.target.value,
+                    })
+                  }
                   className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 focus:outline-none focus:border-amber-500 resize-none"
                 />
               </div>
@@ -429,16 +569,22 @@ export const ContactPage: React.FC<ContactPageProps> = ({ initialData }) => {
                     type="checkbox"
                     id="contactPrivacyAgreed"
                     checked={privacyAgreed}
-                    onChange={(e) => setPrivacyAgreed(e.target.checked)}
+                    onChange={(e) =>
+                      setPrivacyAgreed(e.target.checked)
+                    }
                     disabled={loading}
                     className="mt-0.5 accent-amber-600 w-4 h-4 rounded shrink-0 cursor-pointer"
                   />
+
                   <label
                     htmlFor="contactPrivacyAgreed"
                     className="text-stone-700 cursor-pointer font-medium leading-relaxed select-none"
                   >
-                    상담 신청을 위해 이름, 연락처 및 상담 내용을 수집·이용하는 것에 동의합니다.
-                    <span className="text-amber-600 font-bold ml-1">(필수)</span>
+                    상담 신청을 위해 이름, 연락처 및 상담
+                    내용을 수집·이용하는 것에 동의합니다.
+                    <span className="text-amber-600 font-bold ml-1">
+                      (필수)
+                    </span>
                   </label>
                 </div>
               </div>
@@ -447,7 +593,9 @@ export const ContactPage: React.FC<ContactPageProps> = ({ initialData }) => {
               {errorMessage && (
                 <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs flex items-start gap-2.5">
                   <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
-                  <span className="leading-relaxed font-medium">{errorMessage}</span>
+                  <span className="leading-relaxed font-medium">
+                    {errorMessage}
+                  </span>
                 </div>
               )}
 

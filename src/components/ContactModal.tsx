@@ -8,8 +8,16 @@ import {
   AlertCircle,
   Phone,
 } from "lucide-react";
-import { db, firebaseProjectId, firebaseDatabaseId } from "../firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import {
+  db,
+  firebaseProjectId,
+  firebaseDatabaseId,
+} from "../firebase";
+import {
+  collection,
+  addDoc,
+  serverTimestamp,
+} from "firebase/firestore";
 
 interface ContactModalProps {
   isOpen: boolean;
@@ -30,7 +38,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
-    location: prefilledData?.location || "부산진구 전포동",
+    location: prefilledData?.location || "",
     spaceType: prefilledData?.spaceType || "아파트",
     area: prefilledData?.area || "30",
     startDate: "가장 빠른 일자",
@@ -40,8 +48,12 @@ export const ContactModal: React.FC<ContactModalProps> = ({
   const [privacyAgreed, setPrivacyAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [savedDocPath, setSavedDocPath] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(
+    null
+  );
+  const [savedDocPath, setSavedDocPath] = useState<string | null>(
+    null
+  );
 
   // Sync prefilled data if updated while modal is open
   useEffect(() => {
@@ -64,7 +76,9 @@ export const ContactModal: React.FC<ContactModalProps> = ({
 
     // 1. Validate Privacy Consent
     if (!privacyAgreed) {
-      setErrorMessage("개인정보 수집 및 이용 동의에 체크해 주세요.");
+      setErrorMessage(
+        "개인정보 수집 및 이용 동의에 체크해 주세요."
+      );
       return;
     }
 
@@ -77,10 +91,14 @@ export const ContactModal: React.FC<ContactModalProps> = ({
     setLoading(true);
 
     try {
-      console.log("1. 상담 신청 시작 (busan-interior Firestore)");
+      console.log(
+        "1. 상담 신청 시작 (busan-interior Firestore)"
+      );
 
       if (!db) {
-        throw new Error("Firebase 초기화 오류: Firestore DB 인스턴스가 존재하지 않습니다.");
+        throw new Error(
+          "Firebase 초기화 오류: Firestore DB 인스턴스가 존재하지 않습니다."
+        );
       }
 
       // 3. Save document to Firestore consultations collection using addDoc
@@ -104,8 +122,13 @@ export const ContactModal: React.FC<ContactModalProps> = ({
       console.log("=== FIRESTORE WRITE START ===");
 
       let docRef;
+
       try {
-        docRef = await addDoc(collection(db, "consultations"), consultationData);
+        docRef = await addDoc(
+          collection(db, "consultations"),
+          consultationData
+        );
+
         console.log("=== FIRESTORE WRITE SUCCESS ===");
         console.log("Document ID:", docRef.id);
         console.log("Document Path:", docRef.path);
@@ -122,24 +145,32 @@ export const ContactModal: React.FC<ContactModalProps> = ({
       setSavedDocPath(docRef.path);
       setSubmitted(true);
 
-      // Auxiliary Admin Email Notification (does not block client submission success)
+      // Auxiliary Admin Email Notification
+      // does not block client submission success
       try {
-        const notifyRes = await fetch("/api/notify-consultation", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: formData.name.trim(),
-            phone: formData.phone.trim(),
-            location: formData.location.trim(),
-            spaceType: formData.spaceType,
-            area: formData.area.trim(),
-            startDate: formData.startDate.trim(),
-            details: formData.details.trim(),
-            docPath: docRef.path,
-            createdAt: new Date().toLocaleString("ko-KR"),
-          }),
-        });
+        const notifyRes = await fetch(
+          "/api/notify-consultation",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              name: formData.name.trim(),
+              phone: formData.phone.trim(),
+              location: formData.location.trim(),
+              spaceType: formData.spaceType,
+              area: formData.area.trim(),
+              startDate: formData.startDate.trim(),
+              details: formData.details.trim(),
+              docPath: docRef.path,
+              createdAt: new Date().toLocaleString("ko-KR"),
+            }),
+          }
+        );
+
         const notifyData = await notifyRes.json();
+
         if (notifyData?.success) {
           console.log("EMAIL NOTIFICATION SUCCESS");
         } else {
@@ -149,11 +180,14 @@ export const ContactModal: React.FC<ContactModalProps> = ({
         console.error("EMAIL NOTIFICATION FAILED");
       }
 
-      // Auxiliary Admin Kakao Notification (does not block client submission success)
+      // Auxiliary Admin Kakao Notification
+      // does not block client submission success
       try {
         const kakaoRes = await fetch("/api/notify-kakao", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify({
             name: formData.name.trim(),
             phone: formData.phone.trim(),
@@ -165,24 +199,41 @@ export const ContactModal: React.FC<ContactModalProps> = ({
             docPath: docRef.path,
           }),
         });
+
         const kakaoData = await kakaoRes.json();
+
         if (kakaoData?.success) {
           console.log("KAKAO NOTIFICATION SUCCESS");
         } else {
           console.warn("KAKAO NOTIFICATION FAILED");
         }
       } catch (kakaoErr) {
-        console.warn("KAKAO NOTIFICATION FAILED", kakaoErr);
+        console.warn(
+          "KAKAO NOTIFICATION FAILED",
+          kakaoErr
+        );
       }
     } catch (error: any) {
       setSubmitted(false);
       setSavedDocPath(null);
-      console.error("REAL FIRESTORE WRITE FAILED:", error);
-      console.error("Firebase error code:", error?.code);
-      console.error("Firebase error message:", error?.message);
+
+      console.error(
+        "REAL FIRESTORE WRITE FAILED:",
+        error
+      );
+      console.error(
+        "Firebase error code:",
+        error?.code
+      );
+      console.error(
+        "Firebase error message:",
+        error?.message
+      );
 
       setErrorMessage(
-        `상담 신청 중 오류가 발생했습니다 (${error?.message || "네트워크 오류"}). 잠시 후 다시 시도해 주세요.`
+        `상담 신청 중 오류가 발생했습니다 (${
+          error?.message || "네트워크 오류"
+        }). 잠시 후 다시 시도해 주세요.`
       );
     } finally {
       setLoading(false);
@@ -205,12 +256,14 @@ export const ContactModal: React.FC<ContactModalProps> = ({
         <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-stone-800 bg-stone-950 font-sans">
           <div>
             <span className="text-[11px] font-bold text-amber-400 uppercase tracking-wide font-sans">
-              {SITE_CONFIG.company.name} 공식 실측 신청
+              {SITE_CONFIG.company.name} 공식 상담 신청
             </span>
+
             <h3 className="text-base sm:text-lg font-bold text-white font-sans mt-0.5 break-keep">
-              무료 현장 실측 & 견적 신청
+              현장 실측 & 견적 신청
             </h3>
           </div>
+
           <button
             onClick={handleResetAndClose}
             className="p-2 text-stone-400 hover:text-white bg-stone-800 hover:bg-stone-700 rounded-xl transition-colors shrink-0 cursor-pointer"
@@ -226,7 +279,9 @@ export const ContactModal: React.FC<ContactModalProps> = ({
           {errorMessage && (
             <div className="p-3.5 bg-rose-950/80 border border-rose-500/50 rounded-xl text-rose-200 text-xs flex items-start gap-2.5 animate-in fade-in duration-200 font-sans">
               <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-              <span className="leading-relaxed font-sans break-keep">{errorMessage}</span>
+              <span className="leading-relaxed font-sans break-keep">
+                {errorMessage}
+              </span>
             </div>
           )}
 
@@ -241,8 +296,10 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                 <h4 className="text-xl font-bold text-white font-sans break-keep">
                   실측 상담 신청이 접수되었습니다.
                 </h4>
+
                 <p className="text-xs sm:text-sm text-stone-300 leading-relaxed max-w-md mx-auto font-medium font-sans break-keep">
-                  한신인테리어 담당자가 입력하신 연락처로 상담을 안내해 드리겠습니다.
+                  지니 인테리어 담당자가 입력하신 연락처로
+                  상담을 안내해 드리겠습니다.
                 </p>
               </div>
 
@@ -250,34 +307,58 @@ export const ContactModal: React.FC<ContactModalProps> = ({
               <div className="p-4 bg-stone-950 rounded-2xl border border-stone-800 text-xs text-left space-y-2 text-stone-300">
                 <div className="flex items-center justify-between pb-2 border-b border-stone-800 font-bold text-amber-300">
                   <span>신청 내역 요약</span>
-                  <span className="text-[10px] text-emerald-400 font-bold">Firestore 저장 성공</span>
+                  <span className="text-[10px] text-emerald-400 font-bold">
+                    Firestore 저장 성공
+                  </span>
                 </div>
 
                 {savedDocPath && (
                   <div className="p-2 bg-stone-900 border border-emerald-500/30 rounded-lg text-[11px] font-mono text-emerald-300 break-all">
-                    <strong>문서 경로:</strong> {savedDocPath}
+                    <strong>문서 경로:</strong>{" "}
+                    {savedDocPath}
                   </div>
                 )}
 
                 <div className="grid grid-cols-2 gap-2 pt-1">
                   <p>
-                    <strong className="text-stone-400">성함:</strong> {formData.name}
+                    <strong className="text-stone-400">
+                      성함:
+                    </strong>{" "}
+                    {formData.name}
                   </p>
+
                   <p>
-                    <strong className="text-stone-400">연락처:</strong> {formData.phone}
+                    <strong className="text-stone-400">
+                      연락처:
+                    </strong>{" "}
+                    {formData.phone}
                   </p>
+
                   <p>
-                    <strong className="text-stone-400">지역:</strong> {formData.location}
+                    <strong className="text-stone-400">
+                      지역:
+                    </strong>{" "}
+                    {formData.location}
                   </p>
+
                   <p>
-                    <strong className="text-stone-400">유형/면적:</strong> {formData.spaceType} ({formData.area}평)
+                    <strong className="text-stone-400">
+                      유형/면적:
+                    </strong>{" "}
+                    {formData.spaceType} ({formData.area}평)
                   </p>
                 </div>
 
                 {/* Firebase Connection Diagnostics info */}
                 <div className="pt-2 border-t border-stone-800/80 text-[10px] text-stone-400 font-mono space-y-0.5">
-                  <p><strong>Project ID:</strong> {firebaseProjectId}</p>
-                  <p><strong>Database ID:</strong> {firebaseDatabaseId}</p>
+                  <p>
+                    <strong>Project ID:</strong>{" "}
+                    {firebaseProjectId}
+                  </p>
+                  <p>
+                    <strong>Database ID:</strong>{" "}
+                    {firebaseDatabaseId}
+                  </p>
                 </div>
               </div>
 
@@ -287,7 +368,10 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                   className="w-full min-h-[44px] py-3.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold rounded-xl transition-all shadow-lg text-xs sm:text-sm flex items-center justify-center gap-2 active:scale-[0.99] text-center"
                 >
                   <Phone className="w-4 h-4 shrink-0 text-white" />
-                  <span>📞 지금 바로 전화 상담하기 ({SITE_CONFIG.company.phone})</span>
+                  <span>
+                    📞 지금 바로 전화 상담하기 (
+                    {SITE_CONFIG.company.phone})
+                  </span>
                 </a>
 
                 <button
@@ -300,36 +384,50 @@ export const ContactModal: React.FC<ContactModalProps> = ({
             </div>
           ) : (
             /* Consultation Input Form */
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form
+              onSubmit={handleSubmit}
+              className="space-y-4"
+            >
               {/* Name & Phone */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-stone-300 font-semibold mb-1 text-xs">
-                    이름 <span className="text-amber-400">*</span>
+                    이름{" "}
+                    <span className="text-amber-400">*</span>
                   </label>
+
                   <input
                     type="text"
                     required
                     placeholder="홍길동"
                     value={formData.name}
                     onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
+                      setFormData({
+                        ...formData,
+                        name: e.target.value,
+                      })
                     }
                     disabled={loading}
                     className="w-full px-3.5 py-2.5 bg-stone-950 border border-stone-800 rounded-xl text-white placeholder-stone-600 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all text-xs sm:text-sm"
                   />
                 </div>
+
                 <div>
                   <label className="block text-stone-300 font-semibold mb-1 text-xs">
-                    연락처 <span className="text-amber-400">*</span>
+                    연락처{" "}
+                    <span className="text-amber-400">*</span>
                   </label>
+
                   <input
                     type="tel"
                     required
                     placeholder="010-0000-0000"
                     value={formData.phone}
                     onChange={(e) =>
-                      setFormData({ ...formData, phone: e.target.value })
+                      setFormData({
+                        ...formData,
+                        phone: e.target.value,
+                      })
                     }
                     disabled={loading}
                     className="w-full px-3.5 py-2.5 bg-stone-950 border border-stone-800 rounded-xl text-white placeholder-stone-600 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all text-xs sm:text-sm"
@@ -341,28 +439,39 @@ export const ContactModal: React.FC<ContactModalProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-stone-300 font-semibold mb-1 text-xs">
-                    공사 지역 <span className="text-amber-400">*</span>
+                    공사 지역{" "}
+                    <span className="text-amber-400">*</span>
                   </label>
+
                   <input
                     type="text"
                     required
                     value={formData.location}
-                    placeholder="부산진구 전포동"
+                    placeholder="예: 동래구 명륜동, 해운대구 우동"
                     onChange={(e) =>
-                      setFormData({ ...formData, location: e.target.value })
+                      setFormData({
+                        ...formData,
+                        location: e.target.value,
+                      })
                     }
                     disabled={loading}
                     className="w-full px-3.5 py-2.5 bg-stone-950 border border-stone-800 rounded-xl text-white placeholder-stone-600 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all text-xs sm:text-sm"
                   />
                 </div>
+
                 <div>
                   <label className="block text-stone-300 font-semibold mb-1 text-xs">
-                    공간 유형 <span className="text-amber-400">*</span>
+                    공간 유형{" "}
+                    <span className="text-amber-400">*</span>
                   </label>
+
                   <select
                     value={formData.spaceType}
                     onChange={(e) =>
-                      setFormData({ ...formData, spaceType: e.target.value })
+                      setFormData({
+                        ...formData,
+                        spaceType: e.target.value,
+                      })
                     }
                     disabled={loading}
                     className="w-full px-3.5 py-2.5 bg-stone-950 border border-stone-800 rounded-xl text-white focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all text-xs sm:text-sm"
@@ -373,6 +482,9 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                     <option value="카페">카페</option>
                     <option value="음식점">음식점</option>
                     <option value="사무실">사무실</option>
+                    <option value="학교·교육시설">
+                      학교·교육시설
+                    </option>
                     <option value="기타">기타</option>
                   </select>
                 </div>
@@ -384,27 +496,36 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                   <label className="block text-stone-300 font-semibold mb-1 text-xs">
                     예상 면적 (평수)
                   </label>
+
                   <input
                     type="number"
                     value={formData.area}
                     placeholder="30"
                     onChange={(e) =>
-                      setFormData({ ...formData, area: e.target.value })
+                      setFormData({
+                        ...formData,
+                        area: e.target.value,
+                      })
                     }
                     disabled={loading}
                     className="w-full px-3.5 py-2.5 bg-stone-950 border border-stone-800 rounded-xl text-white placeholder-stone-600 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all text-xs sm:text-sm"
                   />
                 </div>
+
                 <div>
                   <label className="block text-stone-300 font-semibold mb-1 text-xs">
                     희망 공사 시작일
                   </label>
+
                   <input
                     type="text"
                     value={formData.startDate}
                     placeholder="가장 빠른 일자"
                     onChange={(e) =>
-                      setFormData({ ...formData, startDate: e.target.value })
+                      setFormData({
+                        ...formData,
+                        startDate: e.target.value,
+                      })
                     }
                     disabled={loading}
                     className="w-full px-3.5 py-2.5 bg-stone-950 border border-stone-800 rounded-xl text-white placeholder-stone-600 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all text-xs sm:text-sm"
@@ -417,12 +538,16 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                 <label className="block text-stone-300 font-semibold mb-1 text-xs">
                   상담 요청 내용
                 </label>
+
                 <textarea
                   rows={3}
                   value={formData.details}
                   placeholder="공사 범위(전체/부분) 및 원하시는 스타일, 기타 요구사항을 자유롭게 작성해 주세요."
                   onChange={(e) =>
-                    setFormData({ ...formData, details: e.target.value })
+                    setFormData({
+                      ...formData,
+                      details: e.target.value,
+                    })
                   }
                   disabled={loading}
                   className="w-full px-3.5 py-2.5 bg-stone-950 border border-stone-800 rounded-xl text-white placeholder-stone-600 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all resize-none text-xs sm:text-sm"
@@ -436,25 +561,40 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                     type="checkbox"
                     id="privacyAgreed"
                     checked={privacyAgreed}
-                    onChange={(e) => setPrivacyAgreed(e.target.checked)}
+                    onChange={(e) =>
+                      setPrivacyAgreed(e.target.checked)
+                    }
                     disabled={loading}
                     className="mt-0.5 accent-amber-500 w-4 h-4 rounded shrink-0 cursor-pointer"
                   />
+
                   <label
                     htmlFor="privacyAgreed"
                     className="text-stone-200 cursor-pointer font-medium leading-relaxed select-none"
                   >
-                    상담 신청을 위해 이름, 연락처 및 상담 내용을 수집·이용하는 것에 동의합니다.
-                    <span className="text-amber-400 font-bold ml-1">(필수)</span>
+                    상담 신청을 위해 이름, 연락처 및 상담
+                    내용을 수집·이용하는 것에 동의합니다.
+                    <span className="text-amber-400 font-bold ml-1">
+                      (필수)
+                    </span>
                   </label>
                 </div>
 
                 <div className="pt-2 border-t border-stone-800/80 text-[11px] text-stone-400 space-y-0.5 pl-6">
                   <p>
-                    • <strong className="text-stone-300">수집 목적:</strong> 인테리어 상담 및 견적 문의 응대
+                    •{" "}
+                    <strong className="text-stone-300">
+                      수집 목적:
+                    </strong>{" "}
+                    인테리어 상담 및 견적 문의 응대
                   </p>
+
                   <p>
-                    • <strong className="text-stone-300">보유기간:</strong> 상담 목적 달성 후 지체 없이 파기
+                    •{" "}
+                    <strong className="text-stone-300">
+                      보유기간:
+                    </strong>{" "}
+                    상담 목적 달성 후 지체 없이 파기
                   </p>
                 </div>
               </div>
@@ -474,14 +614,15 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                   ) : (
                     <>
                       <Send className="w-4 h-4" />
-                      <span>무료 현장 실측 신청하기</span>
+                      <span>현장 실측 상담 신청하기</span>
                     </>
                   )}
                 </button>
               </div>
 
               <p className="text-[11px] text-stone-400 text-center">
-                * 현장 방문 및 실측 상담은 부담 없이 100% 무료로 진행됩니다.
+                * 상담 접수 후 현장 위치와 공사 범위를
+                확인하여 실측 일정을 안내드립니다.
               </p>
             </form>
           )}

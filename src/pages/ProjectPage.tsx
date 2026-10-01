@@ -141,14 +141,14 @@ export const ProjectPage: React.FC<ProjectPageProps> = ({
   return (
     <div className="max-w-7xl mx-auto px-4 lg:px-8 py-12 space-y-12">
       <MetaManager
-        title="시공사례 (PROJECT)｜부산진구·전포동 인테리어 포트폴리오｜지니 인테리어"
-        description="지니 인테리어(GENE INTERIOR) 대표 시공사례 포트폴리오. 부산 주거·상가·카페·사무실 리모델링 완공 및 비포/애프터 공사 과정 공개."
+        title="시공사례 (PROJECT)｜부산 인테리어 포트폴리오｜지니 인테리어"
+        description="지니 인테리어(GENE INTERIOR)의 실제 시공사례와 디자인 제안·콘셉트 포트폴리오. 부산 주거·상업·사무실·학교·교육시설 인테리어 및 리모델링 사례를 구분하여 확인할 수 있습니다."
         canonicalPath="/projects"
       />
       <StructuredData
         type="page"
         title="시공사례 (PROJECT) | 지니 인테리어"
-        description="지니 인테리어 부산 시공사례 포트폴리오"
+        description="지니 인테리어의 실제 시공사례와 디자인 제안·콘셉트를 구분한 부산 인테리어 포트폴리오"
         path="/projects"
       />
       {/* Page Header */}
@@ -160,10 +160,10 @@ export const ProjectPage: React.FC<ProjectPageProps> = ({
           지니 인테리어 대표 시공사례
         </h1>
         <p className="text-stone-600 text-sm sm:text-base leading-relaxed font-sans break-keep">
-          부산진구 전포동, 서면, 동래구 등 부산 주요 공간의 완공 사례를 확인해보세요.
+          부산을 중심으로 울산·경남까지 지니 인테리어의 실제 시공사례와 공간별 포트폴리오를 확인해보세요.
           <br />
           <span className="text-amber-700 font-semibold text-xs font-sans">
-            * 지니 인테리어(GENE INTERIOR)의 실제 시공 현장 및 추천 포트폴리오를 실시간으로 투명하게 공개합니다.
+            * 실제 시공사례와 디자인 제안·콘셉트 이미지를 명확히 구분하여 제공합니다.
           </span>
         </p>
       </div>
@@ -264,7 +264,7 @@ export const ProjectPage: React.FC<ProjectPageProps> = ({
                             : "bg-emerald-500 text-white"
                         }`}
                       >
-                        {project.isSample ? "샘플 프로젝트" : "실제 시공사례"}
+                        {project.isSample ? "디자인 제안 · 콘셉트" : "실제 시공사례"}
                       </span>
                       <span className="bg-stone-950/80 text-white text-xs px-3 py-1 rounded-full backdrop-blur-md font-semibold border border-stone-700 font-sans">
                         {project.category}
@@ -336,7 +336,7 @@ export const ProjectPage: React.FC<ProjectPageProps> = ({
                     }`}
                   >
                     {selectedProject.isSample
-                      ? "샘플 포트폴리오 상세보기"
+                      ? "디자인 제안 · 콘셉트 상세보기"
                       : "실제 시공사례 상세보기"}
                   </span>
                   <span className="text-xs text-stone-400 font-sans">

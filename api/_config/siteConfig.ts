@@ -178,7 +178,7 @@ export const SITE_CONFIG = {
     email: "8063143@naver.com",
 
     naverPlaceUrl: "https://m.place.naver.com/place/13556704/home",
-    kakaoTalkUrl: "https://pf.kakao.com",
+    kakaoTalkUrl: "https://pf.kakao.com/_xaAxniX",
 
     operatingHours: "월~토요일 08:00 - 18:30",
     closedDays: "일요일 및 공휴일 휴무",

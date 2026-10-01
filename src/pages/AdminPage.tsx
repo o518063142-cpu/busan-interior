@@ -353,7 +353,7 @@ export const AdminPage: React.FC = () => {
               <Lock className="w-7 h-7" />
             </div>
             <span className="text-[11px] font-extrabold uppercase tracking-widest text-amber-400">
-              한신인테리어 관리자 시스템
+              지니 인테리어 관리자 시스템
             </span>
             <h2 className="text-2xl font-bold font-sans text-white break-keep">
               상담 관리 로그인
@@ -453,7 +453,7 @@ export const AdminPage: React.FC = () => {
             </div>
             <div>
               <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest block">
-                한신인테리어 공식 관리 시스템
+                지니 인테리어 공식 관리 시스템
               </span>
               <h1 className="text-lg sm:text-xl font-bold text-white font-sans break-keep">
                 실측 및 견적 상담 관리

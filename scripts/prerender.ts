@@ -567,31 +567,30 @@ function generateJsonLd(
             `${baseUrl}/#organization`,
 
           name:
-            `${SITE_CONFIG.brand.nameKo} (${SITE_CONFIG.legal.businessName})`,
+            SITE_ENTITY.brand.nameKo,
+
+          legalName:
+            SITE_ENTITY.legal.businessName,
 
           alternateName: [
-            SITE_CONFIG.brand.nameEn,
-            "지니인테리어",
-            "부산지니인테리어",
+            SITE_ENTITY.brand.nameEn,
+            SITE_ENTITY.brand.nameKo.replace(/\\s+/g, ""),
           ],
 
           url:
             `${baseUrl}/`,
 
           logo:
-            `${baseUrl}/icon.png`,
+            `${baseUrl}${SITE_ENTITY.logo}`,
 
           image:
-            `${baseUrl}/og-image.jpg`,
+            `${baseUrl}${SITE_ENTITY.logo}`,
 
           description:
             route.description,
 
           telephone:
-            SITE_CONFIG.company.phone,
-
-          email:
-            SITE_CONFIG.company.email,
+            SITE_ENTITY.contact.phone,
 
           priceRange:
             "$$",
@@ -601,10 +600,10 @@ function generateJsonLd(
               "EducationalOccupationalCredential",
 
             name:
-              `실내건축공사업 등록 (${SITE_CONFIG.company.licenseStatus})`,
+              SITE_ENTITY.license.officialTitle,
 
             credentialCategory:
-              "전문건설업",
+              SITE_ENTITY.license.name,
           },
 
           address: {
@@ -612,16 +611,16 @@ function generateJsonLd(
               "PostalAddress",
 
             streetAddress:
-              `${SITE_CONFIG.company.address} ${SITE_CONFIG.company.addressDetail}`,
+              SITE_ENTITY.address.street,
 
             addressLocality:
-              "부산광역시 동래구",
+              SITE_ENTITY.address.locality,
 
             addressRegion:
-              "부산광역시",
+              SITE_ENTITY.address.region,
 
             addressCountry:
-              "KR",
+              SITE_ENTITY.address.country,
           },
 
           openingHoursSpecification: [
@@ -639,46 +638,37 @@ function generateJsonLd(
               ],
 
               opens:
-                "09:00",
+                "08:30",
 
               closes:
-                "19:00",
+                "18:30",
             },
           ],
 
-          areaServed: [
-            {
-              "@type":
-                "AdministrativeArea",
+          areaServed:
+            SITE_ENTITY.serviceArea.map(
+              (area) => ({
+                "@type":
+                  "AdministrativeArea",
 
-              name:
-                "부산광역시",
-            },
+                name:
+                  area,
+              })
+            ),
 
-            {
-              "@type":
-                "AdministrativeArea",
-
-              name:
-                "부산광역시 동래구",
-            },
-
-            {
-              "@type":
-                "AdministrativeArea",
-
-              name:
-                "부산광역시 전포동",
-            },
-
-            {
-              "@type":
-                "AdministrativeArea",
-
-              name:
-                "부산광역시 서면",
-            },
-          ],
+          ...(Object.values(
+            SITE_ENTITY.socialLinks
+          ).filter(Boolean).length > 0
+            ? {
+                sameAs:
+                  Object.values(
+                    SITE_ENTITY.socialLinks
+                  ).filter(
+                    (url): url is string =>
+                      Boolean(url)
+                  ),
+              }
+            : {}),
         },
 
         {
@@ -692,10 +682,7 @@ function generateJsonLd(
             `${baseUrl}/`,
 
           name:
-            SITE_CONFIG.brand.nameKo,
-
-          alternateName:
-            SITE_CONFIG.brand.nameEn,
+            SITE_ENTITY.brand.displayName,
 
           description:
             route.description,

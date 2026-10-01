@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { SITE_CONFIG } from "../config/siteConfig";
+import { useSiteSettings } from "../hooks/useSiteSettings";
 import { NavigationMenu } from "../types";
 import { MetaManager } from "../components/seo/MetaManager";
 import { StructuredData } from "../components/seo/StructuredData";
@@ -34,6 +35,9 @@ export const InfoPage: React.FC<InfoPageProps> = ({
   setActiveTab,
   openContactModal,
 }) => {
+  const { settings: siteSettings, phoneDisplay, fullAddress } =
+    useSiteSettings();
+
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
   const [dynamicArticles, setDynamicArticles] = useState<
     InformationArticleData[]
@@ -231,9 +235,7 @@ export const InfoPage: React.FC<InfoPageProps> = ({
                     <span className="text-amber-600 font-bold font-sans">
                       Q.
                     </span>
-                    <span className="break-keep">
-                      {faq.q}
-                    </span>
+                    <span className="break-keep">{faq.q}</span>
                   </span>
 
                   {isOpen ? (
@@ -250,9 +252,7 @@ export const InfoPage: React.FC<InfoPageProps> = ({
                         A.
                       </span>
 
-                      <span className="break-keep">
-                        {faq.a}
-                      </span>
+                      <span className="break-keep">{faq.a}</span>
                     </p>
                   </div>
                 )}
@@ -297,8 +297,7 @@ export const InfoPage: React.FC<InfoPageProps> = ({
               <div className="space-y-4 font-sans">
                 <div className="flex items-center justify-between gap-2 flex-wrap font-sans">
                   <span className="px-3 py-1 bg-stone-100 group-hover:bg-amber-100 text-stone-700 group-hover:text-amber-900 text-xs font-bold rounded-full transition-colors font-sans">
-                    {article.category ||
-                      "인테리어 가이드"}
+                    {article.category || "인테리어 가이드"}
                   </span>
 
                   {article.publishedAt && (
@@ -395,25 +394,20 @@ export const InfoPage: React.FC<InfoPageProps> = ({
 
             <div className="p-4 bg-stone-950 rounded-2xl border border-stone-800 text-xs space-y-1 font-sans">
               <p>
-                <strong className="text-amber-400">
-                  주소:
-                </strong>{" "}
-                {SITE_CONFIG.company.address}{" "}
-                {SITE_CONFIG.company.addressDetail}
+                <strong className="text-amber-400">주소:</strong>{" "}
+                {fullAddress}
               </p>
 
               <p>
-                <strong className="text-amber-400">
-                  전화:
-                </strong>{" "}
-                {SITE_CONFIG.company.phoneDisplay}
+                <strong className="text-amber-400">전화:</strong>{" "}
+                {phoneDisplay}
               </p>
             </div>
           </div>
 
           <div className="pt-2">
             <a
-              href={SITE_CONFIG.company.naverPlaceUrl}
+              href={siteSettings.naverPlace}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-2 w-full py-3 bg-emerald-900 hover:bg-emerald-800 text-emerald-100 font-bold rounded-xl text-xs transition-all"

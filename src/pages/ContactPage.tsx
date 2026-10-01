@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { SITE_CONFIG } from "../config/siteConfig";
+import { useSiteSettings } from "../hooks/useSiteSettings";
 import { MetaManager } from "../components/seo/MetaManager";
 import { StructuredData } from "../components/seo/StructuredData";
 import {
@@ -37,6 +38,8 @@ interface ContactPageProps {
 export const ContactPage: React.FC<ContactPageProps> = ({
   initialData,
 }) => {
+  const { settings: siteSettings } = useSiteSettings();
+
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -269,28 +272,28 @@ export const ContactPage: React.FC<ContactPageProps> = ({
             <div className="space-y-3 pt-2 font-sans">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 font-sans">
                 <a
-                  href={`tel:${SITE_CONFIG.company.phone}`}
+                  href={`tel:${siteSettings.phone}`}
                   className="flex items-center justify-center gap-2 py-3 px-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-950 font-extrabold rounded-xl text-xs sm:text-sm transition-all shadow"
                 >
                   <Phone className="w-4 h-4 shrink-0" />
                   <span>
-                    대표: {SITE_CONFIG.company.phone}
+                    대표: {siteSettings.phone}
                   </span>
                 </a>
 
                 <a
-                  href={`tel:${SITE_CONFIG.company.mobilePhone}`}
+                  href={`tel:${siteSettings.mobilePhone}`}
                   className="flex items-center justify-center gap-2 py-3 px-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-950 font-extrabold rounded-xl text-xs sm:text-sm transition-all shadow"
                 >
                   <Phone className="w-4 h-4 shrink-0" />
                   <span>
-                    직통: {SITE_CONFIG.company.mobilePhone}
+                    직통: {siteSettings.mobilePhone}
                   </span>
                 </a>
               </div>
 
               <a
-                href={SITE_CONFIG.company.naverPlaceUrl}
+                href={siteSettings.naverPlace}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2 w-full py-3 bg-emerald-900 hover:bg-emerald-800 text-emerald-100 font-bold rounded-xl text-xs sm:text-sm transition-all border border-emerald-700/60 font-sans"

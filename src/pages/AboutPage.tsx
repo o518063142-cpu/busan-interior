@@ -1,5 +1,6 @@
 import React from "react";
 import { SITE_CONFIG } from "../config/siteConfig";
+import { useSiteSettings } from "../hooks/useSiteSettings";
 import { NavigationMenu } from "../types";
 import { MetaManager } from "../components/seo/MetaManager";
 import { StructuredData } from "../components/seo/StructuredData";
@@ -19,6 +20,9 @@ export const AboutPage: React.FC<AboutPageProps> = ({
   setActiveTab,
   openContactModal,
 }) => {
+  const { settings: siteSettings, phoneDisplay, fullAddress } =
+    useSiteSettings();
+
   return (
     <div className="max-w-7xl mx-auto px-4 lg:px-8 py-12 space-y-16">
       <MetaManager
@@ -224,7 +228,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({
             </span>
 
             <span className="font-bold text-stone-900 text-base">
-              {SITE_CONFIG.company.phoneDisplay}
+              {phoneDisplay}
             </span>
           </div>
 
@@ -234,15 +238,14 @@ export const AboutPage: React.FC<AboutPageProps> = ({
             </span>
 
             <span className="font-bold text-stone-900 text-base">
-              {SITE_CONFIG.legal.address}{" "}
-              {SITE_CONFIG.legal.addressDetail}
+              {fullAddress}
             </span>
           </div>
         </div>
 
         <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-stone-100">
           <a
-            href={SITE_CONFIG.company.naverPlaceUrl}
+            href={siteSettings.naverPlace}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-900 hover:bg-emerald-800 text-emerald-100 font-bold rounded-xl text-xs transition-all"

@@ -34,7 +34,7 @@ export const AIEstimatePage: React.FC<AIEstimatePageProps> = ({
 }) => {
   const [formInput, setFormInput] = useState<AIEstimateInput>({
     spaceType: "아파트",
-    location: "부산진구 전포동",
+    location: "",
     area: "30",
     scope: "전체공사",
     startDate: "1개월 이내",
@@ -85,7 +85,7 @@ export const AIEstimatePage: React.FC<AIEstimatePageProps> = ({
           `친환경 실크 도배 및 필름 시공`,
         ],
         constructionPhases: [
-          { phaseName: "1단계: 현장 실측 및 맞춤 설계", description: "한신인테리어 전문가 방문 및 도면 확정", durationDays: "3~5일" },
+          { phaseName: "1단계: 현장 실측 및 맞춤 설계", description: "지니 인테리어 전문가 방문 및 도면 확정", durationDays: "3~5일" },
           { phaseName: "2단계: 철거 및 설비/단열", description: "기존 인테리어 철거 및 전력 배선/배관 정리", durationDays: "2~3일" },
           { phaseName: "3단계: 목공 및 필름/타일", description: "틀 제작, 타일 시공 및 무몰딩 도어 세팅", durationDays: "5~7일" },
           { phaseName: "4단계: 도배, 마루, 조명 설치", description: "고급 마루/타일 시공 및 디밍 디자인 조명 세팅", durationDays: "3~4일" },
@@ -131,7 +131,7 @@ export const AIEstimatePage: React.FC<AIEstimatePageProps> = ({
           AI 인테리어 상담 & 견적
         </h1>
         <p className="text-stone-600 text-sm sm:text-base leading-relaxed font-sans break-keep">
-          공간 정보와 원하시는 스타일을 입력하시면, AI가 부산 지역 최신 인테리어 시세를 반영하여 예상 공사 범위, 단계를 분석해 드립니다.
+          공간 정보와 원하시는 스타일을 입력하시면, AI가 입력 조건을 바탕으로 예상 공사 범위, 비용 및 기간을 참고용으로 분석해 드립니다.
         </p>
       </div>
 
@@ -179,7 +179,7 @@ export const AIEstimatePage: React.FC<AIEstimatePageProps> = ({
                 type="text"
                 required
                 value={formInput.location}
-                placeholder="예: 부산진구 전포동, 서면"
+                placeholder="예: 동래구 명륜동, 해운대구 우동"
                 onChange={(e) => setFormInput({ ...formInput, location: e.target.value })}
                 className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 font-medium focus:outline-none focus:border-amber-500"
               />
@@ -301,7 +301,7 @@ export const AIEstimatePage: React.FC<AIEstimatePageProps> = ({
                 {loading ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin text-stone-950" />
-                    <span>AI가 한신인테리어 시세를 분석 중입니다...</span>
+                    <span>AI가 지니 인테리어 예상 견적을 분석 중입니다...</span>
                   </>
                 ) : (
                   <>
@@ -459,7 +459,7 @@ export const AIEstimatePage: React.FC<AIEstimatePageProps> = ({
                   className="w-full py-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-950 font-extrabold rounded-2xl text-sm sm:text-base transition-all shadow-xl flex items-center justify-center gap-2"
                 >
                   <Send className="w-5 h-5" />
-                  <span>{SITE_CONFIG.brand.nameKo} 무료 현장 실측 신청</span>
+                  <span>{SITE_CONFIG.brand.nameKo} 현장 실측·견적 상담 신청</span>
                 </button>
               </div>
             </div>

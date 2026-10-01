@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
+import { collection, query, orderBy, onSnapshot, doc } from "firebase/firestore";
 import { db } from "../firebase";
 import { SITE_CONFIG } from "../config/siteConfig";
 import { NavigationMenu, ProjectItem } from "../types";
@@ -67,6 +67,41 @@ export const HomePage: React.FC<HomePageProps> = ({
   const [firestoreProjects, setFirestoreProjects] = useState<ProjectItem[]>([]);
   const [activeFeaturedIndex, setActiveFeaturedIndex] = useState(0);
   const [showBeforePhoto, setShowBeforePhoto] = useState(false);
+
+  const [siteSettings, setSiteSettings] = useState({
+    phone: SITE_CONFIG.company.phone,
+    mobilePhone: SITE_CONFIG.company.mobilePhone,
+    email: "8063143@naver.com",
+    address: SITE_CONFIG.company.address,
+    addressDetail: SITE_CONFIG.company.addressDetail,
+  });
+
+  // Real-time subscription to homepage site settings
+  useEffect(() => {
+    const unsubscribe = onSnapshot(
+      doc(db, "siteSettings", "main"),
+      (snapshot) => {
+        if (!snapshot.exists()) return;
+
+        const data = snapshot.data();
+        setSiteSettings((current) => ({
+          phone: data.phone || current.phone,
+          mobilePhone: data.mobilePhone || current.mobilePhone,
+          email: data.email || current.email,
+          address: data.address || current.address,
+          addressDetail: data.addressDetail || current.addressDetail,
+        }));
+      },
+      (error) => {
+        console.warn(
+          "Firestore site settings onSnapshot notice (using base data fallback):",
+          error
+        );
+      }
+    );
+
+    return () => unsubscribe();
+  }, []);
 
   // Real-time subscription to Firestore 'projects' collection
   useEffect(() => {
@@ -209,11 +244,11 @@ export const HomePage: React.FC<HomePageProps> = ({
               <span>현장 실측·견적 상담</span>
             </button>
             <a
-              href={`tel:${SITE_CONFIG.company.phone}`}
+              href={`tel:${siteSettings.phone}`}
               className="w-full sm:w-auto min-h-[46px] sm:min-h-[48px] px-5 sm:px-6 py-3 sm:py-3.5 bg-white hover:bg-stone-50 text-stone-900 font-semibold rounded-xl text-sm sm:text-base border border-stone-300 hover:border-[#D4AF37] transition-all shadow-xs flex items-center justify-center gap-2 active:scale-[0.98]"
             >
               <Phone className="w-4 h-4 text-[#B38F4D] shrink-0" />
-              <span>전화 상담 ({SITE_CONFIG.company.phone})</span>
+              <span>전화 상담 ({siteSettings.phone})</span>
             </a>
             <button
               onClick={() => {
@@ -260,11 +295,11 @@ export const HomePage: React.FC<HomePageProps> = ({
                 MOBILE
               </span>
               <a
-                href="tel:010-7231-1470"
+                href={`tel:${siteSettings.mobilePhone}`}
                 className="text-sm xl:text-base font-semibold text-stone-950 hover:text-[#8C6D23] transition-colors inline-flex items-center gap-1.5"
               >
                 <Phone className="w-3.5 h-3.5 text-[#B38F4D]" />
-                <span>010-7231-1470</span>
+                <span>{siteSettings.mobilePhone}</span>
               </a>
             </div>
 
@@ -274,11 +309,11 @@ export const HomePage: React.FC<HomePageProps> = ({
                 TEL
               </span>
               <a
-                href="tel:051-806-3143"
+                href={`tel:${siteSettings.phone}`}
                 className="text-sm xl:text-base font-semibold text-stone-950 hover:text-[#8C6D23] transition-colors inline-flex items-center gap-1.5"
               >
                 <Phone className="w-3.5 h-3.5 text-[#B38F4D]" />
-                <span>051-806-3143</span>
+                <span>{siteSettings.phone}</span>
               </a>
             </div>
 
@@ -288,11 +323,11 @@ export const HomePage: React.FC<HomePageProps> = ({
                 EMAIL
               </span>
               <a
-                href="mailto:8063143@naver.com"
+                href={`mailto:${siteSettings.email}`}
                 className="text-sm xl:text-base font-semibold text-stone-950 hover:text-[#8C6D23] transition-colors inline-flex items-center gap-1.5"
               >
                 <Mail className="w-3.5 h-3.5 text-[#B38F4D]" />
-                <span>8063143@naver.com</span>
+                <span>{siteSettings.email}</span>
               </a>
             </div>
 
@@ -303,7 +338,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               </span>
               <div className="text-sm xl:text-base font-medium text-stone-900 inline-flex items-center gap-1.5">
                 <MapPin className="w-3.5 h-3.5 text-[#B38F4D]" />
-                <span>{SITE_CONFIG.company.address}</span>
+                <span>{siteSettings.address}</span>
               </div>
             </div>
           </div>
@@ -311,7 +346,7 @@ export const HomePage: React.FC<HomePageProps> = ({
           {/* Mobile & Tablet Contact Bar (Clean, readable 2x2 grid with high legibility & touch targets) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:hidden">
             <a
-              href="tel:010-7231-1470"
+              href={`tel:${siteSettings.mobilePhone}`}
               className="flex items-center justify-between p-3.5 bg-white rounded-xl border border-stone-200/80 shadow-xs active:bg-stone-50 transition-colors"
             >
               <div>
@@ -324,7 +359,7 @@ export const HomePage: React.FC<HomePageProps> = ({
             </a>
 
             <a
-              href="tel:051-806-3143"
+              href={`tel:${siteSettings.phone}`}
               className="flex items-center justify-between p-3.5 bg-white rounded-xl border border-stone-200/80 shadow-xs active:bg-stone-50 transition-colors"
             >
               <div>
@@ -337,7 +372,7 @@ export const HomePage: React.FC<HomePageProps> = ({
             </a>
 
             <a
-              href="mailto:8063143@naver.com"
+              href={`mailto:${siteSettings.email}`}
               className="flex items-center justify-between p-3.5 bg-white rounded-xl border border-stone-200/80 shadow-xs active:bg-stone-50 transition-colors"
             >
               <div>
@@ -354,7 +389,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                 <span className="text-[10px] font-bold tracking-[0.16em] text-[#B38F4D] uppercase font-sans block">
                   ADDRESS
                 </span>
-                <span className="text-sm font-medium text-stone-900">{SITE_CONFIG.company.address}</span>
+                <span className="text-sm font-medium text-stone-900">{siteSettings.address}</span>
               </div>
               <MapPin className="w-4 h-4 text-[#B38F4D]" />
             </div>
@@ -1093,7 +1128,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               </p>
             </div>
             <a
-              href={`tel:${SITE_CONFIG.company.phone}`}
+              href={`tel:${siteSettings.phone}`}
               className="w-full min-h-[44px] py-3 px-6 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs sm:text-sm rounded-xl transition-all shadow-md flex items-center justify-center gap-2 active:scale-95 font-sans"
             >
               <Phone className="w-4 h-4 shrink-0 text-white" />

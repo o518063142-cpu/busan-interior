@@ -175,7 +175,7 @@ export const SITE_CONFIG = {
 
     businessNumber: "상담 시 확인 가능",
     representative: "정혜은",
-    email: "상담 시 안내",
+    email: "8063143@naver.com",
 
     naverPlaceUrl: "https://m.place.naver.com/place/13556704/home",
     kakaoTalkUrl: "https://pf.kakao.com",

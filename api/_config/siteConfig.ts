@@ -109,7 +109,7 @@ export const SITE_ENTITY: SiteEntity = {
   },
 
   url: "https://gene-interior.vercel.app",
-  logo: "/images/hanshin_hero_bg_1784852933011.jpg",
+  logo: "/images/logo.png",
 
   address: {
     street: "명륜로 222 상가동 A-209호",

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { SITE_CONFIG } from "../config/siteConfig";
+import { useSiteSettings } from "../hooks/useSiteSettings";
 import {
   X,
   Send,
@@ -35,6 +36,8 @@ export const ContactModal: React.FC<ContactModalProps> = ({
   onClose,
   prefilledData,
 }) => {
+  const { settings: siteSettings } = useSiteSettings();
+
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -364,13 +367,13 @@ export const ContactModal: React.FC<ContactModalProps> = ({
 
               <div className="space-y-2.5 pt-2">
                 <a
-                  href={`tel:${SITE_CONFIG.company.phone}`}
+                  href={`tel:${siteSettings.phone}`}
                   className="w-full min-h-[44px] py-3.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold rounded-xl transition-all shadow-lg text-xs sm:text-sm flex items-center justify-center gap-2 active:scale-[0.99] text-center"
                 >
                   <Phone className="w-4 h-4 shrink-0 text-white" />
                   <span>
                     📞 지금 바로 전화 상담하기 (
-                    {SITE_CONFIG.company.phone})
+                    {siteSettings.phone})
                   </span>
                 </a>
 

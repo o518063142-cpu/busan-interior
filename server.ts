@@ -30,7 +30,7 @@ function getGenAIClient(): GoogleGenAI | null {
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {
-  res.json({ status: "ok", company: "한신인테리어" });
+  res.json({ status: "ok", company: "지니인테리어" });
 });
 
 // Admin Email Notification API endpoint
@@ -115,7 +115,7 @@ app.post("/api/ai-estimate", async (req, res) => {
   try {
     const {
       spaceType,
-      location = "부산진구 전포동",
+      location = "부산 동래구 명륜동",
       area = "30",
       scope = "전체공사",
       startDate = "협의",
@@ -128,7 +128,7 @@ app.post("/api/ai-estimate", async (req, res) => {
 
     if (ai) {
       const prompt = `
-당신은 부산 부산진구 전포동에 위치한 실내건축·인테리어 전문 브랜드 '지니 인테리어(GENE INTERIOR / 법적상호: 한신인테리어)'의 수석 견적·설계 전문가 AI입니다.
+당신은 부산 동래구 명륜동에 위치한 실내건축·인테리어 전문 브랜드 '지니 인테리어(GENE INTERIOR / 법적상호: 지니인테리어)'의 수석 견적·설계 전문가 AI입니다.
 다음 고객이 입력한 인테리어 정보를 바탕으로 세부적인 참고용 예상 공사 계획 및 비용/기간 분석을 산출해주세요.
 
 [고객 입력 정보]
@@ -184,7 +184,10 @@ app.post("/api/ai-estimate", async (req, res) => {
                 items: { type: Type.STRING },
                 description: "현장 실측 시 필수 확인 사항",
               },
-              summaryMessage: { type: Type.STRING, description: "요약 종합 의견" },
+              summaryMessage: {
+                type: Type.STRING,
+                description: "요약 종합 의견",
+              },
             },
             required: [
               "estimatedScope",
@@ -201,7 +204,11 @@ app.post("/api/ai-estimate", async (req, res) => {
       const resultText = response.text;
       if (resultText) {
         const parsed = JSON.parse(resultText);
-        return res.json({ success: true, source: "gemini", data: parsed });
+        return res.json({
+          success: true,
+          source: "gemini",
+          data: parsed,
+        });
       }
     }
 
@@ -229,11 +236,35 @@ app.post("/api/ai-estimate", async (req, res) => {
           `전기 설비 및 스위치/콘센트 증설`,
         ],
         constructionPhases: [
-          { phaseName: "1단계: 현장 실측 및 맞춤 설계", description: "전문 디자이너의 부산 현장 구조 실측 및 1:1 도면 제안", durationDays: "3~5일" },
-          { phaseName: "2단계: 철거 및 설비 공사", description: "기존 시설 철거, 배선 및 단열/배관 가공", durationDays: "2~3일" },
-          { phaseName: "3단계: 목공 및 필름/타일 시공", description: "틀 잡기, 단열 작업, 필름 래핑 및 욕실/주방 타일 작업", durationDays: "5~7일" },
-          { phaseName: "4단계: 도배, 바닥, 조명 마감", description: "고급 실크벽지, 마루/타일 시공 및 디자인 조명 세팅", durationDays: "3~4일" },
-          { phaseName: "5단계: 가구 설치 및 최종 점검", description: "맞춤 수납장/씽크대 세팅, 준공 청소 및 고객 현장 입회 검수", durationDays: "2~3일" },
+          {
+            phaseName: "1단계: 현장 실측 및 맞춤 설계",
+            description:
+              "전문 디자이너의 부산 현장 구조 실측 및 1:1 도면 제안",
+            durationDays: "3~5일",
+          },
+          {
+            phaseName: "2단계: 철거 및 설비 공사",
+            description: "기존 시설 철거, 배선 및 단열/배관 가공",
+            durationDays: "2~3일",
+          },
+          {
+            phaseName: "3단계: 목공 및 필름/타일 시공",
+            description:
+              "틀 잡기, 단열 작업, 필름 래핑 및 욕실/주방 타일 작업",
+            durationDays: "5~7일",
+          },
+          {
+            phaseName: "4단계: 도배, 바닥, 조명 마감",
+            description:
+              "고급 실크벽지, 마루/타일 시공 및 디자인 조명 세팅",
+            durationDays: "3~4일",
+          },
+          {
+            phaseName: "5단계: 가구 설치 및 최종 점검",
+            description:
+              "맞춤 수납장/씽크대 세팅, 준공 청소 및 고객 현장 입회 검수",
+            durationDays: "2~3일",
+          },
         ],
         costRange: `약 ${minCost.toLocaleString()}만 원 ~ ${maxCost.toLocaleString()}만 원 (선택 자재 및 현장 구조에 따라 변동)`,
         durationRange: `약 ${weeksMin}주 ~ ${weeksMax}주`,
@@ -243,7 +274,7 @@ app.post("/api/ai-estimate", async (req, res) => {
           `공동주택/상가의 경우 입주자대표회의 동의서 제출 및 소음 공사 가능 시간 사전 파악 필요`,
           `현장 실측 시 단열 상태 및 창호 교체 여부를 함께 확인하면 정확한 비용 산출 가능`,
         ],
-        summaryMessage: `지니 인테리어(GENE INTERIOR)는 부산진구 전포동·서면 지역 실내건축 면허 업체로서 고객님의 ${spaceType} 공간을 가장 효율적이고 감각적으로 완성해 드립니다.`,
+        summaryMessage: `지니 인테리어(GENE INTERIOR)는 부산 동래구 명륜동에 위치하며 부산 전 지역을 중심으로 실내건축·인테리어·리모델링을 진행합니다. 고객님의 ${spaceType} 공간에 맞춘 공사 계획을 제안해 드립니다.`,
       },
     });
   } catch (error: any) {
@@ -271,7 +302,7 @@ async function startServer() {
   }
 
   app.listen(PORT, "0.0.0.0", () => {
-    console.log(`한신인테리어 홈페이지 서버가 포트 ${PORT}에서 실행 중입니다.`);
+    console.log(`지니 인테리어 홈페이지 서버가 포트 ${PORT}에서 실행 중입니다.`);
   });
 }
 

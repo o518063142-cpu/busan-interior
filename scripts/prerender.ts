@@ -638,7 +638,7 @@ function generateJsonLd(
               ],
 
               opens:
-                "08:30",
+                "08:00",
 
               closes:
                 "18:30",

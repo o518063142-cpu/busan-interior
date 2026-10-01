@@ -40,7 +40,7 @@ import {
 // Preset categories for convenience
 const PRESET_CATEGORIES = [
   "인테리어 가이드",
-  "법규 및 면허",
+  "법규 및 등록",
   "시공 가이드",
   "비용 및 견적",
   "공정별 팁",
@@ -596,7 +596,7 @@ export const ArticleManagementSection: React.FC = () => {
             <textarea
               required
               rows={3}
-              placeholder="예: 부산 30평형 아파트 올 리모델링은 평당 약 150만~250만원 선이며, 창호 단열재 교체와 배관 방수 상태 점검이 가장 중요합니다. 1,500만원 이상 공사는 실내건축공사업 면허 업체 선정이 필수입니다."
+              placeholder="예: 부산 30평형 아파트 리모델링은 현장 상태와 공사 범위, 자재 사양에 따라 비용이 달라질 수 있습니다. 일정 규모 이상의 공사는 계약 전 실내건축공사업 등록 여부를 확인하는 것이 중요합니다."
               value={shortAnswer}
               onChange={(e) => {
                 setShortAnswer(e.target.value);
@@ -628,8 +628,8 @@ export const ArticleManagementSection: React.FC = () => {
 2. 공사비 산출 시 유의해야 할 추가금 리스크
 철거 후 드러나는 벽체 균열, 노후 배관 교체 비용을 사전 실측 시 미리 내역서에 투명하게 반영해야 합니다.
 
-3. 건설산업기본법에 따른 면허 업체 계약 필수성
-공사금액 1,500만원 이상의 모든 인테리어는 지자체 정식 등록 실내건축공사업 면허 업체와 계약해야 법적 보호를 받습니다.`}
+3. 실내건축공사업 등록 여부 확인
+일정 규모 이상의 실내건축공사를 계획할 때는 계약 전 시공업체의 실내건축공사업 등록 여부와 계약 상대방의 정보를 확인하는 것이 중요합니다.`}
               value={content}
               onChange={(e) => setContent(e.target.value)}
               className="w-full px-4 py-3 bg-stone-950 border border-stone-800 rounded-xl text-white placeholder-stone-600 focus:outline-none focus:border-amber-400 text-xs sm:text-sm leading-relaxed font-sans"

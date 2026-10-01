@@ -86,7 +86,7 @@ export const StructuredData: React.FC<StructuredDataProps> = (props) => {
           },
           "areaServed": SITE_ENTITY.serviceArea.map((area) => ({
             "@type": "AdministrativeArea",
-            "name": area.includes("부산") ? area : `부산광역시 ${area}`,
+            "name": area,
           })),
           ...(sameAs.length > 0 ? { sameAs } : {}),
         },
@@ -142,7 +142,9 @@ export const StructuredData: React.FC<StructuredDataProps> = (props) => {
             "@type": "ListItem",
             "position": idx + 1,
             "name": item.name,
-            "item": `${SITE_ENTITY.url}${item.path.startsWith("/") ? item.path : `/${item.path}`}`,
+            "item": `${SITE_ENTITY.url}${
+              item.path.startsWith("/") ? item.path : `/${item.path}`
+            }`,
           })),
         },
       ],
@@ -183,13 +185,17 @@ export const StructuredData: React.FC<StructuredDataProps> = (props) => {
             "@type": "ListItem",
             "position": idx + 1,
             "name": item.name,
-            "item": `${SITE_ENTITY.url}${item.path.startsWith("/") ? item.path : `/${item.path}`}`,
+            "item": `${SITE_ENTITY.url}${
+              item.path.startsWith("/") ? item.path : `/${item.path}`
+            }`,
           })),
         },
       ],
     };
   } else if (props.type === "page") {
-    const canonical = `${SITE_ENTITY.url}${props.path.startsWith("/") ? props.path : `/${props.path}`}`;
+    const canonical = `${SITE_ENTITY.url}${
+      props.path.startsWith("/") ? props.path : `/${props.path}`
+    }`;
 
     schemaData = {
       "@context": "https://schema.org",

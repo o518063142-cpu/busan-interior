@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../../firebase";
-import { SITE_CONFIG } from "../../config/siteConfig";
+import { SITE_CONFIG, SITE_ENTITY } from "../../config/siteConfig";
 import {
   Save,
   Loader2,
@@ -49,15 +49,15 @@ const DEFAULT_SETTINGS: SiteSettings = {
   closedDays: SITE_CONFIG.company.closedDays,
 
   naverPlace:
-    SITE_CONFIG.socialLinks?.naverPlace ||
+    SITE_ENTITY.socialLinks?.naverPlace ||
     SITE_CONFIG.company.naverPlaceUrl ||
     "",
 
-  naverBlog: SITE_CONFIG.socialLinks?.naverBlog || "",
-  naverClip: SITE_CONFIG.socialLinks?.naverClip || "",
-  instagram: SITE_CONFIG.socialLinks?.instagram || "",
-  youtube: SITE_CONFIG.socialLinks?.youtube || "",
-  kakaoChannel: SITE_CONFIG.socialLinks?.kakaoChannel || "",
+  naverBlog: SITE_ENTITY.socialLinks?.naverBlog || "",
+  naverClip: SITE_ENTITY.socialLinks?.naverClip || "",
+  instagram: SITE_ENTITY.socialLinks?.instagram || "",
+  youtube: SITE_ENTITY.socialLinks?.youtube || "",
+  kakaoChannel: SITE_ENTITY.socialLinks?.kakaoChannel || "",
 };
 
 export const SiteSettingsSection: React.FC = () => {

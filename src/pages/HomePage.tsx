@@ -182,7 +182,7 @@ export const HomePage: React.FC<HomePageProps> = ({
           {/* Refined License Badge */}
           <div className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-1.5 rounded-full bg-[#FAF8F5] border border-[#E5D8B8] text-[#8C6D23] text-xs sm:text-sm font-medium tracking-wide shadow-xs">
             <ShieldCheck className="w-4 h-4 text-[#B38F4D] shrink-0" />
-            <span className="break-keep">실내건축공사업 등록 공식 면허업체</span>
+            <span className="break-keep">실내건축공사업 등록업체</span>
           </div>
 
           {/* Typography: Modern Korean Sans-serif (Gothic) with Pure Hierarchy */}
@@ -206,7 +206,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               className="w-full sm:w-auto min-h-[46px] sm:min-h-[48px] px-6 sm:px-7 py-3 sm:py-3.5 bg-stone-950 hover:bg-stone-800 text-white font-semibold rounded-xl text-sm sm:text-base transition-all shadow-xs hover:shadow-sm flex items-center justify-center gap-2 active:scale-[0.98] cursor-pointer"
             >
               <Calendar className="w-4 h-4 text-[#D4AF37] shrink-0" />
-              <span>무료 현장 실측 신청</span>
+              <span>현장 실측·견적 상담</span>
             </button>
             <a
               href={`tel:${SITE_CONFIG.company.phone}`}
@@ -230,12 +230,12 @@ export const HomePage: React.FC<HomePageProps> = ({
           {/* Minimal Key Strengths Row: Elevated mobile readability without overpowering */}
           <div className="pt-6 sm:pt-8 grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4 max-w-3xl mx-auto text-left">
             <div className="p-3.5 sm:p-4 bg-[#FAF9F7] rounded-xl border border-stone-200/80">
-              <span className="text-xs sm:text-xs font-semibold text-[#8C6D23] block leading-tight">면허 검증</span>
-              <span className="text-sm sm:text-sm font-bold text-stone-900 mt-1 block leading-snug">실내건축면허 보유</span>
+              <span className="text-xs sm:text-xs font-semibold text-[#8C6D23] block leading-tight">등록 확인</span>
+              <span className="text-sm sm:text-sm font-bold text-stone-900 mt-1 block leading-snug">실내건축공사업 등록</span>
             </div>
             <div className="p-3.5 sm:p-4 bg-[#FAF9F7] rounded-xl border border-stone-200/80">
               <span className="text-xs sm:text-xs font-semibold text-[#8C6D23] block leading-tight">시공 방식</span>
-              <span className="text-sm sm:text-sm font-bold text-stone-900 mt-1 block leading-snug">100% 직영 감리</span>
+              <span className="text-sm sm:text-sm font-bold text-stone-900 mt-1 block leading-snug">현장별 공정 관리</span>
             </div>
             <div className="p-3.5 sm:p-4 bg-[#FAF9F7] rounded-xl border border-stone-200/80">
               <span className="text-xs sm:text-xs font-semibold text-[#8C6D23] block leading-tight">견적 원칙</span>
@@ -243,7 +243,7 @@ export const HomePage: React.FC<HomePageProps> = ({
             </div>
             <div className="p-3.5 sm:p-4 bg-[#FAF9F7] rounded-xl border border-stone-200/80">
               <span className="text-xs sm:text-xs font-semibold text-[#8C6D23] block leading-tight">사후 관리</span>
-              <span className="text-sm sm:text-sm font-bold text-stone-900 mt-1 block leading-snug">철저한 A/S 보증</span>
+              <span className="text-sm sm:text-sm font-bold text-stone-900 mt-1 block leading-snug">완공 후 사후 관리</span>
             </div>
           </div>
         </div>
@@ -386,10 +386,10 @@ export const HomePage: React.FC<HomePageProps> = ({
             <div className="p-4 bg-stone-100 rounded-2xl border border-stone-200/80 space-y-2 text-xs sm:text-sm text-stone-800 font-sans">
               <div className="flex items-center gap-2 font-bold text-[#8C6D23]">
                  <ShieldCheck className="w-5 h-5 text-[#B38F4D] shrink-0" />
-                <span className="break-keep">실내건축면허 보유 공식 업체</span>
+                <span className="break-keep">실내건축공사업 등록 공식 업체</span>
               </div>
               <p className="text-stone-600 leading-normal pl-7 break-keep">
-                법적 실내건축면허 기준에 근거하여 안전하고 정직하게 시공합니다. (등록 면허 정보는 시스템상에서 즉시 업데이트가 가능합니다.)
+                실내건축공사업 등록업체로서 공사 범위와 현장 조건을 확인하고 공정별 시공 계획을 수립합니다.
               </p>
             </div>
 
@@ -714,7 +714,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                   className="w-full py-3 bg-stone-800 hover:bg-stone-700 text-stone-200 font-bold rounded-xl text-xs transition-all border border-stone-700 flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <Calendar className="w-4 h-4 text-amber-400" />
-                  <span>비슷한 평수 무료 방문 실측 신청</span>
+                  <span>비슷한 평수 실측·견적 상담</span>
                 </button>
               </div>
             </div>
@@ -823,7 +823,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               왜 {SITE_CONFIG.brand.nameKo}를 선택해야 할까요?
             </h2>
             <p className="text-stone-400 font-sans text-sm sm:text-base break-keep">
-              실내건축 면허 보유 업체의 높은 신뢰도와 부산 및 부울경 권역에 최적화된 시공 노하우를 제공합니다.
+              실내건축공사업 등록업체로서 부산을 중심으로 경남·울산까지 공간별 실내건축과 리모델링을 진행합니다.
             </p>
           </div>
 
@@ -832,9 +832,9 @@ export const HomePage: React.FC<HomePageProps> = ({
               <div className="w-12 h-12 bg-amber-500/10 text-amber-400 rounded-xl flex items-center justify-center border border-amber-500/20">
                 <ShieldCheck className="w-6 h-6" />
               </div>
-              <h3 className="text-lg font-bold text-white font-sans">실내건축면허 보유</h3>
+              <h3 className="text-lg font-bold text-white font-sans">실내건축공사업 등록</h3>
               <p className="text-xs text-stone-400 leading-relaxed font-sans break-keep">
-                법령 기준을 준수하는 공식 실내건축 면허업체로서 정밀 시공 및 하자에 대한 명확한 사후관리를 보증합니다.
+                실내건축공사업 등록업체로서 현장 조건과 공사 범위를 확인하고 공정별 시공과 사후 관리를 진행합니다.
               </p>
             </div>
 
@@ -854,7 +854,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               </div>
               <h3 className="text-lg font-bold text-white font-sans">투명한 견적 및 소통</h3>
               <p className="text-xs text-stone-400 leading-relaxed font-sans break-keep">
-                자재별 세부 공정 내역서를 투명하게 공개하며, 불필요한 추가금 청구 없는 깔끔한 약속을 지킵니다.
+                자재별 세부 공정 내역서를 투명하게 공개하며, 공사 범위와 주요 자재 사양, 변경 사항을 확인하며 견적과 공정을 관리합니다.
               </p>
             </div>
 
@@ -862,9 +862,9 @@ export const HomePage: React.FC<HomePageProps> = ({
               <div className="w-12 h-12 bg-amber-500/10 text-amber-400 rounded-xl flex items-center justify-center border border-amber-500/20">
                 <BadgeCheck className="w-6 h-6" />
               </div>
-              <h3 className="text-lg font-bold text-white font-sans">책임감리 & A/S 보증</h3>
+              <h3 className="text-lg font-bold text-white font-sans">공정 관리 & 사후 관리</h3>
               <p className="text-xs text-stone-400 leading-relaxed font-sans break-keep">
-                현장 소장의 1:1 상주 책임감리와 완공 후에도 신속한 A/S 처리 시스템으로 고객 만족을 유지합니다.
+                현장별 공정 진행 상황을 확인하고, 완공 후에도 필요한 사후 관리 사항을 안내합니다.
               </p>
             </div>
           </div>
@@ -881,18 +881,18 @@ export const HomePage: React.FC<HomePageProps> = ({
             체계적인 공사 진행 6단계
           </h2>
           <p className="text-stone-600 text-sm font-sans break-keep">
-            상담부터 완공 A/S까지 체계적이고 구체적인 단계별 진행으로 안심하고 맡기실 수 있습니다.
+            상담과 현장 실측부터 공사 진행, 완공 후 사후 관리까지 단계별로 진행합니다.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 font-sans">
           {[
-            { step: "01", title: "상담 및 현장 실측", desc: "무료 방문을 통한 부산 및 부울경 현장 정밀 실측 및 공간 니즈 파악" },
+            { step: "01", title: "상담 및 현장 실측", desc: "현장 방문을 통한 공간 실측 및 공사 범위·요구사항 확인" },
             { step: "02", title: "기획 및 디자인 설계", desc: "고객 취향에 맞춘 도면 및 동선 레이아웃 세부 제안" },
             { step: "03", title: "투명 견적 산출", desc: "공정별/자재별 투명한 세부 견적서 발급 및 계약" },
             { step: "04", title: "자재 선정 및 착공", desc: "타일, 마루, 도배, 조명 자재 샘플 확정 및 착공" },
-            { step: "05", title: "책임 시공 및 감리", desc: "실내건축 면허 전문가의 일별 현장 공정 감독 및 소통" },
-            { step: "06", title: "완공 검수 및 A/S", desc: "고객 입회 최종 검수, 준공 청소 및 사후 보증 관리" },
+            { step: "05", title: "책임 시공 및 감리", desc: "공정별 현장 진행 상황 확인 및 주요 사항 소통" },
+            { step: "06", title: "완공 검수 및 A/S", desc: "완공 상태 확인, 준공 청소 및 필요한 사후 관리 안내" },
           ].map((item) => (
             <div
               key={item.step}
@@ -929,7 +929,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                 categoryTag: "주거 리모델링",
                 title: "30평대 아파트 올 리모델링",
                 content:
-                  "실내건축 면허 보유 업체의 전문적인 설계와 투명한 공정 관리로 완성도 높은 주거 공간을 구현했습니다. 깔끔한 마감과 섬세한 조명 라인이 돋보이는 시공 사례입니다.",
+                  "주거 공간의 사용성과 동선을 고려한 설계와 공정 관리 방향을 소개하는 상담 예시입니다. 자재와 조명 계획은 실제 현장 조건과 고객 요청에 따라 달라질 수 있습니다.",
                 clientType: "30평대 주거 공간 고객 상담 예시",
               },
               {
@@ -984,7 +984,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               부산 중심 · 경남 · 울산 출장 실측
             </h2>
             <p className="text-stone-300 text-xs sm:text-sm leading-relaxed font-sans break-keep">
-              {SITE_CONFIG.brand.nameKo}는 부산을 중심으로 경남·울산까지 현장 실측 및 맞춤 견적 서비스를 제공합니다. 부산 전역은 물론 양산·김해 등 인접 경남 지역과 울산 지역도 프로젝트 상담이 가능합니다.
+              {SITE_CONFIG.brand.nameKo}는 부산을 중심으로 경남·울산까지 현장 실측 및 견적 상담을 진행합니다. 부산 전역은 물론 양산·김해 등 인접 경남 지역과 울산 지역도 프로젝트 상담이 가능합니다.
             </p>
           </div>
 
@@ -1114,7 +1114,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               className="w-full min-h-[44px] py-3 px-6 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-950 font-extrabold text-xs sm:text-sm rounded-xl transition-all shadow-md flex items-center justify-center gap-2 active:scale-95"
             >
               <Calendar className="w-4 h-4 shrink-0" />
-              <span>📝 무료 현장 실측 신청하기</span>
+              <span>📝 현장 실측·견적 상담하기</span>
             </button>
           </div>
         </div>

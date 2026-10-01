@@ -48,6 +48,17 @@ export const StructuredData: React.FC<StructuredDataProps> = (props) => {
   const orgId = `${SITE_ENTITY.url}/#organization`;
   const websiteId = `${SITE_ENTITY.url}/#website`;
 
+  // 지니 인테리어 공식 온라인 채널
+  // siteConfig.ts의 socialLinks만 수정하면 구조화데이터에도 자동 반영됩니다.
+  const sameAs = [
+    SITE_ENTITY.socialLinks.naverPlace,
+    SITE_ENTITY.socialLinks.naverBlog,
+    SITE_ENTITY.socialLinks.naverClip,
+    SITE_ENTITY.socialLinks.instagram,
+    SITE_ENTITY.socialLinks.youtube,
+    SITE_ENTITY.socialLinks.kakaoChannel,
+  ].filter((url): url is string => Boolean(url));
+
   if (props.type === "home") {
     schemaData = {
       "@context": "https://schema.org",
@@ -77,9 +88,7 @@ export const StructuredData: React.FC<StructuredDataProps> = (props) => {
             "@type": "AdministrativeArea",
             "name": area.includes("부산") ? area : `부산광역시 ${area}`,
           })),
-          ...(SITE_ENTITY.socialLinks.naverPlace
-            ? { sameAs: [SITE_ENTITY.socialLinks.naverPlace] }
-            : {}),
+          ...(sameAs.length > 0 ? { sameAs } : {}),
         },
         {
           "@type": "WebSite",
@@ -181,6 +190,7 @@ export const StructuredData: React.FC<StructuredDataProps> = (props) => {
     };
   } else if (props.type === "page") {
     const canonical = `${SITE_ENTITY.url}${props.path.startsWith("/") ? props.path : `/${props.path}`}`;
+
     schemaData = {
       "@context": "https://schema.org",
       "@type": "WebPage",

@@ -180,7 +180,7 @@ export const SITE_CONFIG = {
     naverPlaceUrl: "https://m.place.naver.com/place/13556704/home",
     kakaoTalkUrl: "https://pf.kakao.com",
 
-    operatingHours: "월~토요일 08:30 - 18:30",
+    operatingHours: "월~토요일 08:00 - 18:30",
     closedDays: "일요일 및 공휴일 휴무",
 
     primaryRegions: [

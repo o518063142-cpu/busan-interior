@@ -146,7 +146,18 @@ export const HomePage: React.FC<HomePageProps> = ({
     return [...realProjects, ...sampleProjects];
   }, [firestoreProjects]);
 
-  const featuredProject = allProjects[activeFeaturedIndex] || allProjects[0] || PROJECTS_DATA[0];
+  // Homepage portfolio: expose only verified actual projects.
+  // Sample/concept projects remain in allProjects for other dedicated views.
+  const actualProjects = useMemo(
+    () => allProjects.filter((project) => !project.isSample),
+    [allProjects]
+  );
+
+  const featuredProject =
+    actualProjects[activeFeaturedIndex] ||
+    actualProjects[0] ||
+    allProjects[0] ||
+    PROJECTS_DATA[0];
 
   return (
     <div className="space-y-16 lg:space-y-24 pb-12">
@@ -501,7 +512,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               실제 감성을 담은 <span className="inline-block whitespace-nowrap">시공갤러리</span>
             </h2>
             <p className="text-stone-600 font-sans text-xs sm:text-sm break-keep">
-              * 아래 시공사례는 {SITE_CONFIG.brand.nameKo}의 디자인 역량과 마감 퀄리티를 보여드리기 위한 [샘플 포트폴리오]입니다.
+              * 아래 프로젝트는 {SITE_CONFIG.brand.nameKo}가 직접 진행한 실제 시공사례입니다.
             </p>
           </div>
           <button
@@ -511,7 +522,7 @@ export const HomePage: React.FC<HomePageProps> = ({
             }}
             className="inline-flex items-center gap-2 px-6 py-3 bg-stone-950 hover:bg-stone-800 text-stone-100 text-xs sm:text-sm font-extrabold rounded-xl transition-all shadow-xs self-start md:self-auto border border-stone-800 active:scale-[0.98] cursor-pointer font-sans"
           >
-            <span>전체 시공사례 포트폴리오 ({allProjects.length})</span>
+            <span>전체 시공사례 포트폴리오 ({actualProjects.length})</span>
             <ChevronRight className="w-4 h-4 text-[#D4AF37]" />
           </button>
         </div>
@@ -525,7 +536,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                 <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
                 <span>추천 프로젝트:</span>
               </span>
-              {allProjects.map((proj, idx) => (
+              {actualProjects.map((proj, idx) => (
                 <button
                   key={proj.id}
                   onClick={() => {
@@ -722,7 +733,7 @@ export const HomePage: React.FC<HomePageProps> = ({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {allProjects.map((project) => (
+            {actualProjects.map((project) => (
               <Link
                 key={project.id}
                 to={`/projects/${project.slug || project.id}`}

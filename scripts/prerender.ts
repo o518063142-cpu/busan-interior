@@ -58,16 +58,16 @@ const STATIC_ROUTES: StaticRouteConfig[] = [
     path: "/",
 
     title:
-      "지니 인테리어 (한신인테리어)｜부산진구 전포동·서면 실내건축공사업 등록업체",
+      "지니 인테리어 (GENE INTERIOR)｜부산 동래구 명륜동 실내건축·인테리어·리모델링",
 
     description:
-      "부산진구 전포동 지니 인테리어(GENE INTERIOR / 법적상호: 한신인테리어). 실내건축공사업 정식 등록업체로 아파트, 주택, 상가, 매장, 카페, 사무실 리모델링 및 책임시공, 무료 현장 실측을 제공합니다.",
+      "부산 동래구 명륜동에 위치한 지니 인테리어(GENE INTERIOR)는 실내건축공사업 등록업체로 부산을 중심으로 경남·울산까지 아파트, 주택, 상가, 사무실, 교육시설의 실내건축·인테리어·리모델링과 현장 실측 및 맞춤 견적 상담을 제공합니다.",
 
     h1:
-      "부산진구 전포동 실내건축공사업 등록업체 지니 인테리어",
+      "부산 동래구 명륜동 실내건축공사업 등록업체 지니 인테리어",
 
     summary:
-      "지니 인테리어(GENE INTERIOR)는 법적 기준을 준수하는 실내건축공사업 정식 등록업체(법적상호: 한신인테리어)로서 부산진구, 전포동, 서면 및 부산 전 지역의 아파트, 상가, 매장, 카페, 사무실 인테리어 및 리모델링 공사를 책임 시공합니다.",
+      "지니 인테리어(GENE INTERIOR)는 실내건축공사업 등록업체(법적상호: 지니인테리어)로서 부산 전 지역을 중심으로 경남·울산까지 아파트, 주택, 상가, 사무실, 교육시설의 인테리어 및 리모델링 공사를 진행합니다.",
 
     schemaType: "home",
   },
@@ -76,16 +76,16 @@ const STATIC_ROUTES: StaticRouteConfig[] = [
     path: "/about",
 
     title:
-      "회사소개 (ABOUT)｜실내건축공사업 정식 등록 한신인테리어·지니 인테리어",
+      "회사소개 (ABOUT)｜실내건축공사업 등록업체 지니 인테리어",
 
     description:
-      "부산진구 전포동 실내건축공사업 정식 등록업체 지니 인테리어(한신인테리어) 회사소개. 면허 정보, 대표자 정보, 시공 철학 및 표준 공사 시스템 안내.",
+      "부산 동래구 명륜동 실내건축공사업 등록업체 지니 인테리어(GENE INTERIOR) 회사소개. 등록 정보, 대표자 정보, 시공 철학 및 공사 시스템 안내.",
 
     h1:
       "실내건축공사업 등록업체 지니 인테리어 소개",
 
     summary:
-      "지니 인테리어(GENE INTERIOR)는 건설산업기본법에 따른 실내건축공사업 정식 등록업체(법적상호: 한신인테리어)입니다. 투명한 공정, 표준 시방서 준수, 엄격한 감리 및 책임 A/S를 바탕으로 고객 맞춤형 공간을 창조합니다.",
+      "지니 인테리어(GENE INTERIOR)는 실내건축공사업 등록업체(법적상호: 지니인테리어)입니다. 투명한 공정 관리와 책임 시공 및 사후관리를 바탕으로 고객 맞춤형 공간을 제안합니다.",
 
     schemaType: "page",
   },
@@ -97,7 +97,7 @@ const STATIC_ROUTES: StaticRouteConfig[] = [
       "서비스 안내 (SERVICE)｜부산 주거·상가·카페·사무실 인테리어 리모델링",
 
     description:
-      "부산진구 전포동 지니 인테리어의 전문 인테리어 서비스 영역. 아파트 올리모델링, 주택/빌라 개보수, 상가·매장, 카페·음식점 감성 인테리어, 사무실 인테리어.",
+      "부산 동래구 명륜동 지니 인테리어의 전문 인테리어 서비스 영역. 아파트·주택 리모델링, 상가·매장, 사무실, 학교·교육시설 인테리어를 부산 전 지역과 경남·울산에서 진행합니다.",
 
     h1:
       "지니 인테리어 전문 시공 서비스 안내",
@@ -133,7 +133,7 @@ const STATIC_ROUTES: StaticRouteConfig[] = [
       "이용안내 & FAQ｜실내건축공사업 정보 및 부산 인테리어 가이드",
 
     description:
-      "지니 인테리어(GENE INTERIOR) 실내건축공사업 등록 정보, 공사 진행 수칙, 자주 묻는 질문(FAQ) 및 부산진구 전포동 시공 가이드.",
+      "지니 인테리어(GENE INTERIOR) 실내건축공사업 등록 정보, 공사 진행 수칙, 자주 묻는 질문(FAQ) 및 부산 인테리어·리모델링 시공 가이드.",
 
     h1:
       "이용안내, 시공 가이드 및 자주 묻는 질문(FAQ)",
@@ -169,13 +169,13 @@ const STATIC_ROUTES: StaticRouteConfig[] = [
       "무료 현장 실측 & 견적 문의｜지니 인테리어 (GENE INTERIOR)",
 
     description:
-      "부산진구 전포동 지니 인테리어(GENE INTERIOR) 무료 현장 실측 및 상담 신청. 실내건축공사업 등록 전문가의 1:1 맞춤 견적.",
+      "부산 동래구 명륜동 지니 인테리어(GENE INTERIOR) 현장 실측 및 상담 신청. 부산 전 지역을 중심으로 공간과 공사 범위에 맞춘 1:1 맞춤 견적을 안내합니다.",
 
     h1:
       "무료 현장 실측 & 1:1 맞춤 견적 문의",
 
     summary:
-      "부산진구 전포동, 서면 및 부산 전 지역 현장 실측을 진행합니다. 현장을 확인하고 공간 구조와 공사 범위에 맞는 상세 견적을 안내해 드립니다.",
+      "부산 동래구 명륜동을 거점으로 부산 전 지역 현장 실측을 진행합니다. 현장을 확인하고 공간 구조와 공사 범위에 맞는 상세 견적을 안내해 드립니다.",
 
     schemaType: "page",
   },
@@ -184,10 +184,10 @@ const STATIC_ROUTES: StaticRouteConfig[] = [
     path: "/ai-estimate",
 
     title:
-      "AI 상담·견적｜부산진구 인테리어 무료 예상 견적 산출",
+      "AI 상담·견적｜부산 인테리어 예상 견적 산출",
 
     description:
-      "인공지능 기반 맞춤 인테리어 예상 견적 및 공사 기간 산출. 부산진구 전포동·서면 아파트/상가/카페 맞춤 AI 시공 가이드.",
+      "인공지능 기반 맞춤 인테리어 예상 견적 및 공사 기간 산출. 부산 아파트·주택·상가·사무실 공간을 위한 AI 시공 가이드.",
 
     h1:
       "AI 스마트 인테리어 상담 및 예상 견적 산출",
@@ -453,7 +453,7 @@ async function getCombinedProjects(): Promise<{
   }
 
   /* -----------------------------------------
-     3. 샘플 프로젝트 6개
+     3. 디자인 제안 · 콘셉트 6개
   ----------------------------------------- */
 
   for (const project of PROJECTS_DATA) {
@@ -571,7 +571,6 @@ function generateJsonLd(
 
           alternateName: [
             SITE_CONFIG.brand.nameEn,
-            "한신인테리어",
             "지니인테리어",
             "부산지니인테리어",
           ],
@@ -616,27 +615,16 @@ function generateJsonLd(
               `${SITE_CONFIG.company.address} ${SITE_CONFIG.company.addressDetail}`,
 
             addressLocality:
-              "부산광역시 부산진구",
+              "부산광역시 동래구",
 
             addressRegion:
               "부산광역시",
 
             postalCode:
-              "47290",
+              "",
 
             addressCountry:
               "KR",
-          },
-
-          geo: {
-            "@type":
-              "GeoCoordinates",
-
-            latitude:
-              35.1558,
-
-            longitude:
-              129.0622,
           },
 
           openingHoursSpecification: [
@@ -675,7 +663,7 @@ function generateJsonLd(
                 "AdministrativeArea",
 
               name:
-                "부산광역시 부산진구",
+                "부산광역시 동래구",
             },
 
             {
@@ -851,7 +839,7 @@ function renderProjectCard(
         isSample
           ? `
             <span class="inline-block px-2 py-1 text-xs font-bold bg-amber-50 text-amber-800 rounded">
-              샘플 프로젝트
+              디자인 제안 · 콘셉트
             </span>
           `
           : ""
@@ -1101,11 +1089,11 @@ function renderHtmlShell(
         <div class="pt-6 border-t border-stone-200">
 
           <h2 class="text-xl font-bold text-stone-900 mb-2">
-            샘플 프로젝트 (${sampleProjects.length}건)
+            디자인 제안 · 콘셉트 (${sampleProjects.length}건)
           </h2>
 
           <p class="text-xs text-stone-500 leading-relaxed mb-4">
-            아래 프로젝트는 디자인 및 공간 구성 예시를 위한 샘플 프로젝트이며,
+            아래 프로젝트는 디자인 및 공간 구성 예시를 위한 디자인 제안 · 콘셉트이며,
             실제 시공실적과 구분하여 표시합니다.
           </p>
 

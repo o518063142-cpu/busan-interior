@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { collection, query, orderBy, onSnapshot, doc } from "firebase/firestore";
+import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase";
 import { SITE_CONFIG } from "../config/siteConfig";
+import { useSiteSettings } from "../hooks/useSiteSettings";
 import { NavigationMenu, ProjectItem } from "../types";
 import { SERVICES_DATA } from "../data/servicesData";
 import { PROJECTS_DATA } from "../data/projectsData";
@@ -68,40 +69,7 @@ export const HomePage: React.FC<HomePageProps> = ({
   const [activeFeaturedIndex, setActiveFeaturedIndex] = useState(0);
   const [showBeforePhoto, setShowBeforePhoto] = useState(false);
 
-  const [siteSettings, setSiteSettings] = useState({
-    phone: SITE_CONFIG.company.phone,
-    mobilePhone: SITE_CONFIG.company.mobilePhone,
-    email: "8063143@naver.com",
-    address: SITE_CONFIG.company.address,
-    addressDetail: SITE_CONFIG.company.addressDetail,
-  });
-
-  // Real-time subscription to homepage site settings
-  useEffect(() => {
-    const unsubscribe = onSnapshot(
-      doc(db, "siteSettings", "main"),
-      (snapshot) => {
-        if (!snapshot.exists()) return;
-
-        const data = snapshot.data();
-        setSiteSettings((current) => ({
-          phone: data.phone || current.phone,
-          mobilePhone: data.mobilePhone || current.mobilePhone,
-          email: data.email || current.email,
-          address: data.address || current.address,
-          addressDetail: data.addressDetail || current.addressDetail,
-        }));
-      },
-      (error) => {
-        console.warn(
-          "Firestore site settings onSnapshot notice (using base data fallback):",
-          error
-        );
-      }
-    );
-
-    return () => unsubscribe();
-  }, []);
+  const { settings: siteSettings } = useSiteSettings();
 
   // Real-time subscription to Firestore 'projects' collection
   useEffect(() => {

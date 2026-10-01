@@ -203,7 +203,7 @@ const STATIC_ROUTES: StaticRouteConfig[] = [
    FALLBACK REAL PROJECTS
 
    Firestore를 빌드 순간 읽지 못해도
-   현재 정상 실제 사례 5개는 절대 사라지지 않게 보존.
+   현재 정상 실제 사례 6개는 절대 사라지지 않게 보존.
 
    향후 Firestore 연결 성공 시 Firestore 데이터가 우선됨.
 ========================================================= */
@@ -262,6 +262,20 @@ const FALLBACK_REAL_PROJECTS: PrerenderProject[] = [
     category: "공공·교육시설",
     description:
       "울산 초등학교 교육공간 인테리어 시공사례",
+  },
+
+  {
+    id: "busan-jangjeon-music-practice-room-interior",
+    slug: "busan-jangjeon-music-practice-room-interior",
+    isSample: false,
+    title: "부산 금정구 장전동 60평 음악연습실 인테리어",
+    location: "부산 금정구 장전동",
+    category: "상업",
+    spaceTypeDetail: "음악연습실 · 음악 스튜디오",
+    area: "약 60평",
+    duration: "4주",
+    description:
+      "부산 금정구 장전동 60평 음악연습실·음악 스튜디오 인테리어 실제 시공사례",
   },
 ];
 
@@ -393,7 +407,7 @@ async function fetchFirestoreProjects(): Promise<
    MERGE PROJECTS
 
    1. Firestore 실제 사례 우선
-   2. fallback 실제 5개 보존
+   2. fallback 실제 6개 보존
    3. PROJECTS_DATA 샘플 6개 유지
 ========================================================= */
 

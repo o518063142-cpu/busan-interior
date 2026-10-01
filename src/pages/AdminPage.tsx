@@ -20,6 +20,7 @@ import {
 import { Consultation, ConsultationStatus } from "../types";
 import { ProjectManagementSection } from "../components/admin/ProjectManagementSection";
 import { ArticleManagementSection } from "../components/admin/ArticleManagementSection";
+import { SiteSettingsSection } from "../components/admin/SiteSettingsSection";
 import {
   Lock,
   LogOut,
@@ -48,6 +49,7 @@ import {
   Eye,
   Copy,
   Check,
+  Settings,
 } from "lucide-react";
 
 // Status metadata for badges and colors
@@ -97,9 +99,9 @@ export const AdminPage: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
 
-  // Sub-tab Navigation state ("consultations" | "projects" | "articles")
+  // Sub-tab Navigation state ("consultations" | "projects" | "articles" | "settings")
   const [activeSubTab, setActiveSubTab] = useState<
-    "consultations" | "projects" | "articles"
+    "consultations" | "projects" | "articles" | "settings"
   >("consultations");
 
   // Login form state
@@ -527,6 +529,22 @@ export const AdminPage: React.FC = () => {
               지식센터
             </span>
           </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveSubTab("settings")}
+            className={`py-3.5 px-3.5 sm:px-6 font-bold text-xs sm:text-sm border-b-2 transition-all flex items-center gap-2 shrink-0 ${
+              activeSubTab === "settings"
+                ? "border-amber-400 text-amber-400 bg-stone-800/40"
+                : "border-transparent text-stone-400 hover:text-stone-200 hover:bg-stone-800/20"
+            }`}
+          >
+            <Settings className="w-4 h-4 shrink-0" />
+            <span>사이트 설정</span>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-500/20 text-blue-300 border border-blue-500/30">
+              홈페이지
+            </span>
+          </button>
         </div>
       </div>
 
@@ -536,6 +554,8 @@ export const AdminPage: React.FC = () => {
           <ProjectManagementSection />
         ) : activeSubTab === "articles" ? (
           <ArticleManagementSection />
+        ) : activeSubTab === "settings" ? (
+          <SiteSettingsSection />
         ) : (
           <>
             {/* Stat Cards Overview */}

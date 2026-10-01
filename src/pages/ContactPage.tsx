@@ -89,7 +89,6 @@ export const ContactPage: React.FC<ContactPageProps> = ({
         );
       }
 
-      // Save document to Firestore consultations collection using addDoc
       const consultationData = {
         name: formData.name.trim(),
         phone: formData.phone.trim(),
@@ -133,8 +132,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({
       setSavedDocPath(docRef.path);
       setSubmitted(true);
 
-      // Auxiliary Admin Email Notification
-      // does not block client submission success
+      // 이메일 알림
       try {
         const notifyRes = await fetch(
           "/api/notify-consultation",
@@ -168,8 +166,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({
         console.error("EMAIL NOTIFICATION FAILED");
       }
 
-      // Auxiliary Admin Kakao Notification
-      // does not block client submission success
+      // 카카오 알림
       try {
         const kakaoRes = await fetch("/api/notify-kakao", {
           method: "POST",
@@ -254,9 +251,9 @@ export const ContactPage: React.FC<ContactPageProps> = ({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start font-sans">
-        {/* Left: Quick Actions & Company Contact Info */}
+        {/* Left */}
         <div className="lg:col-span-5 space-y-6 font-sans">
-          {/* Quick Call & Naver Place Buttons */}
+          {/* Quick Contact */}
           <div className="bg-stone-900 text-white p-6 rounded-3xl border border-stone-800 space-y-4 shadow-lg font-sans">
             <h3 className="text-lg font-bold text-white font-sans flex items-center gap-2">
               <Phone className="w-5 h-5 text-amber-400" />
@@ -306,7 +303,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({
             </div>
           </div>
 
-          {/* Location & Details Box */}
+          {/* Company Info */}
           <div className="bg-white p-6 rounded-3xl border border-stone-200 space-y-4 shadow-sm text-xs sm:text-sm text-stone-700 font-sans">
             <h3 className="text-base font-bold text-stone-900 font-sans flex items-center gap-2 border-b border-stone-200 pb-3">
               <Building className="w-5 h-5 text-amber-600" />
@@ -321,8 +318,8 @@ export const ContactPage: React.FC<ContactPageProps> = ({
 
                 <span>
                   <strong>주소:</strong>{" "}
-                  {SITE_CONFIG.company.address}{" "}
-                  {SITE_CONFIG.company.addressDetail}
+                  {siteSettings.address}{" "}
+                  {siteSettings.addressDetail}
                 </span>
               </div>
 
@@ -341,15 +338,15 @@ export const ContactPage: React.FC<ContactPageProps> = ({
 
                 <span>
                   <strong>영업시간:</strong>{" "}
-                  {SITE_CONFIG.company.operatingHours} (
-                  {SITE_CONFIG.company.closedDays})
+                  {siteSettings.operatingHours} (
+                  {siteSettings.closedDays})
                 </span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Right: Full Contact Form */}
+        {/* Right: Contact Form */}
         <div className="lg:col-span-7 bg-white p-8 rounded-3xl border border-stone-200 shadow-sm space-y-6 font-sans">
           {submitted ? (
             <div className="text-center py-12 space-y-4 font-sans">
@@ -565,7 +562,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({
                 />
               </div>
 
-              {/* Privacy Consent Box */}
+              {/* Privacy Consent */}
               <div className="p-3.5 bg-stone-50 rounded-xl border border-stone-200 space-y-2 text-xs">
                 <div className="flex items-start gap-2.5">
                   <input
@@ -592,7 +589,6 @@ export const ContactPage: React.FC<ContactPageProps> = ({
                 </div>
               </div>
 
-              {/* Error Message Box */}
               {errorMessage && (
                 <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs flex items-start gap-2.5">
                   <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
@@ -602,7 +598,6 @@ export const ContactPage: React.FC<ContactPageProps> = ({
                 </div>
               )}
 
-              {/* Submit Button */}
               <div className="pt-2">
                 <button
                   type="submit"

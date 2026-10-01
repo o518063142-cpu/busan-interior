@@ -148,16 +148,16 @@ const STATIC_ROUTES: StaticRouteConfig[] = [
     path: "/trust",
 
     title:
-      "안심 시공 보증 (TRUST)｜실내건축공사업 등록업체의 투명한 책임 공사",
+      "안심 시공 안내 (TRUST)｜실내건축공사업 등록업체의 투명한 공정 관리",
 
     description:
-      "지니 인테리어의 5대 안심 보증 시스템. 실내건축공사업 정식 등록, 표준 계약서 작성, 투명 세부 내역 견적, 철저한 현장 감리, 신속한 사후관리(A/S).",
+      "지니 인테리어의 안심 시공 안내. 실내건축공사업 등록, 계약 및 견적 안내, 현장별 공정 관리와 완공 후 사후관리(A/S) 절차를 안내합니다.",
 
     h1:
-      "지니 인테리어 5대 안심 시공 보증 시스템",
+      "지니 인테리어 안심 시공 안내",
 
     summary:
-      "건설산업기본법 기준을 준수하는 실내건축공사업 정식 등록업체로서 투명한 계약과 공정 관리, 책임 시공 및 사후관리를 제공합니다.",
+      "실내건축공사업 등록업체로서 공사 범위와 현장 여건에 맞춰 계약, 견적, 공정 관리 및 완공 후 사후관리를 진행합니다.",
 
     schemaType: "trust",
   },
@@ -619,9 +619,6 @@ function generateJsonLd(
 
             addressRegion:
               "부산광역시",
-
-            postalCode:
-              "",
 
             addressCountry:
               "KR",
@@ -1188,7 +1185,7 @@ function renderHtmlShell(
             </p>
 
             <p>
-              <strong>등록 면허:</strong>
+              <strong>등록 정보:</strong>
               ${escapeHtml(
                 SITE_CONFIG.legal.licenseStatus
               )}

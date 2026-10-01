@@ -1242,7 +1242,7 @@ export const ProjectManagementSection: React.FC = () => {
                 [샘플 프로젝트]로 표시
               </label>
               <p className="text-[11px] text-stone-400">
-                체크 해제 시 한신인테리어의 공인 <strong>[실제 시공사례]</strong> 뱃지가 부여됩니다.
+                체크 해제 시 지니 인테리어의 <strong>[실제 시공사례]</strong> 뱃지가 부여됩니다.
               </p>
             </div>
             <input

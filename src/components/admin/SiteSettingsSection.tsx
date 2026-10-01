@@ -330,7 +330,7 @@ export const SiteSettingsSection: React.FC = () => {
           <SettingInput
             label="영업시간"
             value={settings.operatingHours}
-            placeholder="월~토요일 08:30 - 18:30"
+            placeholder="월~토요일 08:00 - 18:30"
             onChange={(value) =>
               updateField("operatingHours", value)
             }

@@ -71,6 +71,7 @@ export interface SiteEntity {
   socialLinks: {
     naverPlace?: string;
     naverBlog?: string;
+    naverClip?: string;
     instagram?: string;
     youtube?: string;
     kakaoChannel?: string;
@@ -138,6 +139,11 @@ export const SITE_ENTITY: SiteEntity = {
 
   socialLinks: {
     naverPlace: "https://m.place.naver.com/place/13556704/home",
+    naverBlog: "https://blog.naver.com/8063142",
+    naverClip: "https://clip.naver.com/@gene-interior",
+    instagram: "https://www.instagram.com/gene.interior/",
+    youtube: "https://www.youtube.com/@GENEINTERIOR",
+    kakaoChannel: "https://pf.kakao.com/_xaAxniX",
   },
 };
 

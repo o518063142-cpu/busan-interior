@@ -321,7 +321,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                 <span className="text-[10px] font-bold tracking-[0.16em] text-[#B38F4D] uppercase font-sans block">
                   MOBILE
                 </span>
-                <span className="text-sm font-semibold text-stone-950">010-7231-1470</span>
+                <span className="text-sm font-semibold text-stone-950">{siteSettings.mobilePhone}</span>
               </div>
               <Phone className="w-4 h-4 text-[#B38F4D]" />
             </a>
@@ -334,7 +334,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                 <span className="text-[10px] font-bold tracking-[0.16em] text-[#B38F4D] uppercase font-sans block">
                   TEL
                 </span>
-                <span className="text-sm font-semibold text-stone-950">051-806-3143</span>
+                <span className="text-sm font-semibold text-stone-950">{siteSettings.phone}</span>
               </div>
               <Phone className="w-4 h-4 text-[#B38F4D]" />
             </a>
@@ -347,7 +347,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                 <span className="text-[10px] font-bold tracking-[0.16em] text-[#B38F4D] uppercase font-sans block">
                   EMAIL
                 </span>
-                <span className="text-sm font-semibold text-stone-950">8063143@naver.com</span>
+                <span className="text-sm font-semibold text-stone-950">{siteSettings.email}</span>
               </div>
               <Mail className="w-4 h-4 text-[#B38F4D]" />
             </a>

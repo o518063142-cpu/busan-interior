@@ -257,7 +257,7 @@ export const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
   return (
     <>
       <MetaManager
-        title={`${project.title}｜${project.location} ${project.category} 시공사례`}
+        title={project.title}
         description={project.description || `${project.location} ${project.spaceTypeDetail || project.category} 맞춤 리모델링 시공사례`}
         canonicalPath={`/projects/${canonicalSlug}`}
         ogType="article"

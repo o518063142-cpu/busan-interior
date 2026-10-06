@@ -94,7 +94,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     projectData.imageUrl ||
     `${baseUrl}/images/hanshin_hero_bg_1784852933011.jpg`;
 
-  const pageTitle = `${projectData.title}｜지니 인테리어 대표 시공사례`;
+  const pageTitle = `${projectData.title} | 지니 인테리어`;
   const pageDesc =
     projectData.description ||
     `${SITE_CONFIG.brand.nameKo} 부산 ${projectData.location} ${projectData.category} 맞춤 리모델링 시공사례.`;

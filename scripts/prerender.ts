@@ -652,10 +652,10 @@ function generateJsonLd(
               ],
 
               opens:
-                "08:00",
+                "09:00",
 
               closes:
-                "18:30",
+                "19:00",
             },
           ],
 

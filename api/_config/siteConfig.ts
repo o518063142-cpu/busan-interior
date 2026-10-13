@@ -70,6 +70,7 @@ export interface SiteEntity {
   };
   socialLinks: {
     naverPlace?: string;
+    googleMaps?: string;
     naverBlog?: string;
     naverClip?: string;
     instagram?: string;

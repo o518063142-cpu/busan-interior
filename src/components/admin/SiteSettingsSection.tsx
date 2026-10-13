@@ -1,7 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
+import {
+  doc,
+  getDoc,
+  setDoc,
+  serverTimestamp,
+} from "firebase/firestore";
 import { db } from "../../firebase";
-import { SITE_CONFIG, SITE_ENTITY } from "../../config/siteConfig";
+import {
+  SITE_CONFIG,
+  SITE_ENTITY,
+} from "../../config/siteConfig";
 import {
   Save,
   Loader2,
@@ -40,7 +48,7 @@ const DEFAULT_SETTINGS: SiteSettings = {
   phone: SITE_CONFIG.company.phone,
   mobilePhone: SITE_CONFIG.company.mobilePhone,
 
-  // 현재 홈페이지 상단에서 실제 사용 중인 이메일을 초기 기본값으로 사용
+  // 현재 홈페이지에서 실제 사용하는 이메일
   email: "8063143@naver.com",
 
   address: SITE_CONFIG.company.address,
@@ -49,18 +57,28 @@ const DEFAULT_SETTINGS: SiteSettings = {
   operatingHours: SITE_CONFIG.company.operatingHours,
   closedDays: SITE_CONFIG.company.closedDays,
 
-naverPlace:
-  SITE_ENTITY.socialLinks?.naverPlace ||
-  SITE_CONFIG.company.naverPlaceUrl ||
-  "",
+  naverPlace:
+    SITE_ENTITY.socialLinks?.naverPlace ||
+    SITE_CONFIG.company.naverPlaceUrl ||
+    "",
 
-googleMaps: SITE_ENTITY.socialLinks?.googleMaps || "",
+  googleMaps:
+    SITE_ENTITY.socialLinks?.googleMaps || "",
 
-naverBlog: SITE_ENTITY.socialLinks?.naverBlog || "",
-  naverClip: SITE_ENTITY.socialLinks?.naverClip || "",
-  instagram: SITE_ENTITY.socialLinks?.instagram || "",
-  youtube: SITE_ENTITY.socialLinks?.youtube || "",
-  kakaoChannel: SITE_ENTITY.socialLinks?.kakaoChannel || "",
+  naverBlog:
+    SITE_ENTITY.socialLinks?.naverBlog || "",
+
+  naverClip:
+    SITE_ENTITY.socialLinks?.naverClip || "",
+
+  instagram:
+    SITE_ENTITY.socialLinks?.instagram || "",
+
+  youtube:
+    SITE_ENTITY.socialLinks?.youtube || "",
+
+  kakaoChannel:
+    SITE_ENTITY.socialLinks?.kakaoChannel || "",
 };
 
 export const SiteSettingsSection: React.FC = () => {
@@ -84,7 +102,12 @@ export const SiteSettingsSection: React.FC = () => {
       setMessage(null);
 
       try {
-        const ref = doc(db, "siteSettings", "main");
+        const ref = doc(
+          db,
+          "siteSettings",
+          "main"
+        );
+
         const snapshot = await getDoc(ref);
 
         if (snapshot.exists()) {
@@ -102,7 +125,10 @@ export const SiteSettingsSection: React.FC = () => {
           setInitialSettings(DEFAULT_SETTINGS);
         }
       } catch (error) {
-        console.error("사이트 설정 불러오기 오류:", error);
+        console.error(
+          "사이트 설정 불러오기 오류:",
+          error
+        );
 
         setMessage({
           type: "error",
@@ -138,7 +164,11 @@ export const SiteSettingsSection: React.FC = () => {
     setMessage(null);
 
     try {
-      const ref = doc(db, "siteSettings", "main");
+      const ref = doc(
+        db,
+        "siteSettings",
+        "main"
+      );
 
       await setDoc(
         ref,
@@ -158,7 +188,10 @@ export const SiteSettingsSection: React.FC = () => {
         text: "사이트 설정이 저장되었습니다.",
       });
     } catch (error) {
-      console.error("사이트 설정 저장 오류:", error);
+      console.error(
+        "사이트 설정 저장 오류:",
+        error
+      );
 
       setMessage({
         type: "error",
@@ -175,7 +208,8 @@ export const SiteSettingsSection: React.FC = () => {
   };
 
   const hasChanges =
-    JSON.stringify(settings) !== JSON.stringify(initialSettings);
+    JSON.stringify(settings) !==
+    JSON.stringify(initialSettings);
 
   if (loading) {
     return (
@@ -208,8 +242,9 @@ export const SiteSettingsSection: React.FC = () => {
             </h2>
 
             <p className="text-xs sm:text-sm text-stone-400 mt-2 leading-relaxed">
-              홈페이지에 표시되는 연락처, 사업장 주소,
-              영업시간 및 공식 채널 정보를 관리합니다.
+              홈페이지에 표시되는 연락처,
+              사업장 주소, 영업시간 및 공식
+              채널 정보를 관리합니다.
             </p>
           </div>
 
@@ -238,7 +273,9 @@ export const SiteSettingsSection: React.FC = () => {
                 <Save className="w-4 h-4" />
               )}
 
-              {saving ? "저장 중..." : "변경사항 저장"}
+              {saving
+                ? "저장 중..."
+                : "변경사항 저장"}
             </button>
           </div>
         </div>
@@ -273,7 +310,9 @@ export const SiteSettingsSection: React.FC = () => {
             label="대표전화"
             value={settings.phone}
             placeholder="051-806-3143"
-            onChange={(value) => updateField("phone", value)}
+            onChange={(value) =>
+              updateField("phone", value)
+            }
           />
 
           <SettingInput
@@ -281,7 +320,10 @@ export const SiteSettingsSection: React.FC = () => {
             value={settings.mobilePhone}
             placeholder="010-7231-1470"
             onChange={(value) =>
-              updateField("mobilePhone", value)
+              updateField(
+                "mobilePhone",
+                value
+              )
             }
           />
 
@@ -291,8 +333,12 @@ export const SiteSettingsSection: React.FC = () => {
               type="email"
               value={settings.email}
               placeholder="8063143@naver.com"
-              onChange={(value) => updateField("email", value)}
-              icon={<Mail className="w-4 h-4" />}
+              onChange={(value) =>
+                updateField("email", value)
+              }
+              icon={
+                <Mail className="w-4 h-4" />
+              }
             />
           </div>
         </div>
@@ -309,7 +355,9 @@ export const SiteSettingsSection: React.FC = () => {
             label="기본 주소"
             value={settings.address}
             placeholder="부산광역시 동래구 명륜로 222"
-            onChange={(value) => updateField("address", value)}
+            onChange={(value) =>
+              updateField("address", value)
+            }
           />
 
           <SettingInput
@@ -317,7 +365,10 @@ export const SiteSettingsSection: React.FC = () => {
             value={settings.addressDetail}
             placeholder="상가동 A-209호"
             onChange={(value) =>
-              updateField("addressDetail", value)
+              updateField(
+                "addressDetail",
+                value
+              )
             }
           />
         </div>
@@ -335,7 +386,10 @@ export const SiteSettingsSection: React.FC = () => {
             value={settings.operatingHours}
             placeholder="월~토요일 08:00 - 18:30"
             onChange={(value) =>
-              updateField("operatingHours", value)
+              updateField(
+                "operatingHours",
+                value
+              )
             }
           />
 
@@ -344,7 +398,10 @@ export const SiteSettingsSection: React.FC = () => {
             value={settings.closedDays}
             placeholder="일요일 및 공휴일 휴무"
             onChange={(value) =>
-              updateField("closedDays", value)
+              updateField(
+                "closedDays",
+                value
+              )
             }
           />
         </div>
@@ -353,27 +410,43 @@ export const SiteSettingsSection: React.FC = () => {
       {/* Channels */}
       <SettingCard
         title="공식 채널 및 외부 링크"
-        description="네이버·Instagram·YouTube·Kakao 등 공식 채널 주소입니다."
+        description="네이버·Google·Instagram·YouTube·Kakao 등 공식 채널 주소입니다."
         icon={<LinkIcon className="w-5 h-5" />}
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <SettingInput
             label="네이버 플레이스"
-        <SettingInput
-          label="Google 지도"
-          value={settings.googleMaps}
-          placeholder="https://maps.google.com/..."
-          onChange={(value) =>
-            updateField("googleMaps", value)
-           }
-         />
+            value={settings.naverPlace}
+            placeholder="https://m.place.naver.com/..."
+            onChange={(value) =>
+              updateField(
+                "naverPlace",
+                value
+              )
+            }
+          />
+
+          <SettingInput
+            label="Google 지도"
+            value={settings.googleMaps}
+            placeholder="https://maps.google.com/..."
+            onChange={(value) =>
+              updateField(
+                "googleMaps",
+                value
+              )
+            }
+          />
 
           <SettingInput
             label="네이버 블로그"
             value={settings.naverBlog}
             placeholder="https://..."
             onChange={(value) =>
-              updateField("naverBlog", value)
+              updateField(
+                "naverBlog",
+                value
+              )
             }
           />
 
@@ -382,7 +455,10 @@ export const SiteSettingsSection: React.FC = () => {
             value={settings.naverClip}
             placeholder="https://..."
             onChange={(value) =>
-              updateField("naverClip", value)
+              updateField(
+                "naverClip",
+                value
+              )
             }
           />
 
@@ -391,7 +467,10 @@ export const SiteSettingsSection: React.FC = () => {
             value={settings.instagram}
             placeholder="https://..."
             onChange={(value) =>
-              updateField("instagram", value)
+              updateField(
+                "instagram",
+                value
+              )
             }
           />
 
@@ -400,7 +479,10 @@ export const SiteSettingsSection: React.FC = () => {
             value={settings.youtube}
             placeholder="https://..."
             onChange={(value) =>
-              updateField("youtube", value)
+              updateField(
+                "youtube",
+                value
+              )
             }
           />
 
@@ -409,7 +491,10 @@ export const SiteSettingsSection: React.FC = () => {
             value={settings.kakaoChannel}
             placeholder="https://..."
             onChange={(value) =>
-              updateField("kakaoChannel", value)
+              updateField(
+                "kakaoChannel",
+                value
+              )
             }
           />
         </div>
@@ -420,9 +505,11 @@ export const SiteSettingsSection: React.FC = () => {
         <strong className="text-blue-300">
           검색 정보 안내:
         </strong>{" "}
-        이 화면은 홈페이지 운영정보를 관리하기 위한 설정입니다.
-        검색엔진용 핵심 사업자 정보와 구조화데이터는 안전성을 위해
-        별도의 기본 설정값을 유지합니다.
+        이 화면은 홈페이지 운영정보를
+        관리하기 위한 설정입니다.
+        검색엔진용 핵심 사업자 정보와
+        구조화데이터는 안전성을 위해 별도의
+        기본 설정값을 유지합니다.
       </div>
     </div>
   );
@@ -435,7 +522,9 @@ interface SettingCardProps {
   children: React.ReactNode;
 }
 
-const SettingCard: React.FC<SettingCardProps> = ({
+const SettingCard: React.FC<
+  SettingCardProps
+> = ({
   title,
   description,
   icon,
@@ -457,7 +546,9 @@ const SettingCard: React.FC<SettingCardProps> = ({
         </p>
       </div>
 
-      <div className="p-5">{children}</div>
+      <div className="p-5">
+        {children}
+      </div>
     </section>
   );
 };
@@ -471,7 +562,9 @@ interface SettingInputProps {
   onChange: (value: string) => void;
 }
 
-const SettingInput: React.FC<SettingInputProps> = ({
+const SettingInput: React.FC<
+  SettingInputProps
+> = ({
   label,
   value,
   placeholder,
@@ -496,9 +589,13 @@ const SettingInput: React.FC<SettingInputProps> = ({
           type={type}
           value={value}
           placeholder={placeholder}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) =>
+            onChange(e.target.value)
+          }
           className={`w-full py-3 bg-stone-950 border border-stone-800 rounded-xl text-sm text-white placeholder-stone-600 focus:outline-none focus:border-amber-400 transition-colors ${
-            icon ? "pl-10 pr-4" : "px-4"
+            icon
+              ? "pl-10 pr-4"
+              : "px-4"
           }`}
         />
       </div>

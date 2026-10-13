@@ -28,6 +28,7 @@ export interface SiteSettings {
   closedDays: string;
 
   naverPlace: string;
+  googleMaps: string;
   naverBlog: string;
   naverClip: string;
   instagram: string;
@@ -48,12 +49,14 @@ const DEFAULT_SETTINGS: SiteSettings = {
   operatingHours: SITE_CONFIG.company.operatingHours,
   closedDays: SITE_CONFIG.company.closedDays,
 
-  naverPlace:
-    SITE_ENTITY.socialLinks?.naverPlace ||
-    SITE_CONFIG.company.naverPlaceUrl ||
-    "",
+naverPlace:
+  SITE_ENTITY.socialLinks?.naverPlace ||
+  SITE_CONFIG.company.naverPlaceUrl ||
+  "",
 
-  naverBlog: SITE_ENTITY.socialLinks?.naverBlog || "",
+googleMaps: SITE_ENTITY.socialLinks?.googleMaps || "",
+
+naverBlog: SITE_ENTITY.socialLinks?.naverBlog || "",
   naverClip: SITE_ENTITY.socialLinks?.naverClip || "",
   instagram: SITE_ENTITY.socialLinks?.instagram || "",
   youtube: SITE_ENTITY.socialLinks?.youtube || "",
@@ -356,12 +359,14 @@ export const SiteSettingsSection: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <SettingInput
             label="네이버 플레이스"
-            value={settings.naverPlace}
-            placeholder="https://..."
-            onChange={(value) =>
-              updateField("naverPlace", value)
-            }
-          />
+        <SettingInput
+          label="Google 지도"
+          value={settings.googleMaps}
+          placeholder="https://maps.google.com/..."
+          onChange={(value) =>
+            updateField("googleMaps", value)
+           }
+         />
 
           <SettingInput
             label="네이버 블로그"

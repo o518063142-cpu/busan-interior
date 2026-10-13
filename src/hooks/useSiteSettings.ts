@@ -12,6 +12,7 @@ export interface SiteSettings {
   operatingHours: string;
   closedDays: string;
   naverPlace: string;
+  googleMaps: string;
   naverBlog: string;
   naverClip: string;
   instagram: string;

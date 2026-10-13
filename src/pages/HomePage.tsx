@@ -911,71 +911,148 @@ export const HomePage: React.FC<HomePageProps> = ({
         </div>
       </section>
 
-      {/* ================= SECTION 6: 시공 사례 & 고객 경험 ================= */}
+           {/* ================= SECTION 6: 실제 시공 경험 ================= */}
       <section className="bg-stone-100 py-16 border-y border-stone-200 font-sans">
         <div className="max-w-7xl mx-auto px-4 lg:px-8 space-y-10">
-          <div className="text-center space-y-3 max-w-2xl mx-auto">
-            <span className="text-amber-600 font-bold text-xs uppercase tracking-wider bg-amber-100 px-3 py-1 rounded-full border border-amber-200 font-sans">
-              06. REVIEWS & CASE
+          <div className="text-center space-y-3 max-w-3xl mx-auto">
+            <span className="text-amber-600 font-bold text-xs uppercase tracking-wider bg-amber-100 px-3 py-1 rounded-full border border-amber-200">
+              06. ACTUAL EXPERIENCE
             </span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-stone-900 font-sans break-keep">
-              시공 사례 & 고객 경험
+
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-stone-900 break-keep">
+              다양한 공간에서 쌓아온 실제 시공 경험
             </h2>
-            <p className="text-stone-600 text-sm font-sans break-keep">
-              부산을 중심으로 경남·울산까지 다양한 공간의 시공 경험을 쌓아가고 있습니다.
+
+            <p className="text-stone-600 text-sm sm:text-base leading-relaxed break-keep">
+              지니 인테리어는 부산을 중심으로 주거 공간부터 학교·교육시설,
+              상업·업무공간까지 다양한 현장의 실제 시공 경험을 쌓아가고 있습니다.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 font-sans">
-            {[
-              {
-                categoryTag: "주거 리모델링",
-                title: "30평대 아파트 올 리모델링",
-                content:
-                  "주거 공간의 사용성과 동선을 고려한 설계와 공정 관리 방향을 소개하는 상담 예시입니다. 자재와 조명 계획은 실제 현장 조건과 고객 요청에 따라 달라질 수 있습니다.",
-                clientType: "30평대 주거 공간 고객 상담 예시",
-              },
-              {
-                categoryTag: "상업 공간 인테리어",
-                title: "디저트 카페 & F&B 매장 시공",
-                content:
-                  "상업 공간의 핵심인 공사 일정을 철저히 준수하고, 원목 카운터와 감성적인 공간 무드를 결합하여 브랜드 아이덴티티를 극대화한 상가 인테리어 사례입니다.",
-                clientType: "F&B 카페 상업 공간 상담 예시",
-              },
-              {
-                categoryTag: "업무 공간 인테리어",
-                title: "오피스 사무실 가벽 & 방음 공사",
-                content:
-                  "세부 자재 내역과 투명한 견적을 바탕으로 업무 동선에 맞춘 가벽 분할 및 방음 시공을 진행하여 실용적이고 쾌적한 비즈니스 환경을 완성했습니다.",
-                clientType: "오피스 업무 공간 상담 예시",
-              },
-            ].map((item, idx) => (
-              <div key={idx} className="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm space-y-4 font-sans flex flex-col justify-between">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-[11px] font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-md border border-amber-200/80 font-sans">
-                      {item.categoryTag}
-                    </span>
-                    <span className="text-[11px] font-semibold text-stone-400 bg-stone-100 px-2 py-0.5 rounded font-sans">
-                      시공 상담 예시
-                    </span>
-                  </div>
-                  <h3 className="text-sm font-bold text-stone-900 font-sans">{item.title}</h3>
-                  <p className="text-xs text-stone-600 leading-relaxed font-normal font-sans break-keep">
-                    {item.content}
-                  </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* 주거 리모델링 */}
+            <div className="bg-white p-6 sm:p-7 rounded-2xl border border-stone-200 shadow-sm flex flex-col justify-between gap-6">
+              <div className="space-y-4">
+                <div className="w-12 h-12 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center">
+                  <Building className="w-6 h-6 text-amber-700" />
                 </div>
-                <div className="pt-3 border-t border-stone-100">
-                  <p className="text-[11px] font-medium text-stone-400 font-sans">
-                    {item.clientType}
+
+                <div className="space-y-2">
+                  <span className="text-[11px] font-bold text-amber-700 tracking-wider">
+                    RESIDENTIAL
+                  </span>
+
+                  <h3 className="text-lg font-extrabold text-stone-900">
+                    주거 리모델링
+                  </h3>
+
+                  <p className="text-xs sm:text-sm text-stone-600 leading-relaxed break-keep">
+                    부산 망미주공 아파트, 신평 삼창아파트,
+                    사직동 구축 빌라 등 실제 주거 리모델링 현장을
+                    진행했습니다.
                   </p>
                 </div>
               </div>
-            ))}
+
+              <button
+                onClick={() => {
+                  setActiveTab("PROJECT");
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                className="w-full py-3 px-4 bg-stone-950 hover:bg-stone-800 text-white font-bold rounded-xl text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <span>주거 시공사례 보기</span>
+                <ChevronRight className="w-4 h-4 text-amber-400" />
+              </button>
+            </div>
+
+            {/* 학교 · 교육시설 */}
+            <div className="bg-white p-6 sm:p-7 rounded-2xl border border-stone-200 shadow-sm flex flex-col justify-between gap-6">
+              <div className="space-y-4">
+                <div className="w-12 h-12 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center">
+                  <Users className="w-6 h-6 text-amber-700" />
+                </div>
+
+                <div className="space-y-2">
+                  <span className="text-[11px] font-bold text-amber-700 tracking-wider">
+                    EDUCATION
+                  </span>
+
+                  <h3 className="text-lg font-extrabold text-stone-900">
+                    학교 · 교육시설
+                  </h3>
+
+                  <p className="text-xs sm:text-sm text-stone-600 leading-relaxed break-keep">
+                    경남 초등학교 VR교실과 울산 초등학교 교실 등
+                    학생들의 활동과 공간 목적을 고려한 교육시설
+                    인테리어를 실제 시공했습니다.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => {
+                  setActiveTab("PROJECT");
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                className="w-full py-3 px-4 bg-stone-950 hover:bg-stone-800 text-white font-bold rounded-xl text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <span>교육시설 시공사례 보기</span>
+                <ChevronRight className="w-4 h-4 text-amber-400" />
+              </button>
+            </div>
+
+            {/* 상업 · 업무공간 */}
+            <div className="bg-white p-6 sm:p-7 rounded-2xl border border-stone-200 shadow-sm flex flex-col justify-between gap-6">
+              <div className="space-y-4">
+                <div className="w-12 h-12 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center">
+                  <Wrench className="w-6 h-6 text-amber-700" />
+                </div>
+
+                <div className="space-y-2">
+                  <span className="text-[11px] font-bold text-amber-700 tracking-wider">
+                    COMMERCIAL & WORKSPACE
+                  </span>
+
+                  <h3 className="text-lg font-extrabold text-stone-900">
+                    상업 · 업무공간
+                  </h3>
+
+                  <p className="text-xs sm:text-sm text-stone-600 leading-relaxed break-keep">
+                    부산 금정구 장전동 60평 음악연습실·음악 스튜디오 등
+                    공간의 용도와 동선을 고려한 상업·업무공간
+                    인테리어를 실제 시공했습니다.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => {
+                  setActiveTab("PROJECT");
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                className="w-full py-3 px-4 bg-stone-950 hover:bg-stone-800 text-white font-bold rounded-xl text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <span>상업·업무 시공사례 보기</span>
+                <ChevronRight className="w-4 h-4 text-amber-400" />
+              </button>
+            </div>
+          </div>
+
+          <div className="text-center pt-2">
+            <button
+              onClick={() => {
+                setActiveTab("PROJECT");
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+              className="inline-flex items-center gap-2 text-sm font-bold text-stone-800 hover:text-amber-700 transition-colors cursor-pointer"
+            >
+              <span>지니 인테리어 전체 실제 시공사례 확인하기</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </section>
-
       {/* ================= SECTION 7: 부산 지역 서비스 안내 ================= */}
       <section className="max-w-7xl mx-auto px-4 lg:px-8 space-y-8 font-sans">
         <div className="bg-stone-900 text-stone-100 p-8 sm:p-12 rounded-3xl border border-stone-800 space-y-6">

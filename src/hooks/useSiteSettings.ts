@@ -28,10 +28,14 @@ export const DEFAULT_SITE_SETTINGS: SiteSettings = {
   addressDetail: SITE_CONFIG.company.addressDetail,
   operatingHours: SITE_CONFIG.company.operatingHours,
   closedDays: SITE_CONFIG.company.closedDays,
+
   naverPlace:
     SITE_ENTITY.socialLinks.naverPlace ||
     SITE_CONFIG.company.naverPlaceUrl ||
     "",
+
+  googleMaps: SITE_ENTITY.socialLinks.googleMaps || "",
+
   naverBlog: SITE_ENTITY.socialLinks.naverBlog || "",
   naverClip: SITE_ENTITY.socialLinks.naverClip || "",
   instagram: SITE_ENTITY.socialLinks.instagram || "",
@@ -42,6 +46,7 @@ export const DEFAULT_SITE_SETTINGS: SiteSettings = {
 export const useSiteSettings = () => {
   const [settings, setSettings] =
     useState<SiteSettings>(DEFAULT_SITE_SETTINGS);
+
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -59,38 +64,58 @@ export const useSiteSettings = () => {
         const data = snapshot.data();
 
         setSettings({
-          phone: data.phone || DEFAULT_SITE_SETTINGS.phone,
+          phone:
+            data.phone || DEFAULT_SITE_SETTINGS.phone,
+
           mobilePhone:
             data.mobilePhone || DEFAULT_SITE_SETTINGS.mobilePhone,
-          email: data.email || DEFAULT_SITE_SETTINGS.email,
-          address: data.address || DEFAULT_SITE_SETTINGS.address,
+
+          email:
+            data.email || DEFAULT_SITE_SETTINGS.email,
+
+          address:
+            data.address || DEFAULT_SITE_SETTINGS.address,
+
           addressDetail:
             data.addressDetail || DEFAULT_SITE_SETTINGS.addressDetail,
+
           operatingHours:
             data.operatingHours || DEFAULT_SITE_SETTINGS.operatingHours,
+
           closedDays:
             data.closedDays || DEFAULT_SITE_SETTINGS.closedDays,
+
           naverPlace:
             data.naverPlace || DEFAULT_SITE_SETTINGS.naverPlace,
+
+          googleMaps:
+            data.googleMaps || DEFAULT_SITE_SETTINGS.googleMaps,
+
           naverBlog:
             data.naverBlog || DEFAULT_SITE_SETTINGS.naverBlog,
+
           naverClip:
             data.naverClip || DEFAULT_SITE_SETTINGS.naverClip,
+
           instagram:
             data.instagram || DEFAULT_SITE_SETTINGS.instagram,
+
           youtube:
             data.youtube || DEFAULT_SITE_SETTINGS.youtube,
+
           kakaoChannel:
             data.kakaoChannel || DEFAULT_SITE_SETTINGS.kakaoChannel,
         });
 
         setLoading(false);
       },
+
       (error) => {
         console.warn(
           "사이트 설정을 불러오지 못해 기본값을 사용합니다:",
           error
         );
+
         setSettings(DEFAULT_SITE_SETTINGS);
         setLoading(false);
       }
@@ -99,11 +124,17 @@ export const useSiteSettings = () => {
     return () => unsubscribe();
   }, []);
 
-  const phoneDisplay = [settings.phone, settings.mobilePhone]
+  const phoneDisplay = [
+    settings.phone,
+    settings.mobilePhone,
+  ]
     .filter(Boolean)
     .join(" / ");
 
-  const fullAddress = [settings.address, settings.addressDetail]
+  const fullAddress = [
+    settings.address,
+    settings.addressDetail,
+  ]
     .filter(Boolean)
     .join(" ");
 

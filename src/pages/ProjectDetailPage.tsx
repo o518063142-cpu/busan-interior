@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { MetaManager } from "../components/seo/MetaManager";
 import { StructuredData } from "../components/seo/StructuredData";
 import { ProjectDetailContent } from "../components/content/ProjectDetailContent";
+import { RelatedProjectNetwork } from "../components/content/RelatedProjectNetwork";
 import { ProjectItem } from "../types";
 import { PROJECTS_DATA } from "../data/projectsData";
 import { db } from "../firebase";
@@ -275,6 +276,10 @@ export const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
       <ProjectDetailContent
         project={project}
         onOpenContactModal={openContactModal}
+      />
+      <RelatedProjectNetwork
+        project={project}
+        canonicalSlug={canonicalSlug}
       />
     </>
   );

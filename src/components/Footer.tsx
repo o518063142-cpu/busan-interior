@@ -241,12 +241,6 @@ export const Footer: React.FC<FooterProps> = ({
                 </strong>{" "}
                 {SITE_CONFIG.legal.licenseNumber}
               </p>
-
-              <p className="text-[11px] text-amber-400/90 pt-1 border-t border-stone-800 leading-normal">
-                * 지니인테리어(법적 상호) / 지니
-                인테리어(GENE INTERIOR, 서비스
-                브랜드) 공식 정보 기준입니다.
-              </p>
             </div>
           </div>
 

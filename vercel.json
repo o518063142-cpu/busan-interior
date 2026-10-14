@@ -31,6 +31,10 @@
       "dest": "/index.html"
     },
     {
+      "src": "/service/?$",
+      "dest": "/api/render-service"
+    },
+    {
       "src": "/projects/?$",
       "dest": "/api/render-listing?page=projects"
     },

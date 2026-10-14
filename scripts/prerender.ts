@@ -1264,6 +1264,21 @@ function renderHtmlShell(
                 확인하실 수 있습니다.
               </p>
 
+              <ul class="space-y-2 text-sm">
+                ${realProjects.map(
+                  (project) => `
+                    <li>
+                      <a
+                        href="/projects/${encodeURIComponent(project.slug || project.id)}"
+                        class="text-amber-700 underline"
+                      >
+                        ${escapeHtml(project.title)}
+                      </a>
+                    </li>
+                  `
+                ).join("")}
+              </ul>
+
               <p class="pt-2">
 
                 <a

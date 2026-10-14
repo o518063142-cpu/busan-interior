@@ -140,6 +140,7 @@ export const SITE_ENTITY: SiteEntity = {
 
   socialLinks: {
     naverPlace: "https://m.place.naver.com/place/13556704/home",
+    googleMaps: "https://maps.app.goo.gl/TNTT73s3zj66LMbu7",
     naverBlog: "https://blog.naver.com/8063142",
     naverClip: "https://clip.naver.com/@gene-interior",
     instagram: "https://www.instagram.com/gene.interior/",

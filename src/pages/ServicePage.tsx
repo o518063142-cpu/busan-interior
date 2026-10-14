@@ -24,6 +24,21 @@ interface ServicePageProps {
   openContactModal?: () => void;
 }
 
+const EDUCATIONAL_REAL_PROJECTS = [
+  {
+    title: "울산 초등학교 교실 실제 시공사례",
+    path: "/projects/ulsan-elementary-school-classroom-interior",
+  },
+  {
+    title: "경남 초등학교 VR교실 실제 시공사례",
+    path: "/projects/gyeongnam-elementary-school-vr-classroom-remodeling",
+  },
+  {
+    title: "진주 학교 VR 스포츠실 실제 시공사례",
+    path: "/projects/jinju-school-vr-sports-room-interior",
+  },
+];
+
 export const ServicePage: React.FC<ServicePageProps> = ({
   setActiveTab,
   setSelectedCategory,
@@ -155,26 +170,30 @@ export const ServicePage: React.FC<ServicePageProps> = ({
                   </div>
                 </div>
 
-                {/* Specific Real Project Link for Public & Educational */}
+                {/* Real Educational Project Cluster */}
                 {service.id === "public-educational" && (
-                  <div className="p-3.5 bg-amber-50/80 border border-amber-200 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
+                  <div className="p-4 bg-amber-50/80 border border-amber-200 rounded-xl space-y-3">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span className="bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
                         실제 시공사례
                       </span>
-
                       <span className="text-xs font-medium text-stone-600">
-                        대표 프로젝트:
+                        학교·교육시설 실제 프로젝트
                       </span>
                     </div>
 
-                    <Link
-                      to="/projects/gyeongnam-elementary-school-vr-classroom-remodeling"
-                      className="text-xs font-bold text-amber-900 hover:text-amber-700 underline decoration-amber-400 underline-offset-2 flex items-center gap-1 group"
-                    >
-                      <span>경남 ○○초등학교 VR교실 실제 시공사례</span>
-                      <ChevronRight className="w-3.5 h-3.5 text-amber-600 group-hover:translate-x-0.5 transition-transform" />
-                    </Link>
+                    <div className="space-y-2">
+                      {EDUCATIONAL_REAL_PROJECTS.map((project) => (
+                        <Link
+                          key={project.path}
+                          to={project.path}
+                          className="text-xs font-bold text-amber-900 hover:text-amber-700 underline decoration-amber-400 underline-offset-2 flex items-center gap-1 group w-fit"
+                        >
+                          <span>{project.title}</span>
+                          <ChevronRight className="w-3.5 h-3.5 text-amber-600 group-hover:translate-x-0.5 transition-transform" />
+                        </Link>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>

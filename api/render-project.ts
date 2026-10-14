@@ -88,6 +88,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const canonicalUrl = `${baseUrl}/projects/${canonicalSlug}`;
 
+  // 공공·교육시설 실제 시공사례는 같은 카테고리의 다른 실제 현장과 자동 연결한다.
+  // 관리자에서 새 학교/교육시설 실제 프로젝트를 추가하면 별도 코드 수정 없이 내부링크에 반영된다.
+  let relatedEducationalProjects: any[] = [];
+  if (projectData.category === "공공·교육시설" && projectData.isSample !== true) {
+    try {
+      const db = await getFirestoreAdmin();
+      if (db) {
+        const relatedSnap = await db.collection("projects").where("category", "==", "공공·교육시설").get();
+        relatedEducationalProjects = relatedSnap.docs
+          .map((doc) => ({ id: doc.id, ...doc.data() } as any))
+          .filter((item) => isProjectPublic(item) && item.isSample !== true)
+          .filter((item) => {
+            const itemSlug = item.slug || item.id;
+            return itemSlug !== canonicalSlug;
+          })
+          .slice(0, 6);
+      }
+    } catch (err) {
+      console.warn("Related educational projects fetch warning:", err);
+    }
+  }
+
   const primaryImage =
     (projectData.afterImages && projectData.afterImages[0]) ||
     projectData.beforeImage ||
@@ -135,6 +157,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const scopeText = typeof projectData.scope === "string" ? projectData.scope : "";
   const keyFeaturesList = Array.isArray(projectData.keyFeatures) ? projectData.keyFeatures : [];
+  const relatedEducationalProjectsHtml = relatedEducationalProjects.length
+    ? `<section style="margin-top:28px; padding-top:24px; border-top:1px solid #e7e5e4;">
+         <h2 style="font-size:1.125rem; font-weight:bold; margin:0 0 8px; color:#1c1917;">학교·교육시설 관련 실제 시공사례</h2>
+         <p style="font-size:0.875rem; line-height:1.6; color:#57534e; margin:0 0 14px;">지니 인테리어의 다른 학교·교실·VR 교육공간 실제 시공사례를 함께 확인해 보세요.</p>
+         <ul style="padding-left:20px; margin:0; font-size:0.875rem; line-height:1.8;">
+           ${relatedEducationalProjects
+             .map((item) => {
+               const itemSlug = item.slug || item.id;
+               const location = item.location ? ` · ${item.location}` : "";
+               return `<li><a href="/projects/${itemSlug}" style="color:#92400e; font-weight:bold; text-decoration:underline; text-underline-offset:2px;">${item.title}</a><span style="color:#78716c;">${location}</span></li>`;
+             })
+             .join("")}
+         </ul>
+       </section>`
+    : "";
 
   const initialDataPayload = JSON.stringify({
     type: "project",
@@ -226,6 +263,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                </section>`
             : ""
         }
+        ${relatedEducationalProjectsHtml}
       </article>
     </main>
     <footer style="background-color:#0c0a09; color:#a8a29e; padding:32px; font-size:0.75rem; text-align:center;">

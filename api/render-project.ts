@@ -30,7 +30,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const staticFound = PROJECTS_DATA.find(
-    (p) => p.id === slugStr || p.slug === slugStr || p.title.replace(/\s+/g, "-") === slugStr
+    (p) => p.id === slugStr || p.title.replace(/\s+/g, "-") === slugStr
   );
 
   let projectData: any = staticFound ? { ...staticFound } : null;

@@ -52,6 +52,7 @@ export const StructuredData: React.FC<StructuredDataProps> = (props) => {
   // siteConfig.ts의 socialLinks만 수정하면 구조화데이터에도 자동 반영됩니다.
   const sameAs = [
     SITE_ENTITY.socialLinks.naverPlace,
+    SITE_ENTITY.socialLinks.googleMaps,
     SITE_ENTITY.socialLinks.naverBlog,
     SITE_ENTITY.socialLinks.naverClip,
     SITE_ENTITY.socialLinks.instagram,
@@ -76,7 +77,7 @@ export const StructuredData: React.FC<StructuredDataProps> = (props) => {
           "logo": `${SITE_ENTITY.url}${SITE_ENTITY.logo}`,
           "image": `${SITE_ENTITY.url}${SITE_ENTITY.logo}`,
           "telephone": SITE_ENTITY.contact.phone,
-          "description": `${SITE_ENTITY.brand.displayName}(법적상호: ${SITE_ENTITY.legal.businessName})는 부산의 주거·소형 상업공간 인테리어·리모델링을 다루는 ${SITE_ENTITY.license.officialTitle}입니다.`,
+          "description": `${SITE_ENTITY.brand.displayName}(법적상호: ${SITE_ENTITY.legal.businessName})는 ${SITE_ENTITY.brand.shortDescription}입니다.`,
           "address": {
             "@type": "PostalAddress",
             "streetAddress": SITE_ENTITY.address.street,
@@ -88,6 +89,34 @@ export const StructuredData: React.FC<StructuredDataProps> = (props) => {
             "@type": "AdministrativeArea",
             "name": area,
           })),
+          "knowsAbout": [
+            "아파트 리모델링",
+            "빌라 리모델링",
+            "주택 인테리어",
+            "상가 인테리어",
+            "사무실 인테리어",
+            "학교 인테리어",
+            "교육시설 인테리어",
+            "공공시설 실내건축",
+          ],
+          "hasOfferCatalog": {
+            "@type": "OfferCatalog",
+            "name": "지니 인테리어 실내건축 서비스",
+            "itemListElement": [
+              {
+                "@type": "OfferCatalog",
+                "name": "주거공간 인테리어·리모델링",
+              },
+              {
+                "@type": "OfferCatalog",
+                "name": "상업·업무공간 인테리어",
+              },
+              {
+                "@type": "OfferCatalog",
+                "name": "공공·교육시설 실내건축",
+              },
+            ],
+          },
           ...(sameAs.length > 0 ? { sameAs } : {}),
         },
         {

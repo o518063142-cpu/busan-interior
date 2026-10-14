@@ -27,6 +27,10 @@
 
   "routes": [
     {
+      "src": "/admin/?$",
+      "dest": "/index.html"
+    },
+    {
       "src": "/projects/?$",
       "dest": "/api/render-listing?page=projects"
     },

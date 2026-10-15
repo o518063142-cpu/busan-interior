@@ -4,6 +4,7 @@ import { MetaManager } from "../components/seo/MetaManager";
 import { StructuredData } from "../components/seo/StructuredData";
 import { ProjectDetailContent } from "../components/content/ProjectDetailContent";
 import { RelatedProjectNetwork } from "../components/content/RelatedProjectNetwork";
+import { RelatedInformationNetwork } from "../components/content/RelatedInformationNetwork";
 import { ProjectItem } from "../types";
 import { PROJECTS_DATA } from "../data/projectsData";
 import { db } from "../firebase";
@@ -277,6 +278,7 @@ export const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
         project={project}
         onOpenContactModal={openContactModal}
       />
+      <RelatedInformationNetwork source={project} kind="project" />
       <RelatedProjectNetwork
         project={project}
         canonicalSlug={canonicalSlug}

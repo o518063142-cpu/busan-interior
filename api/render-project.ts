@@ -2,6 +2,8 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { SITE_CONFIG, SITE_ENTITY } from "./_config/siteConfig.js";
 import { PROJECTS_DATA } from "./_data/projectsData.js";
 import { getFirestoreAdmin, isProjectPublic } from "./_lib/firebaseAdmin.js";
+import { loadRelationshipArticles } from "./_lib/relationshipData.js";
+import { renderContentRelations } from "./_lib/renderContentRelations.js";
 
 const getProjectSlug = (project: any) =>
   project.slug ||
@@ -130,6 +132,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       </section>`
     : "";
 
+  const relatedInformationHtml = renderContentRelations(projectData, "project", await loadRelationshipArticles());
+
   const primaryImage =
     (projectData.afterImages && projectData.afterImages[0]) || projectData.beforeImage || projectData.imageUrl ||
     `${baseUrl}/images/hanshin_hero_bg_1784852933011.jpg`;
@@ -194,7 +198,7 @@ ${primaryImage ? `<div style="margin-bottom:24px; border-radius:16px; overflow:h
 ${scopeText ? `<section style="margin-bottom:24px;"><h2 style="font-size:1.125rem; font-weight:bold; margin-bottom:12px; color:#1c1917;">${scopeHeading}</h2><p style="font-size:0.875rem; line-height:1.6; color:#44403c;">${escapeHtml(scopeText)}</p></section>` : ""}
 ${keyFeaturesList.length > 0 ? `<section style="margin-bottom:24px;"><h2 style="font-size:1.125rem; font-weight:bold; margin-bottom:12px; color:#1c1917;">${featuresHeading}</h2><ul style="padding-left:20px; margin:0; font-size:0.875rem; color:#44403c; line-height:1.6;">${keyFeaturesList.map((f: string) => `<li>${escapeHtml(f)}</li>`).join("")}</ul></section>` : ""}
 ${projectData.description ? `<section style="margin-bottom:24px;"><h2 style="font-size:1.125rem; font-weight:bold; margin-bottom:12px; color:#1c1917;">${descriptionHeading}</h2><p style="font-size:0.875rem; line-height:1.6; color:#44403c; white-space:pre-line;">${escapeHtml(projectData.description)}</p></section>` : ""}
-${relatedProjectsHtml}</article></main>
+${relatedProjectsHtml}${relatedInformationHtml}</article></main>
 <footer style="background-color:#0c0a09; color:#a8a29e; padding:32px; font-size:0.75rem; text-align:center;"><p>© ${new Date().getFullYear()} ${escapeHtml(SITE_CONFIG.brand.nameKo)} (${escapeHtml(SITE_CONFIG.legal.businessName)}). All rights reserved.</p></footer></div></body></html>`;
 
   res.setHeader("Content-Type", "text/html; charset=utf-8");

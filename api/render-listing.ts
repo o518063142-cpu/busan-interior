@@ -311,7 +311,7 @@ async function fetchProjectsFromRest(): Promise<AnyProject[]> {
  *
  * PROJECTS_DATA의 샘플 6개는 삭제하지 않습니다.
  */
-async function fetchCombinedProjects(): Promise<{
+export async function fetchCombinedProjects(): Promise<{
   allProjects: AnyProject[];
   realProjects: AnyProject[];
   sampleProjects: AnyProject[];

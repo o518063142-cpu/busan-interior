@@ -203,7 +203,7 @@ const STATIC_ROUTES: StaticRouteConfig[] = [
    FALLBACK REAL PROJECTS
 
    Firestore를 빌드 순간 읽지 못해도
-   현재 정상 실제 사례 6개는 절대 사라지지 않게 보존.
+   현재 정상 실제 사례 7개는 절대 사라지지 않게 보존.
 
    향후 Firestore 연결 성공 시 Firestore 데이터가 우선됨.
 ========================================================= */
@@ -276,6 +276,15 @@ const FALLBACK_REAL_PROJECTS: PrerenderProject[] = [
     duration: "4주",
     description:
       "부산 금정구 장전동 60평 음악연습실·음악 스튜디오 인테리어 실제 시공사례",
+  },
+
+  {
+    id: "jinju-school-vr-sports-room-interior",
+    slug: "jinju-school-vr-sports-room-interior",
+    isSample: false,
+    title: "진주 학교 VR 스포츠실 인테리어｜체험형 교육공간 리모델링",
+    location: "경남 진주시",
+    category: "공공·교육시설",
   },
 ];
 
@@ -1264,20 +1273,45 @@ function renderHtmlShell(
                 확인하실 수 있습니다.
               </p>
 
-              <ul class="space-y-2 text-sm">
-                ${realProjects.map(
-                  (project) => `
-                    <li>
-                      <a
-                        href="/projects/${encodeURIComponent(project.slug || project.id)}"
-                        class="text-amber-700 underline"
-                      >
-                        ${escapeHtml(project.title)}
-                      </a>
-                    </li>
-                  `
-                ).join("")}
-              </ul>
+              ${[
+                { category: "주거", title: "주거공간 인테리어·리모델링" },
+                { category: "상업·업무", title: "상업·업무공간 인테리어" },
+                { category: "공공·교육시설", title: "공공·교육시설 인테리어" },
+              ].map(
+                (group) => `
+                  <section class="space-y-3">
+                    <h3 class="font-bold text-stone-900">
+                      ${escapeHtml(group.title)}
+                    </h3>
+                    <ul class="space-y-3 text-sm">
+                      ${realProjects.filter(
+                        (project) => {
+                          const category = project.category === "주거"
+                            ? "주거"
+                            : project.category === "공공·교육시설"
+                              ? "공공·교육시설"
+                              : "상업·업무";
+                          return category === group.category;
+                        }
+                      ).map(
+                        (project) => `
+                          <li>
+                            <a
+                              href="/projects/${encodeURIComponent(project.slug || project.id)}"
+                              class="text-amber-700 underline"
+                            >
+                              ${escapeHtml(project.title)}
+                            </a>
+                            <p class="text-stone-600">
+                              지역: ${escapeHtml(project.location)}
+                            </p>
+                          </li>
+                        `
+                      ).join("")}
+                    </ul>
+                  </section>
+                `
+              ).join("")}
 
               <p class="pt-2">
 

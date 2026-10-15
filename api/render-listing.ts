@@ -492,12 +492,12 @@ export default async function handler(
 
   const pageTitle =
     isProjectsPage
-      ? `시공사례 포트폴리오｜${SITE_CONFIG.brand.nameKo} (${SITE_CONFIG.brand.nameEn})`
+      ? `시공사례·디자인 제안｜부산 인테리어 포트폴리오｜${SITE_CONFIG.brand.nameKo}`
       : `${SITE_CONFIG.brand.nameKo} (${SITE_CONFIG.brand.nameEn})｜부산 실내건축·인테리어·리모델링`;
 
   const pageDesc =
     isProjectsPage
-      ? "지니 인테리어(GENE INTERIOR) 실제 시공사례 및 포트폴리오. 부산·울산·경남 아파트, 빌라, 상가, 음악연습실, 사무실, 학교·공공 교육시설 실내건축 완공 현장."
+      ? "지니 인테리어의 부산·경남·울산 실제 시공사례와 부산 지역별 주거·상업·업무공간 디자인 제안·콘셉트를 확인할 수 있습니다. 실제 시공실적과 디자인 제안을 명확히 구분하여 제공합니다."
       : SITE_CONFIG.seo.metaDescription;
 
   /**
@@ -603,7 +603,7 @@ export default async function handler(
                   margin-right:6px;
                 "
               >
-                샘플 프로젝트
+                디자인 제안
               </span>
 
               <a
@@ -618,7 +618,7 @@ export default async function handler(
             <p style="margin:0; color:#78716c; font-size:0.8rem;">
 
               <span>
-                <strong>지역:</strong>
+                <strong>제안 지역:</strong>
                 ${escapeHtml(project.location)}
               </span>
 
@@ -739,7 +739,7 @@ export default async function handler(
       </section>
 
       <section
-        aria-label="샘플 프로젝트 포트폴리오"
+        aria-label="디자인 제안 및 공간 콘셉트"
         style="margin-top:40px;"
       >
 
@@ -753,9 +753,13 @@ export default async function handler(
             margin-bottom:12px;
           "
         >
-          기본 포트폴리오 / 샘플 프로젝트
+          디자인 제안 · 공간 콘셉트
           (${sampleProjects.length}건)
         </h2>
+
+        <p style="color:#78716c; font-size:0.875rem;">
+          아래 프로젝트는 실제 시공실적이 아닌 지니 인테리어의 디자인 및 공간 구성 제안·콘셉트입니다.
+        </p>
 
         <div class="sample-projects-list">
 

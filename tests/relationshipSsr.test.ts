@@ -65,6 +65,9 @@ test("SSR keeps 7 real/6 designs; new project/design/article join both link dire
   h.data.projects.push(h.newProject, h.design);
   const project = await h.request("api/render-project.ts", { slug: "new-home" });
   assert.equal(project.code, 200);
+  assert(project.html.includes('href="/contact"'));
+  assert(project.html.includes('href="tel:051-806-3143"'));
+  assert(project.html.indexOf('id="project-consultation-heading"') < project.html.indexOf('href="/information/new-guide"'));
   assert(project.html.includes('href="/information/new-guide"'));
   assert(project.html.includes('href="/projects/new-design"'));
   assert(project.html.includes('href="/projects/busan-sajik-villa-remodeling"'));
@@ -86,6 +89,7 @@ test("SSR keeps 7 real/6 designs; new project/design/article join both link dire
   assert(design.html.includes('content="index, follow"'));
   assert(design.html.includes('href="/information/new-guide"'));
   assert(design.html.includes("디자인 제안 정보"));
+  assert(!design.html.includes('id="project-consultation-heading"'));
   const map = await h.request("api/sitemap.ts", {});
   for (const slug of ["new-home", "new-design"]) assert(map.html.includes(`/projects/${slug}</loc>`));
   assert(map.html.includes('/information/new-guide</loc>'));

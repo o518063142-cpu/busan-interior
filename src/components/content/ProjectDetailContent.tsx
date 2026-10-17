@@ -194,21 +194,27 @@ export const ProjectDetailContent: React.FC<ProjectDetailContentProps> = ({
 
       <section className="bg-stone-950 text-stone-100 rounded-3xl p-6 sm:p-8 space-y-5 border border-stone-800 shadow-xl font-sans">
         <div className="space-y-1 font-sans">
-          <h3 className="text-lg sm:text-xl font-bold font-sans text-white break-keep">{isSample ? "이 디자인 제안을 실제 공간에 적용하고 싶으신가요?" : "이 프로젝트와 유사한 공간 리모델링을 고민 중이신가요?"}</h3>
-          <p className="text-stone-400 text-xs sm:text-sm font-sans break-keep">{SITE_ENTITY.brand.nameKo}는 현장 무료 방문 실측 및 1:1 맞춤 상세 견적을 제공합니다.</p>
+          <h3 className="text-lg sm:text-xl font-bold font-sans text-white break-keep">{isSample ? "이 디자인 제안을 실제 공간에 적용하고 싶으신가요?" : "이 시공사례와 비슷한 공간의 공사를 계획하고 계신가요?"}</h3>
+          <p className="text-stone-400 text-xs sm:text-sm font-sans break-keep">{isSample ? `${SITE_ENTITY.brand.nameKo}는 현장 무료 방문 실측 및 1:1 맞춤 상세 견적을 제공합니다.` : "지역, 공간 용도와 면적, 희망 일정 및 공사 범위를 알려주시면 현장 조건에 맞춰 상담해 드립니다."}</p>
         </div>
         <div className="flex flex-col sm:flex-row items-center gap-3">
           {onOpenContactModal ? (
             <button onClick={onOpenContactModal} className="w-full sm:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-950 font-bold text-xs sm:text-sm transition-all shadow text-center cursor-pointer flex items-center justify-center gap-1.5">
-              <span>{isSample ? "이 스타일로 무료 현장 실측 신청" : "비슷한 스타일로 무료 현장 실측 신청"}</span><ChevronRight className="w-4 h-4" />
+              <span>{isSample ? "이 스타일로 무료 현장 실측 신청" : "현장 실측·공사 상담하기"}</span><ChevronRight className="w-4 h-4" />
             </button>
           ) : (
             <Link to="/contact" className="w-full sm:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-950 font-bold text-xs sm:text-sm transition-all shadow text-center flex items-center justify-center gap-1.5">
-              <span>무료 현장 실측 상담 신청</span><ChevronRight className="w-4 h-4" />
+              <span>{isSample ? "무료 현장 실측 상담 신청" : "현장 실측·공사 상담하기"}</span><ChevronRight className="w-4 h-4" />
             </Link>
           )}
-          <Link to="/projects" className="w-full sm:w-auto px-5 py-3 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-200 text-xs font-bold text-center border border-stone-700 transition-all">다른 프로젝트 더보기</Link>
+          {!isSample && (
+            <a href={`tel:${SITE_ENTITY.contact.phone}`} className="w-full sm:w-auto px-5 py-3 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-100 text-xs sm:text-sm font-bold text-center border border-stone-700 transition-all">
+              전화 상담 {SITE_ENTITY.contact.phone}
+            </a>
+          )}
+          {isSample && <Link to="/projects" className="w-full sm:w-auto px-5 py-3 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-200 text-xs font-bold text-center border border-stone-700 transition-all">다른 프로젝트 더보기</Link>}
         </div>
+        {!isSample && <Link to="/projects" className="inline-block text-xs font-bold text-stone-300 hover:text-white underline underline-offset-4">다른 프로젝트 더보기</Link>}
       </section>
     </article>
   );

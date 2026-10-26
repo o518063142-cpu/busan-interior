@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { defaultPublicSelection, calculatePublicSelection, validatePublicSelection, publicSelectionSummary, PUBLIC_SOURCES } from "../shared/publicEstimate32.ts";
+import { defaultPublicSelection, calculatePublicSelection, validatePublicSelection, publicSelectionSummary, defaultMoldingSpace, PUBLIC_SOURCES } from "../shared/publicEstimate32.ts";
 import handler from "../api/ai-estimate.ts";
 
 test("선택이 없거나 가격 미확인 항목만 있으면 0원 견적으로 표시하지 않는다", () => {
@@ -167,33 +167,68 @@ test("방문 상세는 잘못된 사양·수량·상태를 거부하고 이전 �
 });
 
 
-test("몰딩은 실제 방 개수별 전체 가격이며 방 수로 곱하지 않는다", () => {
-  for (const [rooms, upper, lower, both] of [[2,650000,450000,1100000],[3,700000,500000,1200000],[4,900000,600000,1500000]]) {
-    for (const [scope, amount] of [["upper",upper],["lower",lower],["both",both]] as const) {
-      const s = { ...defaultPublicSelection(), extraWork: { carpentry: "work" as const }, moldingRooms: rooms, moldingScope: scope };
-      const quote = calculatePublicSelection(s);
-      assert.equal(quote.subtotalWon, amount);
-      assert.equal(quote.items[0].quantity, 1);
-      assert.equal(quote.moldingSelection.rooms, rooms);
-      assert.match(publicSelectionSummary(s, quote), /몰딩 상세:/);
-    }
-  }
+test("거실·주방·복도·방별 천장과 걸레받이를 별도로 저장하고 임의 가격은 만들지 않는다", () => {
+  const s = defaultPublicSelection();
+  s.extraWork = { carpentry: "work" };
+  s.moldingBySpace = {
+    living: { ceiling: { method: "replace", lengthM: 18.5 }, baseboard: { method: "keep", lengthM: null } },
+    kitchen: { ceiling: { method: "film", lengthM: 7 }, baseboard: { method: "consult", lengthM: null } },
+    hall: { ceiling: { method: "remove", lengthM: 5 }, baseboard: { method: "remove", lengthM: null } },
+    room1: defaultMoldingSpace(), room6: defaultMoldingSpace(),
+  };
+  const quote = calculatePublicSelection(s);
+  assert.equal(quote.subtotalWon, null);
+  assert.equal(quote.hasSelection, true);
+  assert.equal(quote.moldingSelection.spaces.length, 5);
+  assert.ok(!quote.pending.some(p => p.startsWith("거실 걸레받이")));
+  const summary = publicSelectionSummary(s, quote);
+  assert.match(summary, /몰딩 상세: 거실 \/ 천장 몰딩 \/ 교체 \/ 18.5m/);
+  assert.match(summary, /몰딩 상세: 거실 \/ 걸레받이 \/ 기존 유지 \/ 길이 미확인/);
+  assert.match(summary, /복도 \/ 걸레받이 \/ 철거 후 걸레받이 없이 마감 검토/);
+  assert.match(summary, /방 6/);
 });
-test("마루 동시시공 하단 몰딩의 미확인 행사 금액을 합산하지 않는다", () => {
-  const s = { ...defaultPublicSelection(), floor: "wood", extraWork: { carpentry: "work" as const }, moldingRooms: 3 };
-  assert.equal(calculatePublicSelection({ ...s, moldingScope: "lower" }).subtotalWon,2640000);
-  const both = calculatePublicSelection({ ...s, moldingScope: "both" });
-  assert.equal(both.subtotalWon,3340000);
-  assert.ok(both.pending.some(p => p.includes("하단 몰딩") && p.includes("소계 제외")));
-  assert.match(both.items.find(i => i.id === "molding")!.label, /상단 몰딩/);
-  assert.equal(calculatePublicSelection({ ...s, floor: "vinyl18", moldingScope: "both" }).subtotalWon,2112000);
+test("공간별 몰딩은 기존 공개 소계를 바꾸거나 마루와 중복 합산하지 않는다", () => {
+  const s = { ...defaultPublicSelection(), wallpaper: "silk", floor: "wood", extraWork: { carpentry: "work" as const }, moldingBySpace: { living: defaultMoldingSpace() } };
+  const quote = calculatePublicSelection(s);
+  assert.equal(quote.subtotalWon, 4650000);
+  assert.ok(!quote.items.some(i => i.id === "molding"));
+  assert.ok(!quote.sourceIds.includes("molding"));
+  const spaces = { ...s.moldingBySpace }; delete (spaces as any).living;
+  assert.equal(calculatePublicSelection({ ...s, moldingBySpace: spaces }).moldingSelection.spaces.length, 0);
 });
-test("몰딩 미확인 방 개수와 이전 버전은 가격을 만들지 않고 잘못된 입력은 거부한다", () => {
-  const s = { ...defaultPublicSelection(), extraWork: { carpentry: "work" as const }, moldingScope: "both" };
-  assert.equal(calculatePublicSelection(s).subtotalWon,null);
-  for (const patch of [{ moldingScope:"bad" },{ moldingRooms:1 },{ moldingRooms:3.5 },{ moldingRooms:"3" },{ moldingRooms:null },{ moldingRooms:3 }]) {
-    assert.ok(validatePublicSelection({ ...defaultPublicSelection(), ...patch }));
-  }
-  const old = defaultPublicSelection(); delete old.moldingRooms; delete old.moldingScope;
-  assert.equal(calculatePublicSelection(old).hasSelection,false);
+test("몰딩 길이 미확인은 null이며 잘못된 공간·부위·방식·길이는 거부한다", () => {
+  const s = { ...defaultPublicSelection(), extraWork: { carpentry: "work" as const } };
+  for (const moldingBySpace of [null, [], { unknown: defaultMoldingSpace() }, { living: {} }, { living: [] }, { living: { ...defaultMoldingSpace(), wall: {} } },
+    ...[-1, 0, 201, 1/0, NaN, "5"].map(lengthM => ({ living: { ...defaultMoldingSpace(), ceiling: { method: "replace", lengthM } } })),
+    { living: { ...defaultMoldingSpace(), ceiling: { method: "invalid", lengthM: null } } },
+    { living: { ...defaultMoldingSpace(), ceiling: { method: "keep", lengthM: 5 } } },
+  ]) assert.ok(validatePublicSelection({ ...s, moldingBySpace }));
+  assert.equal(validatePublicSelection({ ...s, moldingBySpace: { living: defaultMoldingSpace() } }), null);
+  assert.ok(validatePublicSelection({ ...defaultPublicSelection(), moldingBySpace: { living: defaultMoldingSpace() } }));
+});
+test("이전 방 개수별 선택은 읽되 새 공간에 배분하거나 예전 가격을 재가산하지 않는다", () => {
+  const s = { ...defaultPublicSelection(), extraWork: { carpentry: "work" as const }, moldingScope: "both", moldingRooms: 3 };
+  const quote = calculatePublicSelection(s);
+  assert.equal(quote.subtotalWon, null);
+  assert.deepEqual(quote.moldingSelection.legacyReference, { scope: "both", rooms: 3 });
+  assert.deepEqual(quote.moldingSelection.spaces, []);
+  assert.ok(quote.pending.some(p => p.includes("이전 방 개수별")));
+  assert.ok(validatePublicSelection({ ...s, moldingBySpace: { living: defaultMoldingSpace() } }));
+});
+test("공간별 선택 없는 이전 입력은 미확인 공사나 가격을 새로 만들지 않는다", () => {
+  const old = defaultPublicSelection();
+  delete old.moldingBySpace; delete old.moldingScope; delete old.moldingRooms;
+  const quote = calculatePublicSelection(old);
+  assert.equal(quote.hasSelection, false);
+  assert.equal(quote.subtotalWon, null);
+});
+test("서버 API는 공간별 몰딩을 보존하고 전달된 공간 가격을 신뢰하지 않는다", async () => {
+  const selection = { ...defaultPublicSelection(), extraWork: { carpentry: "work" as const }, moldingBySpace: { living: defaultMoldingSpace() } };
+  let payload: any; let status = 200;
+  const res = { setHeader() {}, status(code: number) { status = code; return this; }, json(value: unknown) { payload = value; return this; } };
+  await handler({ method: "POST", query: {}, body: { publicSelection: { ...selection, subtotalWon: 1234 }, subtotalWon: 1234 } } as any, res as any);
+  assert.equal(status, 200);
+  assert.equal(payload.data.subtotalWon, null);
+  assert.equal(payload.data.moldingSelection.spaces[0].label, "거실");
+  assert.equal(payload.data.moldingSelection.spaces[0].parts[0].lengthM, null);
 });

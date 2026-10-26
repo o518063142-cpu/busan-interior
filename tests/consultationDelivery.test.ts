@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { defaultPublicSelection, calculatePublicSelection, publicSelectionSummary, type PublicSelection32 } from '../shared/publicEstimate32.ts';
+import { defaultPublicSelection, calculatePublicSelection, publicSelectionSummary, defaultMoldingSpace, type PublicSelection32 } from '../shared/publicEstimate32.ts';
 import { buildConsultationKakao, KAKAO_TEXT_LIMIT } from '../shared/kakaoConsultation.ts';
 import estimateHandler from '../api/ai-estimate.ts';
 import notifyHandler from '../api/notify-kakao.ts';
@@ -8,12 +8,12 @@ import notifyHandler from '../api/notify-kakao.ts';
 const common: PublicSelection32 = {
   ...defaultPublicSelection(), kitchen: true, shoeCabinet: true,
   extraWork: { demolition:'work', electrical:'work', carpentry:'work', doors:'work', balconyTile:'work', entranceTile:'work' },
-  moldingRooms:3, moldingScope:'both', doorCount:5,
+  moldingBySpace:{living:defaultMoldingSpace(),kitchen:defaultMoldingSpace(),hall:defaultMoldingSpace(),room1:defaultMoldingSpace()}, doorCount:5,
 };
 const scenarios: Array<{ label:string; selection:PublicSelection32; expected:number }> = [
-  { label:'합지·장판 조합', selection:{ ...common, wallpaper:'paper', floor:'vinyl18', bathrooms:[{method:'overlay',largeTile:false},{method:'overlay',largeTile:false}], doorSpec:'leaf' }, expected:14302000 },
-  { label:'실크·마루 조합', selection:{ ...common, wallpaper:'silk', floor:'wood', bathrooms:[{method:'full',largeTile:false},{method:'full',largeTile:false}], kitchenLengthM:6, doorSpec:'frame' }, expected:22600000 },
-  { label:'창호 포함 조합', selection:{ ...common, wallpaper:'premium', floor:'widewood', bathrooms:[{method:'full',largeTile:true},{method:'full',largeTile:true}], kitchenLengthM:6, windows:true, windowScope:'all', film:true, filmDoors:3, filmEntryDoors:1, doorCount:2, doorSpec:'frame', doorsSeparateFromFilm:true, moldingRooms:4 }, expected:38217000 },
+  { label:'합지·장판 조합', selection:{ ...common, wallpaper:'paper', floor:'vinyl18', bathrooms:[{method:'overlay',largeTile:false},{method:'overlay',largeTile:false}], doorSpec:'leaf' }, expected:13102000 },
+  { label:'실크·마루 조합', selection:{ ...common, wallpaper:'silk', floor:'wood', bathrooms:[{method:'full',largeTile:false},{method:'full',largeTile:false}], kitchenLengthM:6, doorSpec:'frame' }, expected:21900000 },
+  { label:'창호 포함 조합', selection:{ ...common, wallpaper:'premium', floor:'widewood', bathrooms:[{method:'full',largeTile:true},{method:'full',largeTile:true}], kitchenLengthM:6, windows:true, windowScope:'all', film:true, filmDoors:3, filmEntryDoors:1, doorCount:2, doorSpec:'frame', doorsSeparateFromFilm:true }, expected:37317000 },
 ];
 function response() {
   return { code:200, payload:undefined as any, setHeader() {}, status(code:number){this.code=code;return this;}, json(payload:unknown){this.payload=payload;return this;} };

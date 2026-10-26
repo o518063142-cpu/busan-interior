@@ -7,8 +7,8 @@ import { SITE_CONFIG } from "../config/siteConfig";
 import { db } from "../firebase";
 import {
   WALLPAPER_OPTIONS, FLOOR_OPTIONS, BATHROOM_OPTIONS, PUBLIC_SOURCES, WINDOW_OPTIONS,
-  FILM_QUANTITY_OPTIONS, filmPrice, DOOR_OPTIONS, MOLDING_OPTIONS, EXTRA_WORK_SCOPES, EXTRA_WORK_OPTIONS,
-  type ExtraWorkChoice,
+  FILM_QUANTITY_OPTIONS, filmPrice, DOOR_OPTIONS, MOLDING_SPACES, MOLDING_PARTS, MOLDING_METHODS, defaultMoldingSpace, EXTRA_WORK_SCOPES, EXTRA_WORK_OPTIONS,
+  type ExtraWorkChoice, type MoldingMethod, type MoldingSpace,
   defaultPublicSelection, calculatePublicSelection, formatWon, publicSelectionSummary,
   type PublicSelection32,
 } from "../../shared/publicEstimate32";
@@ -29,6 +29,12 @@ export function PublicEstimatePage() {
   const lock = useRef(false);
   const update = (patch: Partial<PublicSelection32>) => {
     setSelection(prev => ({ ...prev, ...patch })); setSaved(false); setError(""); setNotice("");
+  };
+  const changeMoldingPart = (spaceId: string, partId: keyof MoldingSpace, patch: Partial<MoldingSpace["ceiling"]>) => {
+    const space = selection.moldingBySpace?.[spaceId] ?? defaultMoldingSpace();
+    const nextPart = { ...space[partId], ...patch };
+    if (nextPart.method === "keep") nextPart.lengthM = null;
+    update({ moldingBySpace: { ...selection.moldingBySpace, [spaceId]: { ...space, [partId]: nextPart } } });
   };
   const bathChange = (index: number, patch: Partial<PublicSelection32["bathrooms"][number]>) => {
     const bathrooms = selection.bathrooms.map((bath, i) => {
@@ -151,14 +157,29 @@ export function PublicEstimatePage() {
         </section>
         <section className={card}>
           <h2 className="font-black text-lg">9. 추가 공사 범위</h2>
-          <p className="text-xs text-stone-600 mt-2 leading-5">원하는 공사를 선택해 주세요. 방문·몰딩은 사양·수량과 적용 조건을 확인해 공개가격 소계에 반영하며, 가격이 확인되지 않은 공사는 상담 확인 대상으로 전달됩니다.</p>
+          <p className="text-xs text-stone-600 mt-2 leading-5">원하는 공사를 선택해 주세요. 방문은 사양·수량과 적용 조건을 확인해 공개가격 소계에 반영하며, 몰딩 등 가격이 확인되지 않은 공사는 상담 확인 대상으로 전달됩니다.</p>
           <div className="space-y-4 mt-4">{EXTRA_WORK_SCOPES.map(scope => <div key={scope.id}>
-            <label className="block text-sm font-bold">{scope.label}<select aria-label={scope.label} className={control} value={selection.extraWork?.[scope.id] ?? "keep"} onChange={e => update({ extraWork: { ...selection.extraWork, [scope.id]: e.target.value as ExtraWorkChoice }, ...(scope.id === "doors" ? { doorSpec: "unknown", doorCount: 1, doorsSeparateFromFilm: false } : {}), ...(scope.id === "carpentry" ? { moldingScope: "unknown", moldingRooms: 0 } : {}) })}>{EXTRA_WORK_OPTIONS.map(option => <option key={option.id} value={option.id}>{option.label}</option>)}</select></label>
+            <label className="block text-sm font-bold">{scope.label}<select aria-label={scope.label} className={control} value={selection.extraWork?.[scope.id] ?? "keep"} onChange={e => update({ extraWork: { ...selection.extraWork, [scope.id]: e.target.value as ExtraWorkChoice }, ...(scope.id === "doors" ? { doorSpec: "unknown", doorCount: 1, doorsSeparateFromFilm: false } : {}), ...(scope.id === "carpentry" ? { moldingBySpace: {}, moldingScope: "unknown", moldingRooms: 0 } : {}) })}>{EXTRA_WORK_OPTIONS.map(option => <option key={option.id} value={option.id}>{option.label}</option>)}</select></label>
             <p className="text-xs text-stone-500 mt-2 leading-5">{scope.detail}</p>
-            {scope.id === "carpentry" && selection.extraWork?.carpentry === "work" && <div className="rounded-xl bg-stone-50 p-3 mt-3 space-y-3">
-              <label className="block text-sm">몰딩 범위<select aria-label="몰딩 범위" className={control} value={selection.moldingScope ?? "unknown"} onChange={e => update({ moldingScope: e.target.value })}>{MOLDING_OPTIONS.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}</select></label>
-              <label className="block text-sm">몰딩 기준 방 개수<select aria-label="몰딩 기준 방 개수" className={control} value={selection.moldingRooms ?? 0} onChange={e => update({ moldingRooms: Number(e.target.value) })}><option value={0}>모르겠어요 / 다른 구조</option>{[2, 3, 4].map(n => <option key={n} value={n}>방 {n}개</option>)}</select></label>
-              <p className="text-xs text-amber-800 leading-5">방 개수별 전체 몰딩의 공개 시공 예시이며 전체 목공비가 아닙니다. 길이·제품·철거·운반·마감·VAT는 별도 확인합니다. 마루와 함께 선택한 하단 몰딩은 원문의 별도 행사 조건을 확인해야 하므로 합산하지 않습니다.</p>
+            {scope.id === "carpentry" && selection.extraWork?.carpentry === "work" && <div className="rounded-xl bg-stone-50 p-3 mt-3 space-y-4">
+              <p className="text-sm font-bold">몰딩을 확인할 공간을 선택해 주세요.</p>
+              <p className="text-xs text-stone-600 leading-5">거실·주방·복도와 각 방을 별도로 선택합니다. 실제 있는 공간만 선택하고, 천장 몰딩·걸레받이를 각각 정해 주세요. 길이는 선택 입력이며 모르면 비워 두셔도 됩니다.</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">{MOLDING_SPACES.map(space => <label key={space.id} className="flex items-center gap-2 text-sm"><input type="checkbox" aria-label={`${space.label} 몰딩 선택`} checked={!!selection.moldingBySpace?.[space.id]} onChange={e => {
+                const spaces = { ...selection.moldingBySpace };
+                if (e.target.checked) spaces[space.id] = defaultMoldingSpace(); else delete spaces[space.id];
+                update({ moldingBySpace: spaces });
+              }} />{space.label}</label>)}</div>
+              {MOLDING_SPACES.filter(space => selection.moldingBySpace?.[space.id]).map(space => <fieldset key={space.id} className="rounded-xl border border-stone-200 bg-white p-3 min-w-0">
+                <legend className="text-sm font-bold px-1">{space.label}</legend>
+                <div className="space-y-4">{MOLDING_PARTS.map(part => {
+                  const spec = selection.moldingBySpace![space.id][part.id];
+                  return <div key={part.id}>
+                    <label className="block text-sm">{part.label}<select aria-label={`${space.label} ${part.label} 처리 방식`} className={control} value={spec.method} onChange={e => changeMoldingPart(space.id, part.id, { method: e.target.value as MoldingMethod })}>{MOLDING_METHODS.map(method => <option key={method.id} value={method.id}>{method.id === "remove" && part.id === "baseboard" ? "철거 후 걸레받이 없이 마감 검토" : method.label}</option>)}</select></label>
+                    {spec.method !== "keep" && <label className="block text-xs mt-2">시공 길이(m) · 선택<input aria-label={`${space.label} ${part.label} 길이(m)`} type="number" min="0.1" max="200" step="any" inputMode="decimal" placeholder="모르면 비워 두세요" className={control} value={spec.lengthM ?? ""} onChange={e => { const raw = e.target.value; const n = Number(raw); if (raw === "" || (Number.isFinite(n) && n > 0 && n <= 200)) changeMoldingPart(space.id, part.id, { lengthM: raw === "" ? null : n }); }} /></label>}
+                  </div>;
+                })}</div>
+              </fieldset>)}
+              <p className="text-xs text-amber-800 leading-5">공간별 길이·처리 방식에 맞는 공개 시공 단가는 아직 확인되지 않아 몰딩 금액은 소계에 더하지 않습니다. 방 개수별 전체 예시를 나누어 계산하지 않습니다. 무몰딩·무걸레받이는 철거 후 벽·천장·바닥 마감 가능 여부를 현장에서 확인합니다.</p>
             </div>}
             {scope.id === "doors" && selection.extraWork?.doors === "work" && <div className="rounded-xl bg-stone-50 p-3 mt-3 space-y-3">
               <label className="block text-sm">방문 사양<select aria-label="방문 사양" className={control} value={selection.doorSpec ?? "unknown"} onChange={e => update({ doorSpec: e.target.value })}>{DOOR_OPTIONS.map(o => <option key={o.id} value={o.id}>{choiceLabel(o)}{o.price !== null ? "/개" : ""}</option>)}</select></label>

@@ -7,7 +7,7 @@ import { SITE_CONFIG } from "../config/siteConfig";
 import { db } from "../firebase";
 import {
   WALLPAPER_OPTIONS, FLOOR_OPTIONS, BATHROOM_OPTIONS, PUBLIC_SOURCES, WINDOW_OPTIONS,
-  FILM_QUANTITY_OPTIONS, filmPrice, DOOR_OPTIONS, MOLDING_SPACES, MOLDING_PARTS, MOLDING_METHODS, defaultMoldingSpace, EXTRA_WORK_SCOPES, EXTRA_WORK_OPTIONS,
+  FILM_QUANTITY_OPTIONS, filmPrice, DOOR_OPTIONS, MOLDING_SPACES, MOLDING_PARTS, MOLDING_METHODS, defaultMoldingSpace, getMoldingReference, EXTRA_WORK_SCOPES, EXTRA_WORK_OPTIONS,
   type ExtraWorkChoice, type MoldingMethod, type MoldingSpace,
   defaultPublicSelection, calculatePublicSelection, formatWon, publicSelectionSummary,
   type PublicSelection32,
@@ -173,13 +173,23 @@ export function PublicEstimatePage() {
                 <legend className="text-sm font-bold px-1">{space.label}</legend>
                 <div className="space-y-4">{MOLDING_PARTS.map(part => {
                   const spec = selection.moldingBySpace![space.id][part.id];
+                  const reference = getMoldingReference(part.id, spec.method);
                   return <div key={part.id}>
                     <label className="block text-sm">{part.label}<select aria-label={`${space.label} ${part.label} 처리 방식`} className={control} value={spec.method} onChange={e => changeMoldingPart(space.id, part.id, { method: e.target.value as MoldingMethod })}>{MOLDING_METHODS.map(method => <option key={method.id} value={method.id}>{method.id === "remove" && part.id === "baseboard" ? "철거 후 걸레받이 없이 마감 검토" : method.label}</option>)}</select></label>
                     {spec.method !== "keep" && <label className="block text-xs mt-2">시공 길이(m) · 선택<input aria-label={`${space.label} ${part.label} 길이(m)`} type="number" min="0.1" max="200" step="any" inputMode="decimal" placeholder="모르면 비워 두세요" className={control} value={spec.lengthM ?? ""} onChange={e => { const raw = e.target.value; const n = Number(raw); if (raw === "" || (Number.isFinite(n) && n > 0 && n <= 200)) changeMoldingPart(space.id, part.id, { lengthM: raw === "" ? null : n }); }} /></label>}
+                    {reference && <div data-testid={`molding-reference-${space.id}-${part.id}`} className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-stone-700">
+                      <p className="font-bold">공개 단가 참고 · 소계 제외</p>
+                      <p>{reference.label}: <strong>{formatWon(reference.minWonPerM)}~{formatWon(reference.maxWonPerM)}/m</strong></p>
+                      <p>부가세 {reference.vat} · 최소 시공비 미확인</p>
+                      <p>{reference.region}</p>
+                      <a href={reference.url} target="_blank" rel="noopener noreferrer" className="underline">{reference.sourceName} 원문 확인</a>
+                      <p className="mt-1">확인일 {reference.checkedAt} · 예시 자재·공법의 범위이며 실제 선택 사양과 현장 금액은 상담으로 확인합니다.</p>
+                    </div>}
+                    {part.id === "baseboard" && spec.method === "film" && <p className="mt-2 text-xs text-stone-500">걸레받이 필름 시공의 직접 가격 근거는 아직 확인되지 않아 별도 안내합니다.</p>}
                   </div>;
                 })}</div>
               </fieldset>)}
-              <p className="text-xs text-amber-800 leading-5">공간별 길이·처리 방식에 맞는 공개 시공 단가는 아직 확인되지 않아 몰딩 금액은 소계에 더하지 않습니다. 방 개수별 전체 예시를 나누어 계산하지 않습니다. 무몰딩·무걸레받이는 철거 후 벽·천장·바닥 마감 가능 여부를 현장에서 확인합니다.</p>
+              <p className="text-xs text-amber-800 leading-5">공개 단가는 예시 사양의 참고범위입니다. 부산 적용·최소 시공비·철거 조건이 확인되지 않아 길이를 곱하거나 평균값을 만들어 소계에 더하지 않습니다. 방 개수별 전체 예시도 나누어 계산하지 않습니다. 무몰딩·무걸레받이는 철거 후 벽·천장·바닥 마감 가능 여부를 현장에서 확인합니다.</p>
             </div>}
             {scope.id === "doors" && selection.extraWork?.doors === "work" && <div className="rounded-xl bg-stone-50 p-3 mt-3 space-y-3">
               <label className="block text-sm">방문 사양<select aria-label="방문 사양" className={control} value={selection.doorSpec ?? "unknown"} onChange={e => update({ doorSpec: e.target.value })}>{DOOR_OPTIONS.map(o => <option key={o.id} value={o.id}>{choiceLabel(o)}{o.price !== null ? "/개" : ""}</option>)}</select></label>

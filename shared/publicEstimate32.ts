@@ -1,5 +1,5 @@
 // Public supplier estimates only; never import GENE's private cost/margin data.
-export const PUBLIC_CATALOG_VERSION = "public-32-2026-10-26-v6";
+export const PUBLIC_CATALOG_VERSION = "public-32-2026-10-26-v7";
 const checkedAt = "2026-10-26";
 export const PUBLIC_SOURCES = {
   wallpaper: { name: "의정부 부부도배사", url: "https://eamu.info/web/service/wallpaper-cost-32py/", region: "의정부·양주", checkedAt, publishedAt: null, vat: "미확인", condition: "공급 32평·천장 포함. 자재·공임·부자재·폐기물·식대 포함. 확장·보수·짐 이동은 현장 확인." },
@@ -10,6 +10,8 @@ export const PUBLIC_SOURCES = {
   windows: { name: "마미견적서 창호", url: "https://www.mommyestimate.com/estimation/window", region: "부산 적용 미확인", checkedAt, publishedAt: null, vat: "미확인", condition: "아파트/오피스텔 30평대의 내창·외창·내외창 예시. 창별 규격·브랜드·유리·철거·양중은 별도 확인. 32평 모든 현장의 동일 사양을 보장하지 않음." },
   film: { name: "마미견적서 필름", url: "https://www.mommyestimate.com/estimation/firm", region: "부산 적용 미확인", checkedAt, publishedAt: null, vat: "미확인", condition: "부위별 수량 1·2·3·5·10개의 공개 시공 예시. 수량별 금액이며 개당 단가로 곱하지 않음. 표에 없는 수량·여러 부위 동시시공·바탕 보수·부속품·철거·양중은 별도 확인." },
   molding: { name: "마미견적서 목공·몰딩", url: "https://www.mommyestimate.com/estimation/molding", region: "서울·경기 공개 예시 · 부산 적용 미확인", checkedAt, publishedAt: null, vat: "미확인", condition: "아파트/오피스텔 종전 방 개수별 전체 몰딩 참고표. 거실·주방·복도·방별 포함 범위와 길이당 시공 단가가 확인되지 않아 현재 소계에는 합산하지 않음. 짐비·철거비·양중비 제외. 마루 동시시공 하단 몰딩은 별도 이벤트 조건으로 금액 미확인. 제품·길이·실측·VAT 별도 확인." },
+  moldingPaintPvc: { name: "SN인테리어 몰딩·걸레받이", url: "https://www.sninterior.space/2026/08/20_0778351455.html", region: "성남 업체 공개 참고범위 · 부산 적용 미확인", checkedAt, publishedAt: null, vat: "미확인", condition: "도장 평몰딩·PVC 걸레받이의 자재+시공 미터당 참고범위. 규격·철거·최소 시공비·부가세 미확인. 실제 선택 자재를 확정하는 가격이 아니며 소계 제외." },
+  moldingFilmRate: { name: "목동현대인테리어 몰딩 필름", url: "https://mokdonginterior.co.kr/services/etc", region: "서울 목동 업체 공개 참고범위 · 부산 적용 미확인", checkedAt, publishedAt: null, vat: "별도", condition: "기존 몰딩 필름 시공 미터당 참고범위. 면 정리·프라이머 포함. 최소 시공비·규격·현장 적용 별도 확인. 걸레받이 필름의 직접 근거로 전용하지 않으며 소계 제외." },
   doors: { name: "마미견적서 방문", url: "https://www.mommyestimate.com/estimation/door", region: "서울·경기 공개 예시 · 부산 적용 미확인", checkedAt, publishedAt: null, vat: "미확인", condition: "방문 개당 단가×수량. 다른 시공과 함께 진행하는 조건이며 단독 시공 불가. 실측 필수. 철거·폐기·부속품·문선 마감·규격과 VAT는 별도 확인." },
   kitchen: { name: "마미견적서 싱크대", url: "https://www.mommyestimate.com/estimation/sink", region: "부산 적용 미확인", checkedAt, publishedAt: null, vat: "미확인", condition: "상·하부장·기본 상판·하이드후드·기본 수전/싱크볼 예시. 철거·짐 이동·양중 별도. ㄱ/ㄷ자 연결부 중첩 길이 확인 필요." },
 } as const;
@@ -70,6 +72,20 @@ export const MOLDING_METHODS = [
 ] as const;
 export type MoldingMethod = typeof MOLDING_METHODS[number]["id"];
 export type MoldingSpace = Record<typeof MOLDING_PARTS[number]["id"], { method: MoldingMethod; lengthM: number | null }>;
+// Unit reference examples only: do not multiply lengths, average, or add to subtotal.
+export const MOLDING_RATE_REFERENCES = {
+  paintCeiling: { id: "paintCeiling", label: "도장 평몰딩 교체 자재 예시", minWonPerM: 8000, maxWonPerM: 15000, source: "moldingPaintPvc", exampleOnly: true },
+  pvcBaseboard: { id: "pvcBaseboard", label: "PVC 걸레받이 교체 자재 예시", minWonPerM: 4000, maxWonPerM: 8000, source: "moldingPaintPvc", exampleOnly: true },
+  existingCeilingFilm: { id: "existingCeilingFilm", label: "기존 몰딩 필름 시공 예시", minWonPerM: 10000, maxWonPerM: 20000, source: "moldingFilmRate", exampleOnly: true },
+} as const;
+export function getMoldingReference(part: string, method: MoldingMethod) {
+  const rate = part === "ceiling" && method === "replace" ? MOLDING_RATE_REFERENCES.paintCeiling
+    : part === "baseboard" && method === "replace" ? MOLDING_RATE_REFERENCES.pvcBaseboard
+    : part === "ceiling" && method === "film" ? MOLDING_RATE_REFERENCES.existingCeilingFilm : null;
+  if (!rate) return null;
+  const source = PUBLIC_SOURCES[rate.source];
+  return { ...rate, sourceName: source.name, url: source.url, checkedAt: source.checkedAt, region: source.region, vat: source.vat, minimumCharge: "미확인", excludedFromSubtotal: true as const };
+}
 export const defaultMoldingSpace = (): MoldingSpace => ({
   ceiling: { method: "consult", lengthM: null }, baseboard: { method: "consult", lengthM: null },
 });
@@ -230,8 +246,9 @@ export function calculatePublicSelection(value: unknown) {
   }
   const moldingSpaces = MOLDING_SPACES.filter(space => s.moldingBySpace?.[space.id]).map(space => ({
     id: space.id, label: space.label,
-    parts: MOLDING_PARTS.map(part => ({ id: part.id, label: part.label, ...s.moldingBySpace![space.id][part.id], methodLabel: moldingMethodLabel(s.moldingBySpace![space.id][part.id].method, part.id) })),
+    parts: MOLDING_PARTS.map(part => ({ id: part.id, label: part.label, ...s.moldingBySpace![space.id][part.id], methodLabel: moldingMethodLabel(s.moldingBySpace![space.id][part.id].method, part.id), reference: getMoldingReference(part.id, s.moldingBySpace![space.id][part.id].method) })),
   }));
+  const moldingReferences = [...new Map(moldingSpaces.flatMap(space => space.parts.flatMap(part => part.reference ? [[part.reference.id, part.reference] as const] : []))).values()];
   for (const space of moldingSpaces) {
     for (const part of space.parts) {
       if (part.method === "keep") continue;
@@ -271,6 +288,8 @@ export function calculatePublicSelection(value: unknown) {
     area: { supplyPyung: 32, exampleExclusivePyung: 24 },
     items,
     scopeChoices,
+    moldingReferences,
+    moldingReferenceSourceIds: [...new Set(moldingReferences.map(reference => reference.source))],
     moldingSelection: { mode: "by-space" as const, spaces: moldingSpaces, legacyReference: hasLegacyMolding ? { scope: s.moldingScope ?? "unknown", rooms: s.moldingRooms ?? 0 } : null },
     doorSelection: { spec: s.doorSpec ?? "unknown", count: s.extraWork?.doors === "work" ? s.doorCount ?? 1 : 0, separateFromFilm: s.doorsSeparateFromFilm ?? false },
     sourceIds: [...new Set(items.map(i => i.source))],
@@ -287,6 +306,7 @@ export function publicSelectionSummary(selection: PublicSelection32, quote: Retu
   return ["[32평 공종 선택형 공개가격 참고]", `조건: ${selection.occupied ? "거주 중" : "빈집"} / ${selection.expanded ? "확장" : "미확장"} / 엘리베이터 ${selection.elevator ? "있음" : "없음"}`,
     ...EXTRA_WORK_SCOPES.map(scope => `${scope.label}: ${EXTRA_WORK_OPTIONS.find(o => o.id === (selection.extraWork?.[scope.id] ?? "keep"))!.label}`),
     ...quote.moldingSelection.spaces.flatMap(space => space.parts.map(part => `몰딩 상세: ${space.label} / ${part.label} / ${part.methodLabel} / ${part.lengthM === null ? "길이 미확인" : `${part.lengthM}m`}`)),
+    ...quote.moldingReferences.map(reference => `몰딩 공개 단가 참고 (소계 제외·예시 사양): ${reference.label} / ${formatWon(reference.minWonPerM)}~${formatWon(reference.maxWonPerM)}/m / 부가세 ${reference.vat} / 최소 시공비 미확인 / ${reference.sourceName} / ${reference.url} / 확인일 ${reference.checkedAt}`),
     ...(quote.moldingSelection.legacyReference ? [`이전 몰딩 선택: ${quote.moldingSelection.legacyReference.scope} / 방 ${quote.moldingSelection.legacyReference.rooms || "개수 미확인"} · 공간별 범위 재확인 필요`] : []),
     ...(selection.extraWork?.doors === "work" ? [`방문 상세: ${DOOR_OPTIONS.find(o => o.id === (selection.doorSpec ?? "unknown"))!.label} / ${selection.doorCount ?? 1}개 / 필름과 다른 대상 확인: ${selection.doorsSeparateFromFilm ? "예" : "미확인"}`] : []),
     ...quote.items.map(i => `${i.label}: ${formatWon(i.amount)}`),

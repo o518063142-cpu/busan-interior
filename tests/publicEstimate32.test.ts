@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { defaultPublicSelection, calculatePublicSelection, validatePublicSelection, publicSelectionSummary, defaultMoldingSpace, PUBLIC_SOURCES } from "../shared/publicEstimate32.ts";
+import { defaultPublicSelection, calculatePublicSelection, validatePublicSelection, publicSelectionSummary, defaultMoldingSpace, getMoldingReference, PUBLIC_SOURCES } from "../shared/publicEstimate32.ts";
 import handler from "../api/ai-estimate.ts";
 
 test("선택이 없거나 가격 미확인 항목만 있으면 0원 견적으로 표시하지 않는다", () => {
@@ -231,4 +231,42 @@ test("서버 API는 공간별 몰딩을 보존하고 전달된 공간 가격을 
   assert.equal(payload.data.subtotalWon, null);
   assert.equal(payload.data.moldingSelection.spaces[0].label, "거실");
   assert.equal(payload.data.moldingSelection.spaces[0].parts[0].lengthM, null);
+});
+
+
+test("몰딩 교체 자재 예시와 기존 필름 시공 단가를 구분하고 원문·VAT를 보존한다", () => {
+  const paint = getMoldingReference("ceiling", "replace")!;
+  assert.equal(paint.minWonPerM, 8000); assert.equal(paint.maxWonPerM, 15000);
+  assert.equal(paint.vat, "미확인"); assert.match(paint.label, /도장 평몰딩/);
+  const pvc = getMoldingReference("baseboard", "replace")!;
+  assert.equal(pvc.minWonPerM, 4000); assert.equal(pvc.maxWonPerM, 8000);
+  const film = getMoldingReference("ceiling", "film")!;
+  assert.equal(film.minWonPerM, 10000); assert.equal(film.maxWonPerM, 20000);
+  assert.equal(film.vat, "별도"); assert.match(film.url, /mokdonginterior/);
+  for (const method of ["keep", "remove", "consult"] as const) assert.equal(getMoldingReference("ceiling", method), null);
+  assert.equal(getMoldingReference("baseboard", "film"), null);
+});
+test("길이가 있어도 몰딩 참고범위를 곱하거나 평균내거나 전체 소계에 섞지 않는다", () => {
+  const s = { ...defaultPublicSelection(), wallpaper: "paper", extraWork: { carpentry: "work" as const }, moldingBySpace: {
+    living: { ceiling: { method: "replace" as const, lengthM: 18.5 }, baseboard: { method: "replace" as const, lengthM: 16 } },
+    kitchen: { ceiling: { method: "film" as const, lengthM: 7 }, baseboard: { method: "film" as const, lengthM: 5 } },
+  } };
+  const quote = calculatePublicSelection(s);
+  assert.equal(quote.subtotalWon, 1290000);
+  assert.equal(quote.items.length, 1);
+  assert.equal(quote.moldingReferences.length, 3);
+  assert.equal(quote.moldingSelection.spaces[1].parts[1].reference, null);
+  assert.ok(quote.moldingReferences.every(reference => reference.excludedFromSubtotal && reference.exampleOnly));
+  assert.ok(!quote.sourceIds.includes("moldingPaintPvc"));
+  assert.ok(quote.moldingReferenceSourceIds.includes("moldingPaintPvc"));
+  assert.match(publicSelectionSummary(s, quote), /몰딩 공개 단가 참고 \(소계 제외·예시 사양\)/);
+  assert.match(publicSelectionSummary(s, quote), /최소 시공비 미확인/);
+});
+test("미입력 길이에도 단가 참고만 남기고 가격을 조작한 새 필드는 거부한다", () => {
+  const s = { ...defaultPublicSelection(), extraWork: { carpentry: "work" as const }, moldingBySpace: { living: { ...defaultMoldingSpace(), ceiling: { method: "replace" as const, lengthM: null } } } };
+  const quote = calculatePublicSelection(s);
+  assert.equal(quote.subtotalWon, null);
+  assert.equal(quote.moldingReferences.length, 1);
+  assert.equal(quote.moldingSelection.spaces[0].parts[0].lengthM, null);
+  assert.ok(validatePublicSelection({ ...s, moldingBySpace: { living: { ...s.moldingBySpace.living, ceiling: { ...s.moldingBySpace.living.ceiling, minWonPerM: 1 } } } }));
 });

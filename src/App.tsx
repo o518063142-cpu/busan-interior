@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { NavigationMenu, ProjectCategory, ProjectItem } from "./types";
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
@@ -66,6 +66,16 @@ export function App({ initialData }: AppProps) {
           setActiveTab={setActiveTab}
         />
       </main>
+
+      {/* Admin-only shortcut to the contract funnel dashboard. */}
+      {location.pathname === "/admin" && (
+        <Link
+          to="/admin/funnel"
+          className="fixed right-4 bottom-5 z-[60] rounded-xl border border-amber-400/40 bg-stone-900 px-4 py-3 text-xs font-extrabold text-amber-300 shadow-2xl hover:bg-stone-800"
+        >
+          계약 전환 분석
+        </Link>
+      )}
 
       {/* Footer */}
       <Footer

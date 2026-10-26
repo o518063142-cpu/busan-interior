@@ -19,6 +19,22 @@ import {
   UserCheck,
 } from "lucide-react";
 
+type SourcePerformance = {
+  source: string;
+  leads: number;
+  siteVisits: number;
+  estimates: number;
+  contractOrCompleted: number;
+  leadToContract: number;
+};
+
+type LandingPerformance = {
+  path: string;
+  leads: number;
+  contractOrCompleted: number;
+  leadToContract: number;
+};
+
 type FunnelResponse = {
   success: boolean;
   generatedAt: string;
@@ -54,9 +70,27 @@ type FunnelResponse = {
     leadToContract: number;
   };
   topSources: Array<{ source: string; count: number }>;
+  sourcePerformance: SourcePerformance[];
+  landingPerformance: LandingPerformance[];
 };
 
 const EMPTY = "-";
+
+function sourceLabel(source: string) {
+  const labels: Record<string, string> = {
+    direct: "직접 방문",
+    naver: "네이버",
+    google: "Google",
+    daum: "다음",
+    kakao: "카카오",
+    instagram: "Instagram",
+    youtube: "YouTube",
+    facebook: "Facebook",
+    bing: "Bing",
+    referral: "기타 외부사이트",
+  };
+  return labels[source] || source || EMPTY;
+}
 
 export const FunnelDashboardPage: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -211,6 +245,48 @@ export const FunnelDashboardPage: React.FC = () => {
               ))}
             </section>
 
+            <section className="rounded-3xl border border-amber-500/20 bg-stone-900 p-5 sm:p-6">
+              <div className="flex items-start justify-between gap-3 mb-4">
+                <div>
+                  <p className="text-xs font-bold text-amber-400">계약 기준 채널 분석</p>
+                  <h3 className="font-black text-white mt-1">유입 채널 → 상담 → 실측 → 견적 → 계약</h3>
+                  <p className="text-[11px] text-stone-500 mt-1">AI 상담의 세션과 최초 방문 이벤트를 연결합니다. 광고 클릭 수가 아니라 실제 상담·계약 기준입니다.</p>
+                </div>
+                <TrendingUp className="w-5 h-5 text-emerald-400 shrink-0" />
+              </div>
+
+              {data.sourcePerformance.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-stone-700 p-6 text-center text-xs text-stone-500">아직 채널별 계약 데이터가 없습니다.</div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[680px] text-xs">
+                    <thead>
+                      <tr className="text-left text-stone-500 border-b border-stone-800">
+                        <th className="py-3 pr-4 font-semibold">유입 채널</th>
+                        <th className="py-3 px-3 text-right font-semibold">상담</th>
+                        <th className="py-3 px-3 text-right font-semibold">실측+</th>
+                        <th className="py-3 px-3 text-right font-semibold">견적+</th>
+                        <th className="py-3 px-3 text-right font-semibold">계약/완료</th>
+                        <th className="py-3 pl-3 text-right font-semibold">상담→계약</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data.sourcePerformance.map((row) => (
+                        <tr key={row.source} className="border-b border-stone-800/70 last:border-0">
+                          <td className="py-3 pr-4 font-bold text-white">{sourceLabel(row.source)}</td>
+                          <td className="py-3 px-3 text-right text-stone-300">{row.leads}</td>
+                          <td className="py-3 px-3 text-right text-stone-300">{row.siteVisits}</td>
+                          <td className="py-3 px-3 text-right text-stone-300">{row.estimates}</td>
+                          <td className="py-3 px-3 text-right font-black text-amber-300">{row.contractOrCompleted}</td>
+                          <td className="py-3 pl-3 text-right font-black text-emerald-400">{row.leadToContract.toFixed(1)}%</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </section>
+
             <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div className="rounded-3xl border border-stone-800 bg-stone-900 p-5">
                 <h3 className="font-bold text-white">전체 홈페이지 상담 성과</h3>
@@ -222,18 +298,41 @@ export const FunnelDashboardPage: React.FC = () => {
               </div>
 
               <div className="rounded-3xl border border-stone-800 bg-stone-900 p-5">
-                <h3 className="font-bold text-white">유입 소스 상위</h3>
+                <h3 className="font-bold text-white">전체 방문 유입 소스 상위</h3>
                 <div className="mt-4 space-y-2">
                   {data.topSources.length === 0 ? (
                     <p className="text-xs text-stone-500">아직 추적 데이터가 없습니다.</p>
                   ) : data.topSources.map((item) => (
                     <div key={item.source} className="flex items-center justify-between rounded-xl bg-stone-950 border border-stone-800 px-3 py-2.5 text-xs">
-                      <span className="text-stone-300 truncate pr-3">{item.source || EMPTY}</span>
+                      <span className="text-stone-300 truncate pr-3">{sourceLabel(item.source)}</span>
                       <strong className="text-amber-300">{item.count}</strong>
                     </div>
                   ))}
                 </div>
               </div>
+            </section>
+
+            <section className="rounded-3xl border border-stone-800 bg-stone-900 p-5 sm:p-6">
+              <div className="mb-4">
+                <p className="text-xs font-bold text-amber-400">콘텐츠·SEO 계약 기여</p>
+                <h3 className="font-black text-white mt-1">최초 진입 페이지별 AI 상담 성과</h3>
+                <p className="text-[11px] text-stone-500 mt-1">어떤 프로젝트·정보글·홈 페이지에서 들어온 방문자가 상담과 계약으로 이어졌는지 확인합니다.</p>
+              </div>
+
+              {data.landingPerformance.length === 0 ? (
+                <p className="text-xs text-stone-500">아직 진입 페이지별 상담 데이터가 없습니다.</p>
+              ) : (
+                <div className="space-y-2">
+                  {data.landingPerformance.map((row) => (
+                    <div key={row.path} className="grid grid-cols-[minmax(0,1fr)_auto_auto_auto] gap-3 items-center rounded-xl border border-stone-800 bg-stone-950 px-3 py-3 text-xs">
+                      <span className="truncate text-stone-300" title={row.path}>{row.path}</span>
+                      <span className="text-stone-500">상담 <strong className="text-white">{row.leads}</strong></span>
+                      <span className="text-stone-500">계약 <strong className="text-amber-300">{row.contractOrCompleted}</strong></span>
+                      <strong className="text-emerald-400">{row.leadToContract.toFixed(1)}%</strong>
+                    </div>
+                  ))}
+                </div>
+              )}
             </section>
 
             <p className="text-[11px] text-stone-500 text-right">

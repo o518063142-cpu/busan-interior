@@ -27,6 +27,10 @@
 
   "routes": [
     {
+      "src": "/api/upload-ai-estimate-file/?$",
+      "dest": "/api/ai-estimate?mode=upload"
+    },
+    {
       "src": "/admin/?$",
       "dest": "/index.html"
     },

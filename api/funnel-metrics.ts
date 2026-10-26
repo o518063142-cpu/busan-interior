@@ -5,6 +5,15 @@ import { handleAiLeadAttachment, handleAiLeadList } from "./_lib/aiLeadAdmin.js"
 
 const AI_MARKER = "AI 예상 비용";
 
+const STATUS_ORDER: Record<string, number> = {
+  new: 0,
+  contacted: 1,
+  site_visit: 2,
+  estimate: 3,
+  contract: 4,
+  completed: 5,
+};
+
 function percentage(numerator: number, denominator: number) {
   if (!denominator) return 0;
   return Math.round((numerator / denominator) * 1000) / 10;
@@ -16,6 +25,109 @@ function uniqueSessions(events: any[], eventName: string) {
       .filter((event) => event.eventName === eventName && event.sessionId)
       .map((event) => event.sessionId)
   ).size;
+}
+
+function hasReachedStatus(item: any, target: string) {
+  const current = STATUS_ORDER[item?.status] ?? -1;
+  const targetOrder = STATUS_ORDER[target] ?? Number.MAX_SAFE_INTEGER;
+  return current >= targetOrder;
+}
+
+function classifyAcquisition(event: any) {
+  const utmSource = typeof event?.utmSource === "string" ? event.utmSource.trim().toLowerCase() : "";
+  if (utmSource) return utmSource.slice(0, 80);
+
+  const referrer = typeof event?.referrer === "string" ? event.referrer.toLowerCase() : "";
+  if (!referrer) return "direct";
+  if (referrer.includes("naver.com")) return "naver";
+  if (referrer.includes("google.")) return "google";
+  if (referrer.includes("daum.net")) return "daum";
+  if (referrer.includes("kakao.com")) return "kakao";
+  if (referrer.includes("instagram.com")) return "instagram";
+  if (referrer.includes("youtube.com") || referrer.includes("youtu.be")) return "youtube";
+  if (referrer.includes("facebook.com")) return "facebook";
+  if (referrer.includes("bing.com")) return "bing";
+  return "referral";
+}
+
+function buildFirstPageBySession(events: any[]) {
+  const firstPageBySession = new Map<string, any>();
+
+  // Firestore query is newest first. Reverse so the first stored page_view is the
+  // earliest page we saw for that session within the retained event window.
+  for (const event of [...events].reverse()) {
+    if (event?.eventName !== "page_view" || !event?.sessionId) continue;
+    if (!firstPageBySession.has(event.sessionId)) {
+      firstPageBySession.set(event.sessionId, event);
+    }
+  }
+
+  return firstPageBySession;
+}
+
+function buildLeadPerformance(aiLeads: any[], firstPageBySession: Map<string, any>) {
+  type PerformanceRow = {
+    source: string;
+    leads: number;
+    siteVisits: number;
+    estimates: number;
+    contractOrCompleted: number;
+  };
+
+  type LandingRow = {
+    path: string;
+    leads: number;
+    contractOrCompleted: number;
+  };
+
+  const sourceMap = new Map<string, PerformanceRow>();
+  const landingMap = new Map<string, LandingRow>();
+
+  for (const lead of aiLeads) {
+    const firstPage = lead?.sessionId ? firstPageBySession.get(lead.sessionId) : null;
+    const source = classifyAcquisition(firstPage);
+    const landingPath = typeof firstPage?.path === "string" && firstPage.path ? firstPage.path : "unknown";
+
+    const sourceRow = sourceMap.get(source) || {
+      source,
+      leads: 0,
+      siteVisits: 0,
+      estimates: 0,
+      contractOrCompleted: 0,
+    };
+    sourceRow.leads += 1;
+    if (hasReachedStatus(lead, "site_visit")) sourceRow.siteVisits += 1;
+    if (hasReachedStatus(lead, "estimate")) sourceRow.estimates += 1;
+    if (hasReachedStatus(lead, "contract")) sourceRow.contractOrCompleted += 1;
+    sourceMap.set(source, sourceRow);
+
+    const landingRow = landingMap.get(landingPath) || {
+      path: landingPath,
+      leads: 0,
+      contractOrCompleted: 0,
+    };
+    landingRow.leads += 1;
+    if (hasReachedStatus(lead, "contract")) landingRow.contractOrCompleted += 1;
+    landingMap.set(landingPath, landingRow);
+  }
+
+  const sourcePerformance = [...sourceMap.values()]
+    .map((row) => ({
+      ...row,
+      leadToContract: percentage(row.contractOrCompleted, row.leads),
+    }))
+    .sort((a, b) => b.contractOrCompleted - a.contractOrCompleted || b.leads - a.leads)
+    .slice(0, 12);
+
+  const landingPerformance = [...landingMap.values()]
+    .map((row) => ({
+      ...row,
+      leadToContract: percentage(row.contractOrCompleted, row.leads),
+    }))
+    .sort((a, b) => b.contractOrCompleted - a.contractOrCompleted || b.leads - a.leads)
+    .slice(0, 12);
+
+  return { sourcePerformance, landingPerformance };
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -116,7 +228,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const sources = new Map<string, number>();
     for (const event of events as any[]) {
       if (event.eventName !== "page_view") continue;
-      const source = event.utmSource || event.source || "direct";
+      const source = event.utmSource || classifyAcquisition(event);
       sources.set(source, (sources.get(source) || 0) + 1);
     }
 
@@ -125,10 +237,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .slice(0, 8)
       .map(([source, count]) => ({ source, count }));
 
+    const firstPageBySession = buildFirstPageBySession(events as any[]);
+    const { sourcePerformance, landingPerformance } = buildLeadPerformance(aiLeads, firstPageBySession);
+
     return res.status(200).json({
       success: true,
       generatedAt: new Date().toISOString(),
-      trackingNote: "방문·AI 실행 수치는 전환 추적 기능 적용 이후 데이터입니다. 상담 상태는 기존 상담 문서도 포함될 수 있습니다.",
+      trackingNote: "방문·AI 실행·유입채널 수치는 전환 추적 기능 적용 이후 데이터입니다. 유입채널은 AI 상담의 sessionId와 최초 page_view를 연결해 계산합니다.",
       aiFunnel,
       rates,
       allLeads: {
@@ -141,6 +256,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         leadToContract: percentage(allContracts, consultations.length),
       },
       topSources,
+      sourcePerformance,
+      landingPerformance,
     });
   } catch (error: any) {
     console.error("Funnel metrics error:", error?.message || error);

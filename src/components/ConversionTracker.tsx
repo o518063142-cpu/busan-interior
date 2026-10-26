@@ -1,7 +1,5 @@
 import React, { useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
-import { db } from "../firebase";
 
 type ConversionEventName =
   | "page_view"
@@ -22,33 +20,42 @@ function getSessionId() {
   return id;
 }
 
+function safeReferrer() {
+  if (!document.referrer) return "";
+  try {
+    const url = new URL(document.referrer);
+    return `${url.origin}${url.pathname}`.slice(0, 300);
+  } catch {
+    return "";
+  }
+}
+
 function getAttribution() {
   const params = new URLSearchParams(window.location.search);
   return {
     utmSource: params.get("utm_source") || "",
     utmMedium: params.get("utm_medium") || "",
     utmCampaign: params.get("utm_campaign") || "",
-    referrer: document.referrer || "",
+    referrer: safeReferrer(),
   };
 }
 
-async function writeEvent(
-  eventName: ConversionEventName,
-  path: string,
-  extra: Record<string, string | number | boolean> = {}
-) {
+async function writeEvent(eventName: ConversionEventName, path: string) {
   try {
     const source = sessionStorage.getItem(LEAD_SOURCE_KEY) || "website";
     const attribution = getAttribution();
 
-    await addDoc(collection(db, "conversionEvents"), {
-      eventName,
-      path,
-      source,
-      sessionId: getSessionId(),
-      ...attribution,
-      ...extra,
-      createdAt: serverTimestamp(),
+    await fetch("/api/track-conversion", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      keepalive: true,
+      body: JSON.stringify({
+        eventName,
+        path,
+        source,
+        sessionId: getSessionId(),
+        ...attribution,
+      }),
     });
   } catch (error) {
     // Analytics must never interrupt the customer's consultation flow.

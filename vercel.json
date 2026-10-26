@@ -31,6 +31,14 @@
       "dest": "/api/ai-estimate?mode=upload"
     },
     {
+      "src": "/admin/ai-leads/?$",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/admin/funnel/?$",
+      "dest": "/index.html"
+    },
+    {
       "src": "/admin/?$",
       "dest": "/index.html"
     },

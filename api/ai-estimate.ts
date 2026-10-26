@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { GoogleGenAI, Type } from "@google/genai";
 import { getFirestoreAdmin } from "./_lib/firebaseAdmin.js";
+import { getCustomerPriceReference, validateCustomerConditions } from "../shared/customerEstimate.js";
 
 interface AttachmentInput {
   ref?: string;
@@ -22,6 +23,7 @@ interface EstimateInput {
   details?: string;
   sessionId?: string;
   attachments?: AttachmentInput[];
+  selectedItems?: string[];
 }
 
 const MODEL_NAME = process.env.GEMINI_MODEL || "gemini-3.6-flash";
@@ -211,15 +213,11 @@ function buildFallback(
 ) {
   const pyung = normalizeArea(input.area);
   const isFull = input.scope === "전체공사";
-  const basePerPyungMin = isFull ? 120 : 60;
-  const basePerPyungMax = isFull ? 180 : 90;
-  const minCost = Math.round((pyung * basePerPyungMin) / 100) * 100;
-  const maxCost = Math.round((pyung * basePerPyungMax) / 100) * 100;
   const weeksMin = isFull ? Math.max(2, Math.ceil(pyung / 12)) : 1;
   const weeksMax = isFull ? Math.max(3, Math.ceil(pyung / 8)) : 2;
 
   return {
-    estimatedScope: [
+    estimatedScope: input.scope === "부분공사" ? input.selectedItems.map((item) => `${item} 공사 범위·수량 확인`) : [
       `${input.spaceType} 공간 철거 및 기본 공사`,
       "목공 및 천장·벽체 레이아웃 구성",
       "조명 계획 및 전기 스위치·콘센트 점검",
@@ -255,8 +253,9 @@ function buildFallback(
         durationDays: "1~3일",
       },
     ],
-    costRange: `약 ${minCost.toLocaleString()}만 원 ~ ${maxCost.toLocaleString()}만 원 (입력 정보 기준 참고 범위)`,
-    durationRange: `약 ${weeksMin}주 ~ ${weeksMax}주`,
+    costRange: getCustomerPriceReference(input).costRange,
+    pricing: getCustomerPriceReference(input),
+    durationRange: getCustomerPriceReference(input).status === "consultation_required" ? "공사 항목·수량 확인 후 안내" : `약 ${weeksMin}주 ~ ${weeksMax}주`,
     visualFindings: attachmentCount
       ? ["첨부 자료는 저장되었으며, AI 시각 분석을 사용할 수 없어 현장 실측 시 함께 확인합니다."]
       : [],
@@ -474,6 +473,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const body = (req.body || {}) as EstimateInput;
+  const validationError = validateCustomerConditions({
+    spaceType: body.spaceType || "아파트",
+    area: body.area ?? "",
+    scope: body.scope || "전체공사",
+    selectedItems: body.selectedItems,
+  });
+  if (validationError) {
+    return res.status(400).json({ success: false, error: validationError });
+  }
   const area = normalizeArea(body.area);
   const input: Required<Omit<EstimateInput, "attachments">> = {
     spaceType: cleanText(body.spaceType, "아파트") || "아파트",
@@ -485,12 +493,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     style: cleanText(body.style, "모던 미니멀") || "모던 미니멀",
     details: cleanText(body.details, ""),
     sessionId: cleanText(body.sessionId, ""),
+    selectedItems: Array.isArray(body.selectedItems) ? [...new Set(body.selectedItems)] : [],
   };
   const attachments = normalizeAttachments(body);
   const fallback = buildFallback(input, attachments.length);
   const apiKey = process.env.GEMINI_API_KEY;
 
-  if (!apiKey) {
+  if (!apiKey || !attachments.length) {
     return res.status(200).json({
       success: true,
       source: "calculated",
@@ -539,6 +548,9 @@ wall, door, window, kitchen, built_in_wardrobe, shoe_cabinet, dressing_room, sys
 - 고객 예상 예산: ${input.budget}
 - 선호 스타일: ${input.style}
 - 추가 요청: ${input.details || "없음"}
+- 선택한 부분공사: ${input.selectedItems.join(", ") || "해당 없음"}
+- 금액은 별도 계산 기준으로 표시합니다. costRange는 빈 문자열로 두고, 다른 모든 필드에도 가격·평당 단가·예산 수치를 작성하지 마세요.
+- 부분공사는 고객이 선택한 항목만 공사 범위로 정리하고 전체 리모델링 공정을 일괄 제시하지 마세요.
 - AI 분석에 포함된 현장 사진: ${photoCount}장
 - AI 분석에 포함된 평면도: ${hasFloorplan ? "예" : "아니오"}
 - 용량 제한으로 이번 AI 분석에서 제외된 자료: ${
@@ -628,13 +640,27 @@ wall, door, window, kitchen, built_in_wardrobe, shoe_cabinet, dressing_room, sys
 
     if (!response.text) throw new Error("AI 응답 본문이 비어 있습니다.");
     const parsed = JSON.parse(response.text);
+    if (!Array.isArray(parsed.estimatedScope) || !parsed.estimatedScope.every((item: unknown) => typeof item === "string") ||
+        !Array.isArray(parsed.expertTips) || !parsed.expertTips.every((item: unknown) => typeof item === "string") ||
+        typeof parsed.summaryMessage !== "string" || typeof parsed.durationRange !== "string" ||
+        (parsed.visualFindings !== undefined && (!Array.isArray(parsed.visualFindings) || !parsed.visualFindings.every((item: unknown) => typeof item === "string"))) ||
+        (parsed.floorplanNotes !== undefined && (!Array.isArray(parsed.floorplanNotes) || !parsed.floorplanNotes.every((item: unknown) => typeof item === "string")))) {
+      throw new Error("AI 응답 형식이 올바르지 않습니다.");
+    }
     return res.status(200).json({
       success: true,
       source: "gemini",
       attachmentCount: attachments.length,
       analyzedAttachmentCount: loaded.includedKinds.length,
       skippedAttachmentNames: loaded.skippedNames,
-      data: parsed,
+      data: {
+        ...parsed,
+        // Prices always come from the same disclosed reference, never model guesses.
+        costRange: fallback.costRange,
+        pricing: fallback.pricing,
+        durationRange: fallback.pricing.status === "consultation_required" ? fallback.durationRange : parsed.durationRange,
+        estimatedScope: input.scope === "부분공사" ? fallback.estimatedScope : parsed.estimatedScope,
+      },
     });
   } catch (error: any) {
     console.error("AI estimate API fallback:", error?.message || error);

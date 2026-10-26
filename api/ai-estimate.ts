@@ -1,9 +1,9 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { GoogleGenAI, Type } from "@google/genai";
-import { downloadPrivateStorageObject } from "./_lib/firebaseStorage.js";
+import { getFirestoreAdmin } from "./_lib/firebaseAdmin.js";
 
 interface AttachmentInput {
-  path?: string;
+  ref?: string;
   name?: string;
   mimeType?: string;
   kind?: "photo" | "floorplan" | string;
@@ -87,29 +87,47 @@ function normalizeAttachments(body: EstimateInput) {
   if (!/^s_[A-Za-z0-9_-]{8,100}$/.test(sessionId)) return [];
 
   const raw = Array.isArray(body.attachments) ? body.attachments.slice(0, MAX_ATTACHMENTS) : [];
-  const prefix = `ai-estimate/${sessionId}/`;
-
   return raw
     .map((item) => ({
-      path: cleanText(item?.path, "").slice(0, 500),
+      ref: cleanText(item?.ref, "").slice(0, 120),
       name: cleanText(item?.name, "첨부파일").slice(0, 120),
       mimeType: cleanText(item?.mimeType, "").slice(0, 100),
       kind: item?.kind === "floorplan" ? "floorplan" : "photo",
     }))
-    .filter((item) => item.path.startsWith(prefix) && ALLOWED_MIME_TYPES.has(item.mimeType));
+    .filter((item) => /^[A-Za-z0-9_-]{8,120}$/.test(item.ref) && ALLOWED_MIME_TYPES.has(item.mimeType));
 }
 
-async function loadAttachmentParts(attachments: ReturnType<typeof normalizeAttachments>) {
+async function loadAttachmentParts(
+  sessionId: string,
+  attachments: ReturnType<typeof normalizeAttachments>
+) {
   const parts: any[] = [];
+  if (!attachments.length) return parts;
+
+  const db = await getFirestoreAdmin();
+  if (!db) return parts;
+
   for (const item of attachments) {
     try {
-      const buffer = await downloadPrivateStorageObject(item.path);
-      parts.push({ inlineData: { mimeType: item.mimeType, data: buffer.toString("base64") } });
-      parts.push({ text: `[첨부자료 메모] 종류=${item.kind}, 파일명=${item.name}` });
+      const snap = await db.collection("aiEstimateUploads").doc(item.ref).get();
+      if (!snap.exists) continue;
+      const data = snap.data() || {};
+      if (data.sessionId !== sessionId) continue;
+      if (!ALLOWED_MIME_TYPES.has(data.mimeType)) continue;
+      if (typeof data.dataBase64 !== "string" || !data.dataBase64) continue;
+
+      parts.push({
+        inlineData: {
+          mimeType: data.mimeType,
+          data: data.dataBase64,
+        },
+      });
+      parts.push({ text: `[첨부자료 메모] 종류=${data.kind || item.kind}, 파일명=${data.name || item.name}` });
     } catch (error: any) {
-      console.warn("AI attachment load skipped:", item.path, error?.message || error);
+      console.warn("AI attachment load skipped:", item.ref, error?.message || error);
     }
   }
+
   return parts;
 }
 
@@ -143,7 +161,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const ai = new GoogleGenAI({ apiKey });
-    const attachmentParts = await loadAttachmentParts(attachments);
+    const attachmentParts = await loadAttachmentParts(input.sessionId, attachments);
     const hasFloorplan = attachments.some((item) => item.kind === "floorplan");
     const photoCount = attachments.filter((item) => item.kind === "photo").length;
 
@@ -185,7 +203,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const response = await ai.models.generateContent({
       model: MODEL_NAME,
-      contents: [{ role: "user", parts: [{ text: prompt }, ...attachmentParts] }],
+      contents: [{ role: "user", parts: [{ text: prompt }, ...attachmentParts] }] as any,
       config: {
         responseMimeType: "application/json",
         responseSchema: {

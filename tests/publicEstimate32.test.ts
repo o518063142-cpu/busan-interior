@@ -145,3 +145,23 @@ test("추가 공사 잘못된 값은 거부하고 이전 버전 입력은 호환
   assert.equal(quote.hasSelection, false);
   assert.ok(quote.scopeChoices.every(s => s.choice === "keep"));
 });
+
+
+test("방문은 사양별 단가×수량이며 다른 공종과 함께일 때만 참고 소계에 더한다", () => {
+  for (const [doorSpec, unit] of [["leaf",240000],["frame",450000],["yerim",520000],["slim",560000]] as const) {
+    const s = { ...defaultPublicSelection(), wallpaper: "silk", extraWork: { doors: "work" as const }, doorSpec, doorCount: 3 };
+    assert.equal(calculatePublicSelection(s).subtotalWon, 2010000 + unit * 3);
+    assert.equal(calculatePublicSelection({ ...s, wallpaper: "keep" }).subtotalWon, null);
+  }
+});
+test("문 교체와 필름 대상 구분 전에는 교체를 합산하지 않고 확인 후에만 더한다", () => {
+  const s = { ...defaultPublicSelection(), film: true, filmDoors: 3, extraWork: { doors: "work" as const }, doorSpec: "frame", doorCount: 2 };
+  assert.equal(calculatePublicSelection(s).subtotalWon, 510000);
+  assert.equal(calculatePublicSelection({ ...s, doorsSeparateFromFilm: true }).subtotalWon, 1410000);
+  assert.match(publicSelectionSummary(s, calculatePublicSelection(s)), /방문 상세:.*2개/);
+});
+test("방문 상세는 잘못된 사양·수량·상태를 거부하고 이전 선택값은 유지한다", () => {
+  for (const patch of [{ doorSpec: "invalid" }, { doorCount: 0 }, { doorCount: 1.2 }, { doorCount: 11 }, { doorsSeparateFromFilm: "yes" }, { doorSpec: "frame" }]) assert.ok(validatePublicSelection({ ...defaultPublicSelection(), ...patch }));
+  const s = defaultPublicSelection(); delete s.doorSpec; delete s.doorCount; delete s.doorsSeparateFromFilm;
+  assert.equal(calculatePublicSelection(s).subtotalWon, null);
+});

@@ -1,10 +1,11 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { Calculator, CheckCircle2, Phone, Send, Loader2, ArrowUpRight } from "lucide-react";
 import { MetaManager } from "../components/seo/MetaManager";
 import { SITE_CONFIG } from "../config/siteConfig";
 import { db } from "../firebase";
+import { getConversionSessionId, trackEstimateEvent } from "../utils/conversionTracking";
 import {
   WALLPAPER_OPTIONS, FLOOR_OPTIONS, BATHROOM_OPTIONS, PUBLIC_SOURCES, WINDOW_OPTIONS,
   FILM_QUANTITY_OPTIONS, filmPrice, DOOR_OPTIONS, MOLDING_SPACES, MOLDING_PARTS, MOLDING_METHODS, defaultMoldingSpace, getMoldingReference, DEMOLITION_SCOPE_OPTIONS, ELECTRICAL_WORK_OPTIONS, EXTRA_WORK_SCOPES, EXTRA_WORK_OPTIONS,
@@ -27,6 +28,12 @@ export function PublicEstimatePage() {
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
   const lock = useRef(false);
+  const selectionStarted = useRef(false);
+  useEffect(() => {
+    if (!quote.hasSelection || selectionStarted.current) return;
+    selectionStarted.current = true;
+    void trackEstimateEvent("ai_estimate_generate");
+  }, [quote.hasSelection]);
   const update = (patch: Partial<PublicSelection32>) => {
     setSelection(prev => ({ ...prev, ...patch })); setSaved(false); setError(""); setNotice("");
   };
@@ -64,17 +71,14 @@ export function PublicEstimatePage() {
       const isTest = isPreview || /^\[TEST\]/i.test(contact.name.trim());
       const details = `${isTest ? "[TEST] 테스트 접수 · 실적 집계 제외 · 실제 고객 연락 금지\n" : ""}${publicSelectionSummary(selection, result.data)}\n추가 요청: ${contact.details.trim() || "없음"}`;
       const payload = { name: contact.name.trim(), phone: contact.phone.trim(), location: contact.location.trim(), spaceType: "아파트", area: "32", startDate: "협의", details };
-      let sessionId = "";
-      try {
-        sessionId = sessionStorage.getItem("gene_conversion_session_id") || `s_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
-        sessionStorage.setItem("gene_conversion_session_id", sessionId);
-      } catch { /* The consultation can still be saved if browser storage is unavailable. */ }
+      const sessionId = getConversionSessionId();
       const doc = await addDoc(collection(db, "consultations"), {
         ...payload, status: "new", source: "ai-estimate", estimateType: "public-selection-32",
         sessionId, isTest, excludeFromMetrics: isTest,
         estimateConditions: selection, publicEstimateSnapshot: result.data, createdAt: serverTimestamp(),
       });
       setSaved(true);
+      void trackEstimateEvent("consultation_submitted", sessionId);
       try {
         const notified = await fetch("/api/notify-kakao", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...payload, docPath: doc.path, createdAt: new Date().toLocaleString("ko-KR") }), signal: AbortSignal.timeout(10000) });
         const notification = await notified.json();
@@ -238,7 +242,7 @@ export function PublicEstimatePage() {
               <textarea aria-label="추가 요청" placeholder="추가 요청 · 선택" maxLength={1000} className={control} value={contact.details} onChange={e => setContact({ ...contact, details: e.target.value })} />
               <label className="flex items-start gap-2 text-xs text-stone-600 leading-5"><input type="checkbox" className="mt-1" checked={consent} onChange={e => setConsent(e.target.checked)} />상담을 위한 이름·연락처·지역·선택 공사내역 수집 및 이용에 동의합니다.</label>
               {error && <p role="alert" className="text-sm text-rose-700">{error}</p>}
-              <button type="submit" disabled={busy || !quote.hasSelection} className="w-full rounded-xl bg-amber-500 text-stone-950 p-4 font-black text-sm disabled:opacity-40 flex justify-center items-center gap-2">{busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}선택 내역으로 상담 신청</button>
+              <button type="submit" data-conversion-handled="true" onClick={() => { if (!lock.current && !saved) void trackEstimateEvent("ai_estimate_consultation_click"); }} disabled={busy || !quote.hasSelection} className="w-full rounded-xl bg-amber-500 text-stone-950 p-4 font-black text-sm disabled:opacity-40 flex justify-center items-center gap-2">{busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}선택 내역으로 상담 신청</button>
             </fieldset>
           </form>}
           <a href={`tel:${SITE_CONFIG.company.phone.replace(/[^0-9+]/g, "")}`} className="mt-4 flex items-center justify-center gap-2 border border-stone-300 rounded-xl p-3 text-sm font-bold"><Phone className="w-4 h-4" />전화로 상담하기</a>

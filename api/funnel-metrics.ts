@@ -140,14 +140,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const db = await getFirestoreAdmin();
-    if (!db) {
-      return res.status(503).json({
-        success: false,
-        error: "관리자 데이터 연결이 설정되지 않았습니다.",
-      });
-    }
-
     const authorization = req.headers.authorization || "";
     const token = authorization.startsWith("Bearer ")
       ? authorization.slice("Bearer ".length).trim()
@@ -155,6 +147,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (!token) {
       return res.status(401).json({ success: false, error: "관리자 인증이 필요합니다." });
+    }
+
+    const db = await getFirestoreAdmin();
+    if (!db) {
+      return res.status(503).json({
+        success: false,
+        error: "관리자 데이터 연결이 설정되지 않았습니다.",
+      });
     }
 
     try {

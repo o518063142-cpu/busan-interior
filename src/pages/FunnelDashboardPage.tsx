@@ -157,7 +157,7 @@ export const FunnelDashboardPage: React.FC = () => {
   const funnelCards = data
     ? [
         { label: "AI 견적 방문", value: data.aiFunnel.pageVisitors, icon: Search },
-        { label: "AI 견적 실행", value: data.aiFunnel.estimateUsers, icon: Bot },
+        { label: "견적 선택·실행", value: data.aiFunnel.estimateUsers, icon: Bot },
         { label: "상담 버튼 클릭", value: data.aiFunnel.consultationClicks, icon: MousePointerClick },
         { label: "AI 상담 리드", value: data.aiFunnel.leads, icon: UserCheck },
         { label: "현장 실측", value: data.aiFunnel.siteVisits, icon: Ruler },
@@ -231,7 +231,7 @@ export const FunnelDashboardPage: React.FC = () => {
 
             <section className="grid grid-cols-2 lg:grid-cols-3 gap-3">
               {[
-                ["방문 → AI견적", data.rates.visitorToEstimate],
+                ["방문 → 견적 선택·실행", data.rates.visitorToEstimate],
                 ["AI견적 → 상담클릭", data.rates.estimateToConsultationClick],
                 ["AI견적 → 상담접수", data.rates.estimateToLead],
                 ["상담 → 현장실측", data.rates.leadToSiteVisit],

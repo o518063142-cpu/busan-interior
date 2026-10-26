@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
+import { getConversionSessionId, getTrackingValue, setTrackingValue, removeTrackingValue } from "../utils/conversionTracking";
 
 type ConversionEventName =
   | "page_view"
@@ -7,18 +8,8 @@ type ConversionEventName =
   | "ai_estimate_consultation_click"
   | "consultation_submitted";
 
-const SESSION_ID_KEY = "gene_conversion_session_id";
 const LEAD_SOURCE_KEY = "gene_lead_source";
 const CONSULTATION_LOGGED_KEY = "gene_consultation_logged";
-
-function getSessionId() {
-  let id = sessionStorage.getItem(SESSION_ID_KEY);
-  if (!id) {
-    id = `s_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
-    sessionStorage.setItem(SESSION_ID_KEY, id);
-  }
-  return id;
-}
 
 function safeReferrer() {
   if (!document.referrer) return "";
@@ -42,7 +33,7 @@ function getAttribution() {
 
 async function writeEvent(eventName: ConversionEventName, path: string) {
   try {
-    const source = sessionStorage.getItem(LEAD_SOURCE_KEY) || "website";
+    const source = getTrackingValue(LEAD_SOURCE_KEY) || "website";
     const attribution = getAttribution();
 
     await fetch("/api/track-conversion", {
@@ -53,7 +44,7 @@ async function writeEvent(eventName: ConversionEventName, path: string) {
         eventName,
         path,
         source,
-        sessionId: getSessionId(),
+        sessionId: getConversionSessionId(),
         ...attribution,
       }),
     });
@@ -73,7 +64,7 @@ export const ConversionTracker: React.FC = () => {
     previousPathRef.current = path;
 
     if (path === "/ai-estimate") {
-      sessionStorage.setItem(LEAD_SOURCE_KEY, "ai-estimate");
+      setTrackingValue(LEAD_SOURCE_KEY, "ai-estimate");
     }
 
     void writeEvent("page_view", path);
@@ -86,7 +77,7 @@ export const ConversionTracker: React.FC = () => {
       const submitter = event.submitter as HTMLElement | null;
       const label = submitter?.textContent || "";
       if (label.includes("AI 예상 견적") || label.includes("분석 산출")) {
-        sessionStorage.setItem(LEAD_SOURCE_KEY, "ai-estimate");
+        setTrackingValue(LEAD_SOURCE_KEY, "ai-estimate");
         void writeEvent("ai_estimate_generate", "/ai-estimate");
       }
     };
@@ -94,7 +85,7 @@ export const ConversionTracker: React.FC = () => {
     const handleClick = (event: MouseEvent) => {
       const target = event.target as HTMLElement | null;
       const button = target?.closest("button, a") as HTMLElement | null;
-      if (!button) return;
+      if (!button || button.dataset.conversionHandled === "true") return;
 
       const label = button.textContent || "";
       const path = window.location.pathname;
@@ -103,15 +94,15 @@ export const ConversionTracker: React.FC = () => {
         path === "/ai-estimate" &&
         (label.includes("현장 실측") || label.includes("견적 상담 신청"))
       ) {
-        sessionStorage.setItem(LEAD_SOURCE_KEY, "ai-estimate");
-        sessionStorage.removeItem(CONSULTATION_LOGGED_KEY);
+        setTrackingValue(LEAD_SOURCE_KEY, "ai-estimate");
+        removeTrackingValue(CONSULTATION_LOGGED_KEY);
         void writeEvent("ai_estimate_consultation_click", path);
       } else if (
         label.includes("상담") ||
         button.getAttribute("href")?.startsWith("tel:")
       ) {
-        sessionStorage.setItem(LEAD_SOURCE_KEY, `website:${path}`);
-        sessionStorage.removeItem(CONSULTATION_LOGGED_KEY);
+        setTrackingValue(LEAD_SOURCE_KEY, `website:${path}`);
+        removeTrackingValue(CONSULTATION_LOGGED_KEY);
       }
     };
 
@@ -126,11 +117,11 @@ export const ConversionTracker: React.FC = () => {
 
   useEffect(() => {
     const observer = new MutationObserver(() => {
-      if (sessionStorage.getItem(CONSULTATION_LOGGED_KEY) === "1") return;
+      if (getTrackingValue(CONSULTATION_LOGGED_KEY) === "1") return;
 
       const bodyText = document.body?.innerText || "";
       if (bodyText.includes("실측 상담 신청이 접수되었습니다.")) {
-        sessionStorage.setItem(CONSULTATION_LOGGED_KEY, "1");
+        setTrackingValue(CONSULTATION_LOGGED_KEY, "1");
         void writeEvent("consultation_submitted", window.location.pathname);
       }
     });

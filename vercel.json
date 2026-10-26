@@ -1,4 +1,5 @@
 {
+  "installCommand": "npm install --no-audit --no-fund --package-lock=false",
   "functions": {
     "api/*.ts": {
       "includeFiles": "api/**"
@@ -26,6 +27,26 @@
   ],
 
   "routes": [
+    {
+      "src": "/api/upload-ai-estimate-file/?$",
+      "dest": "/api/ai-estimate?mode=upload"
+    },
+    {
+      "src": "/api/ai-leads/?$",
+      "dest": "/api/funnel-metrics?mode=leads"
+    },
+    {
+      "src": "/api/ai-estimate-attachment/?$",
+      "dest": "/api/funnel-metrics?mode=attachment"
+    },
+    {
+      "src": "/admin/ai-leads/?$",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/admin/funnel/?$",
+      "dest": "/index.html"
+    },
     {
       "src": "/admin/?$",
       "dest": "/index.html"

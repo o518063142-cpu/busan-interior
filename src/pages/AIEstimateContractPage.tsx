@@ -121,7 +121,7 @@ export const AIEstimateContractPage: React.FC<AIEstimateContractPageProps> = () 
   const [formInput, setFormInput] = useState<AIEstimateInput>({
     spaceType: "아파트",
     location: "",
-    area: "30",
+    area: "32",
     scope: "전체공사",
     startDate: "1개월 이내",
     budget: "3,000만 원 ~ 5,000만 원",
@@ -347,7 +347,7 @@ export const AIEstimateContractPage: React.FC<AIEstimateContractPageProps> = () 
     setNotificationDelayed(false);
     try {
       const sessionId = getSessionId();
-      const details = `${analyzedInput.scope} / 선택항목: ${analyzedInput.selectedItems.join(", ") || "전체 리모델링"} / ${analyzedInput.style} 스타일 / 참고 예상 비용 (${result.costRange}) / 추가요청: ${analyzedInput.details || "없음"}`;
+      const details = `${analyzedInput.scope} / 선택항목: ${analyzedInput.selectedItems.join(", ") || "전체 리모델링"} / ${analyzedInput.style} 스타일 / 참고 예상 비용 (${result.costRange}) / ${result.pricing?.basis || ""} / ${result.pricing?.priceNotice || ""} / 추가요청: ${analyzedInput.details || "없음"}`;
       const hasStructuredDraft = Boolean(result.genePlanDraft);
       const consultationData = {
         name: leadForm.name.trim(),
@@ -561,7 +561,7 @@ export const AIEstimateContractPage: React.FC<AIEstimateContractPageProps> = () 
               <div className="max-w-md space-y-4">
                 <div className="w-16 h-16 mx-auto rounded-2xl bg-stone-100 flex items-center justify-center"><Building2 className="w-7 h-7 text-stone-500" /></div>
                 <h2 className="text-xl font-black text-stone-900">우리집 조건을 입력해 주세요.</h2>
-                <p className="text-sm text-stone-500 leading-6">주거 전체 리모델링은 면적 기준의 참고 금액을 안내합니다. 부분공사·비주거 공간은 필요한 항목을 정리한 후 개별 상담으로 금액을 안내합니다.</p>
+                <p className="text-sm text-stone-500 leading-6">32평 아파트 전체형의 기본 구성 참고예산을 안내합니다. 다른 평수·공간과 부분공사는 요청하신 범위를 확인한 뒤 개별 안내합니다.</p>
               </div>
             </div>
           ) : (
@@ -574,8 +574,10 @@ export const AIEstimateContractPage: React.FC<AIEstimateContractPageProps> = () 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="rounded-3xl bg-stone-950 text-white p-6">
                   <WalletCards className="w-5 h-5 text-amber-300 mb-3" />
-                  <div className="text-xs text-stone-400">예상 공사비 범위</div>
+                  <div className="text-xs text-stone-400">기본 구성 참고예산</div>
                   <div className="text-lg font-black mt-1 leading-7">{result.costRange}</div>
+                  <p className="text-xs text-amber-300 mt-2 font-bold">부가세 별도{result.pricing?.flooringIncluded ? " · 마루 포함" : ""}</p>
+                  <p className="text-sm text-stone-200 mt-3 leading-6">{result.pricing?.priceNotice}</p>
                 </div>
                 <div className="rounded-3xl border border-stone-200 bg-white p-6">
                   <Clock3 className="w-5 h-5 text-amber-600 mb-3" />

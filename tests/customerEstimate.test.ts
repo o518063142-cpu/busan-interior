@@ -20,9 +20,14 @@ test("32평 주거 전체공사는 공개 참고 범위와 계산 근거를 반�
   const { status, payload } = await request({ spaceType: "아파트", area: 32, scope: "전체공사" });
   assert.equal(status, 200);
   assert.equal(payload.source, "calculated");
-  assert.equal(payload.data.pricing.minManwon, 3840);
-  assert.equal(payload.data.pricing.maxManwon, 5760);
-  assert.match(payload.data.pricing.basis, /참고 단가/);
+  assert.equal(payload.data.pricing.minManwon, 5500);
+  assert.equal(payload.data.pricing.maxManwon, null);
+  assert.equal(payload.data.pricing.referenceHighManwon, 6000);
+  assert.equal(payload.data.pricing.isPriceCap, false);
+  assert.equal(payload.data.pricing.vatIncluded, false);
+  assert.equal(payload.data.pricing.flooringIncluded, true);
+  assert.match(payload.data.pricing.priceNotice, /6,000만 원 이상/);
+  assert.match(payload.data.pricing.basis, /마루 포함, 부가세 별도/);
 });
 
 test("부분공사에는 전체 평수 기준의 임의 금액이나 미선택 항목을 제시하지 않는다", async () => {
@@ -73,4 +78,19 @@ test("잘못된 HTTP 메서드는 거부하고 견적 응답은 캐시하지 않
   assert.equal(result.status, 405);
   assert.equal(result.headers.Allow, "POST");
   assert.equal(result.headers["Cache-Control"], "no-store");
+});
+
+
+test("32평 참고예산을 다른 평수·주택 종류의 확정 금액으로 확대하지 않는다", () => {
+  for (const input of [
+    { spaceType: "아파트", area: 31 },
+    { spaceType: "아파트", area: 33 },
+    { spaceType: "빌라", area: 32 },
+    { spaceType: "주택", area: 32 },
+  ]) {
+    const price = getCustomerPriceReference({ ...input, scope: "전체공사" });
+    assert.equal(price.minManwon, null);
+    assert.equal(price.maxManwon, null);
+    assert.equal(price.status, "consultation_required");
+  }
 });

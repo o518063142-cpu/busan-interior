@@ -4,15 +4,14 @@ import { getFirestore, type Firestore } from "firebase-admin/firestore";
 let adminApp: App | null = null;
 let adminDb: Firestore | null = null;
 
-export async function getFirestoreAdmin(): Promise<Firestore | null> {
-  if (adminDb) return adminDb;
+export async function getFirebaseAdminApp(): Promise<App | null> {
+  if (adminApp) return adminApp;
 
   const projectId = process.env.FIREBASE_ADMIN_PROJECT_ID;
   const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
   let privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY;
 
   if (!projectId || !clientEmail || !privateKey) {
-    // Missing required credentials in environment
     return null;
   }
 
@@ -25,22 +24,30 @@ export async function getFirestoreAdmin(): Promise<Firestore | null> {
     const apps = getApps();
     if (apps.length === 0) {
       adminApp = initializeApp({
-        credential: cert({
-          projectId,
-          clientEmail,
-          privateKey,
-        }),
+        credential: cert({ projectId, clientEmail, privateKey }),
+        storageBucket:
+          process.env.FIREBASE_STORAGE_BUCKET ||
+          "busan-interior.firebasestorage.app",
       });
     } else {
       adminApp = apps[0];
     }
 
-    adminDb = getFirestore(adminApp);
-    return adminDb;
+    return adminApp;
   } catch (err: any) {
     console.error("Firebase Admin initialization error:", err?.message || err);
     return null;
   }
+}
+
+export async function getFirestoreAdmin(): Promise<Firestore | null> {
+  if (adminDb) return adminDb;
+
+  const app = await getFirebaseAdminApp();
+  if (!app) return null;
+
+  adminDb = getFirestore(app);
+  return adminDb;
 }
 
 /**

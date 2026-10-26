@@ -16,6 +16,30 @@ service cloud.firestore {
       allow read, update, delete: if request.auth != null;
     }
 
+    // Anonymous conversion funnel events.
+    // No name, phone number, or free-text customer details are stored here.
+    match /conversionEvents/{eventId} {
+      allow create: if
+        request.resource.data.keys().hasOnly([
+          'eventName',
+          'path',
+          'source',
+          'sessionId',
+          'utmSource',
+          'utmMedium',
+          'utmCampaign',
+          'referrer',
+          'createdAt'
+        ]) &&
+        request.resource.data.eventName is string &&
+        request.resource.data.path is string &&
+        request.resource.data.source is string &&
+        request.resource.data.sessionId is string;
+
+      // Funnel data is visible only to signed-in admin users.
+      allow read, update, delete: if request.auth != null;
+    }
+
     // Projects Collection Security Rules
     match /projects/{projectId} {
       // Public visitors can read projects
@@ -26,4 +50,3 @@ service cloud.firestore {
     }
   }
 }
-

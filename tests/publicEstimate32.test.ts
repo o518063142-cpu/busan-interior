@@ -270,3 +270,37 @@ test("미입력 길이에도 단가 참고만 남기고 가격을 조작한 새 
   assert.equal(quote.moldingSelection.spaces[0].parts[0].lengthM, null);
   assert.ok(validatePublicSelection({ ...s, moldingBySpace: { living: { ...s.moldingBySpace.living, ceiling: { ...s.moldingBySpace.living.ceiling, minWonPerM: 1 } } } }));
 });
+
+
+test("전체 철거 참고는 부분·미확인 범위에 적용하지 않고 욕실 패키지 중복을 안내한다", () => {
+  const s = defaultPublicSelection(); s.extraWork = { demolition: "work" }; s.bathrooms[0].method = "full";
+  for (const demolitionScope of ["unknown", "partial"]) assert.equal(calculatePublicSelection({ ...s, demolitionScope }).additionalWorkReferences.length, 0);
+  const quote = calculatePublicSelection({ ...s, demolitionScope: "whole" });
+  assert.equal(quote.subtotalWon, 4800000);
+  assert.equal(quote.additionalWorkReferences[0].minWon, 2500000);
+  assert.equal(quote.additionalWorkReferences[0].maxWon, 4500000);
+  assert.match(quote.demolitionOverlapChecks[0], /욕실 1.*중복 확인/);
+  assert.equal(quote.additionalWorkReferences[0].vat, "별도");
+});
+test("조명 작업별 자재 포함 참고와 단위·제외 조건을 구분하며 배선 전체 가격은 만들지 않는다", () => {
+  const s = { ...defaultPublicSelection(), extraWork: { electrical: "work" as const }, electricalWorks: ["existing", "downlight", "indirect", "circuits", "rewiring"] };
+  const quote = calculatePublicSelection(s);
+  assert.equal(quote.subtotalWon, null);
+  assert.equal(quote.additionalWorkReferences.length, 4);
+  assert.deepEqual(quote.additionalWorkReferences.map(r => r.unit), ["30평대 전체", "개", "m", "개소"]);
+  assert.ok(quote.additionalWorkReferences.every(r => r.excludedFromSubtotal && r.vat === "별도"));
+  assert.ok(quote.pending.some(p => p.includes("전체 배선·분전반")));
+  assert.match(publicSelectionSummary(s, quote), /추가 공사 공개 참고 \(소계 제외\)/);
+  assert.ok(!quote.sourceIds.includes("lightingReference"));
+});
+test("비활성 공사 상세·잘못된 ID·중복 작업은 거부한다", () => {
+  for (const patch of [{ demolitionScope: "whole" },{ demolitionScope: "fake" },{ electricalWorks: ["existing"] },{ electricalWorks: null },{ electricalWorks: "existing" },{ extraWork:{ electrical:"work" },electricalWorks:["fake"] },{ extraWork:{ electrical:"work" },electricalWorks:["existing","existing"] }]) assert.ok(validatePublicSelection({ ...defaultPublicSelection(), ...patch }));
+});
+test("이전 입력에 철거·전기 참고를 임의 추가하지 않고 선택 해제 시 제거한다", () => {
+  const old = defaultPublicSelection(); delete old.demolitionScope; delete old.electricalWorks;
+  assert.equal(calculatePublicSelection(old).additionalWorkReferences.length, 0);
+  const s = { ...old, wallpaper:"paper", extraWork:{electrical:"work" as const}, electricalWorks:["downlight"] };
+  assert.equal(calculatePublicSelection(s).subtotalWon,1290000);
+  assert.equal(calculatePublicSelection(s).additionalWorkReferences.length,1);
+  assert.equal(calculatePublicSelection({ ...s,electricalWorks:[] }).additionalWorkReferences.length,0);
+});

@@ -7,7 +7,7 @@ import { SITE_CONFIG } from "../config/siteConfig";
 import { db } from "../firebase";
 import {
   WALLPAPER_OPTIONS, FLOOR_OPTIONS, BATHROOM_OPTIONS, PUBLIC_SOURCES, WINDOW_OPTIONS,
-  FILM_QUANTITY_OPTIONS, filmPrice, DOOR_OPTIONS, MOLDING_SPACES, MOLDING_PARTS, MOLDING_METHODS, defaultMoldingSpace, getMoldingReference, EXTRA_WORK_SCOPES, EXTRA_WORK_OPTIONS,
+  FILM_QUANTITY_OPTIONS, filmPrice, DOOR_OPTIONS, MOLDING_SPACES, MOLDING_PARTS, MOLDING_METHODS, defaultMoldingSpace, getMoldingReference, DEMOLITION_SCOPE_OPTIONS, ELECTRICAL_WORK_OPTIONS, EXTRA_WORK_SCOPES, EXTRA_WORK_OPTIONS,
   type ExtraWorkChoice, type MoldingMethod, type MoldingSpace,
   defaultPublicSelection, calculatePublicSelection, formatWon, publicSelectionSummary,
   type PublicSelection32,
@@ -159,8 +159,24 @@ export function PublicEstimatePage() {
           <h2 className="font-black text-lg">9. 추가 공사 범위</h2>
           <p className="text-xs text-stone-600 mt-2 leading-5">원하는 공사를 선택해 주세요. 방문은 사양·수량과 적용 조건을 확인해 공개가격 소계에 반영하며, 몰딩 등 가격이 확인되지 않은 공사는 상담 확인 대상으로 전달됩니다.</p>
           <div className="space-y-4 mt-4">{EXTRA_WORK_SCOPES.map(scope => <div key={scope.id}>
-            <label className="block text-sm font-bold">{scope.label}<select aria-label={scope.label} className={control} value={selection.extraWork?.[scope.id] ?? "keep"} onChange={e => update({ extraWork: { ...selection.extraWork, [scope.id]: e.target.value as ExtraWorkChoice }, ...(scope.id === "doors" ? { doorSpec: "unknown", doorCount: 1, doorsSeparateFromFilm: false } : {}), ...(scope.id === "carpentry" ? { moldingBySpace: {}, moldingScope: "unknown", moldingRooms: 0 } : {}) })}>{EXTRA_WORK_OPTIONS.map(option => <option key={option.id} value={option.id}>{option.label}</option>)}</select></label>
+            <label className="block text-sm font-bold">{scope.label}<select aria-label={scope.label} className={control} value={selection.extraWork?.[scope.id] ?? "keep"} onChange={e => update({ extraWork: { ...selection.extraWork, [scope.id]: e.target.value as ExtraWorkChoice }, ...(scope.id === "demolition" ? { demolitionScope: "unknown" } : {}), ...(scope.id === "electrical" ? { electricalWorks: [] } : {}), ...(scope.id === "doors" ? { doorSpec: "unknown", doorCount: 1, doorsSeparateFromFilm: false } : {}), ...(scope.id === "carpentry" ? { moldingBySpace: {}, moldingScope: "unknown", moldingRooms: 0 } : {}) })}>{EXTRA_WORK_OPTIONS.map(option => <option key={option.id} value={option.id}>{option.label}</option>)}</select></label>
             <p className="text-xs text-stone-500 mt-2 leading-5">{scope.detail}</p>
+            {scope.id === "demolition" && selection.extraWork?.demolition === "work" && <div className="rounded-xl bg-stone-50 p-3 mt-3 space-y-3">
+              <label className="block text-sm">철거 범위<select aria-label="철거 범위" className={control} value={selection.demolitionScope ?? "unknown"} onChange={e => update({ demolitionScope: e.target.value })}>{DEMOLITION_SCOPE_OPTIONS.map(option => <option key={option.id} value={option.id}>{option.label}</option>)}</select></label>
+              {selection.demolitionScope === "partial" && <p className="text-xs text-stone-600">부분 철거에는 전체 철거 참고가격을 적용하지 않습니다. 철거 대상·폐기물 양을 상담으로 확인합니다.</p>}
+              {quote.demolitionOverlapChecks.length > 0 && <ul className="text-xs text-amber-800 leading-5">{quote.demolitionOverlapChecks.map(message => <li key={message}>{message}</li>)}</ul>}
+            </div>}
+            {scope.id === "electrical" && selection.extraWork?.electrical === "work" && <div className="rounded-xl bg-stone-50 p-3 mt-3 space-y-3">
+              <p className="text-xs text-stone-600">원하시는 작업을 선택하세요. 여러 항목을 함께 고를 수 있으며 수량·길이는 상담 시 확인합니다.</p>
+              {ELECTRICAL_WORK_OPTIONS.map(option => <label key={option.id} className="flex gap-2 text-sm"><input type="checkbox" checked={selection.electricalWorks?.includes(option.id) ?? false} onChange={e => update({ electricalWorks: e.target.checked ? [...(selection.electricalWorks ?? []), option.id] : (selection.electricalWorks ?? []).filter(id => id !== option.id) })} />{option.label}</label>)}
+              {selection.electricalWorks?.includes("rewiring") && <p className="text-xs text-stone-600">전체 배선·분전반 공사는 단순 조명 교체 가격에 포함시키지 않고 별도 견적을 확인합니다.</p>}
+            </div>}
+            {["demolition", "electrical"].includes(scope.id) && quote.additionalWorkReferences.filter(reference => reference.source === (scope.id === "demolition" ? "demolitionReference" : "lightingReference")).map(reference => <div key={reference.id} data-testid={`work-reference-${reference.id}`} className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-stone-700">
+              <p className="font-bold">공개 참고범위 · 소계 제외</p><p>{reference.label}: <strong>{formatWon(reference.minWon)}~{formatWon(reference.maxWon)}/{reference.unit}</strong></p>
+              <p>포함: {reference.includes}</p><p>별도: {reference.excludes}</p><p>부가세 {reference.vat} · 최소 시공비 미확인</p><p>{reference.region}</p>
+              <a className="underline" href={reference.url} target="_blank" rel="noopener noreferrer">{reference.sourceName} 원문 확인</a>
+              <p>확인일 {reference.checkedAt} · 수량·길이를 곱하거나 참고범위를 서로 더해 총액으로 사용하지 않습니다.</p>
+            </div>)}
             {scope.id === "carpentry" && selection.extraWork?.carpentry === "work" && <div className="rounded-xl bg-stone-50 p-3 mt-3 space-y-4">
               <p className="text-sm font-bold">몰딩을 확인할 공간을 선택해 주세요.</p>
               <p className="text-xs text-stone-600 leading-5">거실·주방·복도와 각 방을 별도로 선택합니다. 실제 있는 공간만 선택하고, 천장 몰딩·걸레받이를 각각 정해 주세요. 길이는 선택 입력이며 모르면 비워 두셔도 됩니다.</p>

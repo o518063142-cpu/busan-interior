@@ -1,5 +1,5 @@
 // Public supplier estimates only; never import GENE's private cost/margin data.
-export const PUBLIC_CATALOG_VERSION = "public-32-2026-10-26-v7";
+export const PUBLIC_CATALOG_VERSION = "public-32-2026-10-26-v8";
 const checkedAt = "2026-10-26";
 export const PUBLIC_SOURCES = {
   wallpaper: { name: "의정부 부부도배사", url: "https://eamu.info/web/service/wallpaper-cost-32py/", region: "의정부·양주", checkedAt, publishedAt: null, vat: "미확인", condition: "공급 32평·천장 포함. 자재·공임·부자재·폐기물·식대 포함. 확장·보수·짐 이동은 현장 확인." },
@@ -12,6 +12,8 @@ export const PUBLIC_SOURCES = {
   molding: { name: "마미견적서 목공·몰딩", url: "https://www.mommyestimate.com/estimation/molding", region: "서울·경기 공개 예시 · 부산 적용 미확인", checkedAt, publishedAt: null, vat: "미확인", condition: "아파트/오피스텔 종전 방 개수별 전체 몰딩 참고표. 거실·주방·복도·방별 포함 범위와 길이당 시공 단가가 확인되지 않아 현재 소계에는 합산하지 않음. 짐비·철거비·양중비 제외. 마루 동시시공 하단 몰딩은 별도 이벤트 조건으로 금액 미확인. 제품·길이·실측·VAT 별도 확인." },
   moldingPaintPvc: { name: "SN인테리어 몰딩·걸레받이", url: "https://www.sninterior.space/2026/08/20_0778351455.html", region: "성남 업체 공개 참고범위 · 부산 적용 미확인", checkedAt, publishedAt: null, vat: "미확인", condition: "도장 평몰딩·PVC 걸레받이의 자재+시공 미터당 참고범위. 규격·철거·최소 시공비·부가세 미확인. 실제 선택 자재를 확정하는 가격이 아니며 소계 제외." },
   moldingFilmRate: { name: "목동현대인테리어 몰딩 필름", url: "https://mokdonginterior.co.kr/services/etc", region: "서울 목동 업체 공개 참고범위 · 부산 적용 미확인", checkedAt, publishedAt: null, vat: "별도", condition: "기존 몰딩 필름 시공 미터당 참고범위. 면 정리·프라이머 포함. 최소 시공비·규격·현장 적용 별도 확인. 걸레받이 필름의 직접 근거로 전용하지 않으며 소계 제외." },
+  lightingReference: { name: "목동현대인테리어 조명", url: "https://mokdonginterior.co.kr/services/lighting", region: "서울 업체 공개 참고범위 · 부산 적용 미확인", checkedAt, publishedAt: null, vat: "별도", condition: "등기구 자재 포함 시공 참고범위. 기존 등 철거·폐기, 설치·결선 포함 안내. 우물천장 목공·분전반 증설·스마트 설정 별도. 수량·등급·최소 시공비·부산 적용 미확인, 소계 제외." },
+  demolitionReference: { name: "목동현대인테리어 철거", url: "https://mokdonginterior.co.kr/services/etc", region: "서울 업체 공개 참고범위 · 부산 적용 미확인", checkedAt, publishedAt: null, vat: "별도", condition: "30평대 전체 철거의 폐기물 반출·처리 포함 참고범위. 부분 철거에 전용하지 않음. 구조 변경·사다리차·관리사무소 예치금 별도. 욕실 패키지 등의 철거 범위와 중복 확인, 소계 제외." },
   doors: { name: "마미견적서 방문", url: "https://www.mommyestimate.com/estimation/door", region: "서울·경기 공개 예시 · 부산 적용 미확인", checkedAt, publishedAt: null, vat: "미확인", condition: "방문 개당 단가×수량. 다른 시공과 함께 진행하는 조건이며 단독 시공 불가. 실측 필수. 철거·폐기·부속품·문선 마감·규격과 VAT는 별도 확인." },
   kitchen: { name: "마미견적서 싱크대", url: "https://www.mommyestimate.com/estimation/sink", region: "부산 적용 미확인", checkedAt, publishedAt: null, vat: "미확인", condition: "상·하부장·기본 상판·하이드후드·기본 수전/싱크볼 예시. 철거·짐 이동·양중 별도. ㄱ/ㄷ자 연결부 중첩 길이 확인 필요." },
 } as const;
@@ -99,6 +101,39 @@ export const DOOR_OPTIONS = [
   { id: "yerim", label: "문짝+문틀 · 예림 예시", price: 520000 },
   { id: "slim", label: "문짝+12mm 문틀 · 예림 예시", price: 560000 },
 ] as const;
+export const DEMOLITION_SCOPE_OPTIONS = [
+  { id: "unknown", label: "철거 범위를 상담 후 결정" },
+  { id: "partial", label: "일부 공간·항목만 철거" },
+  { id: "whole", label: "전체 철거 범위 검토" },
+] as const;
+export const ELECTRICAL_WORK_OPTIONS = [
+  { id: "existing", label: "기존 자리의 조명 전체 교체 검토" },
+  { id: "downlight", label: "매립 다운라이트 신설" },
+  { id: "indirect", label: "간접 띠조명 신설" },
+  { id: "circuits", label: "스위치 회로 분리" },
+  { id: "rewiring", label: "전체 배선·분전반 등 별도 검토" },
+] as const;
+const WORK_REFERENCE_RANGES = {
+  whole: { id: "demolitionWhole", label: "30평대 전체 철거 예시", minWon: 2500000, maxWon: 4500000, unit: "30평대 전체", source: "demolitionReference", includes: "폐기물 반출·처리", excludes: "구조 변경·사다리차·관리사무소 예치금" },
+  existing: { id: "lightingExisting", label: "기존 자리 등기구 교체 예시", minWon: 800000, maxWon: 2500000, unit: "30평대 전체", source: "lightingReference", includes: "등기구 자재·기존 등 철거/폐기·설치/결선", excludes: "우물천장 목공·분전반 증설·스마트 설정" },
+  downlight: { id: "lightingDownlight", label: "매립 다운라이트 신설 예시", minWon: 60000, maxWon: 120000, unit: "개", source: "lightingReference", includes: "등기구 자재·천장 타공·배선", excludes: "별도 목공·분전반 증설" },
+  indirect: { id: "lightingIndirect", label: "간접 띠조명 예시", minWon: 40000, maxWon: 80000, unit: "m", source: "lightingReference", includes: "조명 자재 포함 시공 참고", excludes: "우물천장 목공" },
+  circuits: { id: "lightingCircuits", label: "스위치 회로 분리 예시", minWon: 80000, maxWon: 200000, unit: "개소", source: "lightingReference", includes: "회로 분리 시공 참고", excludes: "배선 경로에 따른 추가 조건·분전반 증설" },
+} as const;
+export function additionalWorkReferences(s: PublicSelection32) {
+  const keys: Array<keyof typeof WORK_REFERENCE_RANGES> = [];
+  if (s.extraWork?.demolition === "work" && s.demolitionScope === "whole") keys.push("whole");
+  if (s.extraWork?.electrical === "work") {
+    for (const option of ELECTRICAL_WORK_OPTIONS) {
+      if (option.id !== "rewiring" && s.electricalWorks?.includes(option.id)) keys.push(option.id);
+    }
+  }
+  return keys.map(key => {
+    const reference = WORK_REFERENCE_RANGES[key];
+    const source = PUBLIC_SOURCES[reference.source];
+    return { ...reference, sourceName: source.name, url: source.url, region: source.region, vat: source.vat, checkedAt: source.checkedAt, minimumCharge: "미확인", excludedFromSubtotal: true as const };
+  });
+}
 export const EXTRA_WORK_OPTIONS = [
   { id: "keep", label: "유지 / 공사 없음" },
   { id: "work", label: "공사 / 교체 희망" },
@@ -116,6 +151,8 @@ export type ExtraWorkId = typeof EXTRA_WORK_SCOPES[number]["id"];
 export type ExtraWorkChoice = typeof EXTRA_WORK_OPTIONS[number]["id"];
 
 export interface PublicSelection32 {
+  demolitionScope?: string;
+  electricalWorks?: string[];
   moldingBySpace?: Record<string, MoldingSpace>;
   /** Previous whole-home reference; never converted to a per-space rate. */
   moldingScope?: string;
@@ -142,7 +179,7 @@ export interface PublicSelection32 {
   elevator: boolean;
 }
 export const defaultPublicSelection = (): PublicSelection32 => ({
-  extraWork: {}, moldingBySpace: {}, moldingScope: "unknown", moldingRooms: 0, doorSpec: "unknown", doorCount: 1, doorsSeparateFromFilm: false,
+  extraWork: {}, demolitionScope: "unknown", electricalWorks: [], moldingBySpace: {}, moldingScope: "unknown", moldingRooms: 0, doorSpec: "unknown", doorCount: 1, doorsSeparateFromFilm: false,
   wallpaper: "keep", floor: "keep", bathrooms: [{ method: "keep", largeTile: false }, { method: "keep", largeTile: false }],
   kitchen: false, kitchenLengthM: 3, shoeCabinet: false, windows: false, film: false,
   windowScope: "unknown", filmDoors: 0, filmShoeCabinets: 0, filmEntryDoors: 0,
@@ -157,6 +194,12 @@ export function validatePublicSelection(value: unknown): string | null {
     for (const [key, choice] of Object.entries(s.extraWork)) {
       if (!EXTRA_WORK_SCOPES.some(scope => scope.id === key) || !EXTRA_WORK_OPTIONS.some(option => option.id === choice)) return "추가 공사 범위의 선택이 올바르지 않습니다.";
     }
+  }
+  if (!DEMOLITION_SCOPE_OPTIONS.some(o => o.id === (s.demolitionScope ?? "unknown"))) return "철거 범위를 확인해 주세요.";
+  if (s.extraWork?.demolition !== "work" && s.demolitionScope && s.demolitionScope !== "unknown") return "철거 공사 선택을 확인해 주세요.";
+  if (s.electricalWorks !== undefined) {
+    if (!Array.isArray(s.electricalWorks) || s.electricalWorks.length > ELECTRICAL_WORK_OPTIONS.length || new Set(s.electricalWorks).size !== s.electricalWorks.length || s.electricalWorks.some(id => !ELECTRICAL_WORK_OPTIONS.some(o => o.id === id))) return "전기·조명 공사 항목을 확인해 주세요.";
+    if (s.electricalWorks.length && s.extraWork?.electrical !== "work") return "전기·조명 공사 선택을 확인해 주세요.";
   }
   if (!LEGACY_MOLDING_SCOPES.includes(s.moldingScope ?? "unknown")) return "몰딩 공사 범위를 확인해 주세요.";
   if (s.moldingRooms !== undefined && ![0, 2, 3, 4].includes(s.moldingRooms)) return "이전 몰딩 기준 방 개수를 확인해 주세요.";
@@ -270,6 +313,11 @@ export function calculatePublicSelection(value: unknown) {
       } else pending.push("방문 · 원문은 다른 공종 동시시공 조건 · 단독 선택 금액은 별도 확인");
     }
   }
+  const workReferences = additionalWorkReferences(s);
+  const demolitionOverlapChecks = s.extraWork?.demolition === "work" && s.demolitionScope === "whole"
+    ? s.bathrooms.flatMap((bath, i) => bath.method === "full" ? [`욕실 ${i + 1} 전체철거+방수 패키지와 전체 철거의 범위·폐기비 중복 확인`] : []) : [];
+  pending.push(...demolitionOverlapChecks);
+  if (s.extraWork?.electrical === "work") for (const option of ELECTRICAL_WORK_OPTIONS.filter(o => s.electricalWorks?.includes(o.id))) pending.push(`전기·조명 · ${option.label} · 수량·현장 조건·금액 확인`);
   const scopeChoices = EXTRA_WORK_SCOPES.map(scope => ({ id: scope.id, label: scope.label, choice: s.extraWork?.[scope.id] ?? "keep" }));
   for (const scope of scopeChoices) {
     if (scope.id === "doors" && pricedDoors) continue;
@@ -288,6 +336,10 @@ export function calculatePublicSelection(value: unknown) {
     area: { supplyPyung: 32, exampleExclusivePyung: 24 },
     items,
     scopeChoices,
+    additionalWorkSelection: { demolitionScope: s.demolitionScope ?? "unknown", electricalWorks: [...(s.electricalWorks ?? [])] },
+    additionalWorkReferences: workReferences,
+    additionalReferenceSourceIds: [...new Set(workReferences.map(reference => reference.source))],
+    demolitionOverlapChecks,
     moldingReferences,
     moldingReferenceSourceIds: [...new Set(moldingReferences.map(reference => reference.source))],
     moldingSelection: { mode: "by-space" as const, spaces: moldingSpaces, legacyReference: hasLegacyMolding ? { scope: s.moldingScope ?? "unknown", rooms: s.moldingRooms ?? 0 } : null },
@@ -305,6 +357,9 @@ export function formatWon(amount: number) { return `${amount.toLocaleString("ko-
 export function publicSelectionSummary(selection: PublicSelection32, quote: ReturnType<typeof calculatePublicSelection>) {
   return ["[32평 공종 선택형 공개가격 참고]", `조건: ${selection.occupied ? "거주 중" : "빈집"} / ${selection.expanded ? "확장" : "미확장"} / 엘리베이터 ${selection.elevator ? "있음" : "없음"}`,
     ...EXTRA_WORK_SCOPES.map(scope => `${scope.label}: ${EXTRA_WORK_OPTIONS.find(o => o.id === (selection.extraWork?.[scope.id] ?? "keep"))!.label}`),
+    ...(selection.extraWork?.demolition === "work" ? [`철거 상세: ${DEMOLITION_SCOPE_OPTIONS.find(o => o.id === (selection.demolitionScope ?? "unknown"))!.label}`] : []),
+    ...(selection.extraWork?.electrical === "work" ? [`전기·조명 상세: ${ELECTRICAL_WORK_OPTIONS.filter(o => selection.electricalWorks?.includes(o.id)).map(o => o.label).join(", ") || "범위 상담 후 결정"}`] : []),
+    ...quote.additionalWorkReferences.map(reference => `추가 공사 공개 참고 (소계 제외): ${reference.label} / ${formatWon(reference.minWon)}~${formatWon(reference.maxWon)}/${reference.unit} / 부가세 ${reference.vat} / 포함: ${reference.includes} / 별도: ${reference.excludes} / ${reference.url} / 확인일 ${reference.checkedAt}`),
     ...quote.moldingSelection.spaces.flatMap(space => space.parts.map(part => `몰딩 상세: ${space.label} / ${part.label} / ${part.methodLabel} / ${part.lengthM === null ? "길이 미확인" : `${part.lengthM}m`}`)),
     ...quote.moldingReferences.map(reference => `몰딩 공개 단가 참고 (소계 제외·예시 사양): ${reference.label} / ${formatWon(reference.minWonPerM)}~${formatWon(reference.maxWonPerM)}/m / 부가세 ${reference.vat} / 최소 시공비 미확인 / ${reference.sourceName} / ${reference.url} / 확인일 ${reference.checkedAt}`),
     ...(quote.moldingSelection.legacyReference ? [`이전 몰딩 선택: ${quote.moldingSelection.legacyReference.scope} / 방 ${quote.moldingSelection.legacyReference.rooms || "개수 미확인"} · 공간별 범위 재확인 필요`] : []),

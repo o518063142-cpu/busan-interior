@@ -1,9 +1,11 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { GoogleGenAI, Type } from "@google/genai";
 import { getFirestoreAdmin } from "./_lib/firebaseAdmin.js";
 
 interface AttachmentInput {
   ref?: string;
+  path?: string;
   name?: string;
   mimeType?: string;
   kind?: "photo" | "floorplan" | string;
@@ -24,6 +26,7 @@ interface EstimateInput {
 
 const MODEL_NAME = process.env.GEMINI_MODEL || "gemini-3.6-flash";
 const MAX_ATTACHMENTS = 5;
+const MAX_UPLOAD_BYTES = 600 * 1024;
 const ALLOWED_MIME_TYPES = new Set([
   "image/jpeg",
   "image/png",
@@ -35,10 +38,104 @@ function cleanText(value: unknown, fallback = "") {
   return typeof value === "string" ? value.trim().slice(0, 1000) : fallback;
 }
 
+function cleanHeader(value: string | string[] | undefined, maxLength = 200) {
+  const raw = Array.isArray(value) ? value[0] : value || "";
+  return raw.trim().slice(0, maxLength);
+}
+
+function safeFileName(value: string) {
+  let decoded = value;
+  try {
+    decoded = decodeURIComponent(value);
+  } catch {
+    // Keep original value if decoding fails.
+  }
+  return (decoded.replace(/[\\/]/g, "-").replace(/[^0-9A-Za-z가-힣._ -]/g, "").trim() || "첨부파일").slice(0, 120);
+}
+
 function normalizeArea(value: unknown) {
   const parsed = Number(value);
   if (!Number.isFinite(parsed)) return 30;
   return Math.min(300, Math.max(1, parsed));
+}
+
+async function readUploadBody(req: VercelRequest) {
+  if (Buffer.isBuffer(req.body)) return req.body;
+  if (typeof req.body === "string") return Buffer.from(req.body, "binary");
+
+  const chunks: Buffer[] = [];
+  let total = 0;
+  for await (const chunk of req) {
+    const part = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+    total += part.length;
+    if (total > MAX_UPLOAD_BYTES) throw new Error("FILE_TOO_LARGE");
+    chunks.push(part);
+  }
+  return Buffer.concat(chunks);
+}
+
+async function handleUpload(req: VercelRequest, res: VercelResponse) {
+  const sessionId = cleanHeader(req.headers["x-session-id"], 100);
+  const kind = cleanHeader(req.headers["x-file-kind"], 30);
+  const mimeType = cleanHeader(req.headers["content-type"], 100).split(";")[0];
+  const name = safeFileName(cleanHeader(req.headers["x-file-name"], 300));
+
+  if (!/^s_[A-Za-z0-9_-]{8,100}$/.test(sessionId)) {
+    return res.status(400).json({ success: false, error: "유효한 업로드 세션이 필요합니다." });
+  }
+  if (kind !== "photo" && kind !== "floorplan") {
+    return res.status(400).json({ success: false, error: "파일 종류가 올바르지 않습니다." });
+  }
+  if (!ALLOWED_MIME_TYPES.has(mimeType)) {
+    return res.status(415).json({ success: false, error: "JPG, PNG, WEBP 또는 PDF 파일만 업로드할 수 있습니다." });
+  }
+
+  const declaredLength = Number(cleanHeader(req.headers["content-length"], 30));
+  if (Number.isFinite(declaredLength) && declaredLength > MAX_UPLOAD_BYTES) {
+    return res.status(413).json({ success: false, error: "AI 분석용 첨부자료는 파일당 600KB 이하로 준비해 주세요." });
+  }
+
+  try {
+    const buffer = await readUploadBody(req);
+    if (!buffer.length) {
+      return res.status(400).json({ success: false, error: "빈 파일은 업로드할 수 없습니다." });
+    }
+    if (buffer.length > MAX_UPLOAD_BYTES) throw new Error("FILE_TOO_LARGE");
+
+    const db = await getFirestoreAdmin();
+    if (!db) {
+      return res.status(503).json({ success: false, error: "첨부자료 저장 연결이 설정되지 않았습니다." });
+    }
+
+    const docRef = await db.collection("aiEstimateUploads").add({
+      sessionId,
+      kind,
+      name,
+      mimeType,
+      size: buffer.length,
+      dataBase64: buffer.toString("base64"),
+      createdAt: FieldValue.serverTimestamp(),
+      expiresAt: Timestamp.fromMillis(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    });
+
+    return res.status(200).json({
+      success: true,
+      file: {
+        ref: docRef.id,
+        path: docRef.id,
+        name,
+        mimeType,
+        size: buffer.length,
+        kind,
+      },
+    });
+  } catch (error: any) {
+    if (error?.message === "FILE_TOO_LARGE") {
+      return res.status(413).json({ success: false, error: "AI 분석용 첨부자료는 파일당 600KB 이하로 준비해 주세요." });
+    }
+    console.error("AI estimate attachment upload error:", error?.message || error);
+    return res.status(500).json({ success: false, error: "첨부자료 저장 중 오류가 발생했습니다." });
+  }
 }
 
 function buildFallback(input: Required<Omit<EstimateInput, "attachments">>, attachmentCount: number) {
@@ -89,7 +186,7 @@ function normalizeAttachments(body: EstimateInput) {
   const raw = Array.isArray(body.attachments) ? body.attachments.slice(0, MAX_ATTACHMENTS) : [];
   return raw
     .map((item) => ({
-      ref: cleanText(item?.ref, "").slice(0, 120),
+      ref: cleanText(item?.ref || item?.path, "").slice(0, 120),
       name: cleanText(item?.name, "첨부파일").slice(0, 120),
       mimeType: cleanText(item?.mimeType, "").slice(0, 100),
       kind: item?.kind === "floorplan" ? "floorplan" : "photo",
@@ -97,10 +194,7 @@ function normalizeAttachments(body: EstimateInput) {
     .filter((item) => /^[A-Za-z0-9_-]{8,120}$/.test(item.ref) && ALLOWED_MIME_TYPES.has(item.mimeType));
 }
 
-async function loadAttachmentParts(
-  sessionId: string,
-  attachments: ReturnType<typeof normalizeAttachments>
-) {
+async function loadAttachmentParts(sessionId: string, attachments: ReturnType<typeof normalizeAttachments>) {
   const parts: any[] = [];
   if (!attachments.length) return parts;
 
@@ -116,26 +210,26 @@ async function loadAttachmentParts(
       if (!ALLOWED_MIME_TYPES.has(data.mimeType)) continue;
       if (typeof data.dataBase64 !== "string" || !data.dataBase64) continue;
 
-      parts.push({
-        inlineData: {
-          mimeType: data.mimeType,
-          data: data.dataBase64,
-        },
-      });
+      parts.push({ inlineData: { mimeType: data.mimeType, data: data.dataBase64 } });
       parts.push({ text: `[첨부자료 메모] 종류=${data.kind || item.kind}, 파일명=${data.name || item.name}` });
     } catch (error: any) {
       console.warn("AI attachment load skipped:", item.ref, error?.message || error);
     }
   }
-
   return parts;
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Cache-Control", "no-store");
+
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
     return res.status(405).json({ success: false, error: "POST 요청만 지원합니다." });
+  }
+
+  const mode = Array.isArray(req.query.mode) ? req.query.mode[0] : req.query.mode;
+  if (mode === "upload") {
+    return handleUpload(req, res);
   }
 
   const body = (req.body || {}) as EstimateInput;

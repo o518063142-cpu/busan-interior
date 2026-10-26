@@ -51,7 +51,10 @@ export function PublicEstimatePage() {
       const response = await fetch("/api/ai-estimate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ publicSelection: selection }), signal: AbortSignal.timeout(15000) });
       const result = await response.json();
       if (!response.ok || !result.success || result.source !== "public-reference") throw new Error(result.error || "선택 견적 확인에 실패했습니다.");
-      const details = `${publicSelectionSummary(selection, result.data)}\n추가 요청: ${contact.details.trim() || "없음"}`;
+      const isPreview = window.location.hostname.endsWith(".vercel.app") &&
+        window.location.hostname !== new URL(SITE_CONFIG.seo.canonicalUrl).hostname;
+      const isTest = isPreview || /^\[TEST\]/i.test(contact.name.trim());
+      const details = `${isTest ? "[TEST] 테스트 접수 · 실적 집계 제외 · 실제 고객 연락 금지\n" : ""}${publicSelectionSummary(selection, result.data)}\n추가 요청: ${contact.details.trim() || "없음"}`;
       const payload = { name: contact.name.trim(), phone: contact.phone.trim(), location: contact.location.trim(), spaceType: "아파트", area: "32", startDate: "협의", details };
       let sessionId = "";
       try {
@@ -60,7 +63,8 @@ export function PublicEstimatePage() {
       } catch { /* The consultation can still be saved if browser storage is unavailable. */ }
       const doc = await addDoc(collection(db, "consultations"), {
         ...payload, status: "new", source: "ai-estimate", estimateType: "public-selection-32",
-        sessionId, estimateConditions: selection, publicEstimateSnapshot: result.data, createdAt: serverTimestamp(),
+        sessionId, isTest, excludeFromMetrics: isTest,
+        estimateConditions: selection, publicEstimateSnapshot: result.data, createdAt: serverTimestamp(),
       });
       setSaved(true);
       try {

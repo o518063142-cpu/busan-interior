@@ -21,6 +21,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ success: false, error: "POST 요청만 지원합니다." });
   }
 
+  if (process.env.VERCEL_ENV === "preview") {
+    return res.status(200).json({ success: true, skipped: true, reason: "preview" });
+  }
+
   try {
     const eventName = clean(req.body?.eventName, 80);
     if (!ALLOWED_EVENTS.has(eventName)) {

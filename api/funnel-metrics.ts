@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestoreAdmin } from "./_lib/firebaseAdmin.js";
 import { handleAiLeadAttachment, handleAiLeadList } from "./_lib/aiLeadAdmin.js";
+import { productionMetricRecords } from "../shared/consultationMetrics.js";
 
 const AI_MARKER = "AI 예상 비용";
 
@@ -175,8 +176,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       db.collection("consultations").orderBy("createdAt", "desc").limit(5000).get(),
     ]);
 
-    const events = eventsSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-    const consultations = consultationsSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() } as any));
+    const { events, consultations } = productionMetricRecords(
+      consultationsSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() } as any)),
+      eventsSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() } as any))
+    );
 
     const aiPageEvents = events.filter(
       (event: any) => event.eventName === "page_view" && event.path === "/ai-estimate"

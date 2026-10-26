@@ -5,6 +5,7 @@ import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
 import { FloatingContactBar } from "./components/FloatingContactBar";
 import { ContactModal } from "./components/ContactModal";
+import { ConversionTracker } from "./components/ConversionTracker";
 import { AppRoutes } from "./routes/AppRoutes";
 
 interface AppProps {
@@ -42,6 +43,9 @@ export function App({ initialData }: AppProps) {
 
   return (
     <div className="min-h-screen flex flex-col bg-stone-50 text-stone-900 font-sans antialiased selection:bg-amber-400 selection:text-stone-950">
+      {/* Anonymous conversion analytics. Stores no name or phone number. */}
+      <ConversionTracker />
+
       {/* Header Navigation */}
       <Header
         activeTab={activeTab}

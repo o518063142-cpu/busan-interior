@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { GoogleGenAI, Type } from "@google/genai";
 import { getFirestoreAdmin } from "./_lib/firebaseAdmin.js";
+import { calculatePublicSelection, validatePublicSelection } from "../shared/publicEstimate32.js";
 import { getCustomerPriceReference, validateCustomerConditions } from "../shared/customerEstimate.js";
 
 interface AttachmentInput {
@@ -472,7 +473,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return handleUpload(req, res);
   }
 
-  const body = (req.body || {}) as EstimateInput;
+  const body = (req.body || {}) as EstimateInput & { publicSelection?: unknown };
+  if (Object.prototype.hasOwnProperty.call(body, "publicSelection")) {
+    const invalid = validatePublicSelection(body.publicSelection);
+    if (invalid) return res.status(400).json({ success: false, error: invalid });
+    const quote = calculatePublicSelection(body.publicSelection);
+    if (!quote.hasSelection) return res.status(400).json({ success: false, error: "공사 항목을 하나 이상 선택해 주세요." });
+    return res.status(200).json({ success: true, source: "public-reference", data: quote });
+  }
   const validationError = validateCustomerConditions({
     spaceType: body.spaceType || "아파트",
     area: body.area ?? "",

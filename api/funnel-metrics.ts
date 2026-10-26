@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestoreAdmin } from "./_lib/firebaseAdmin.js";
+import { handleAiLeadAttachment, handleAiLeadList } from "./_lib/aiLeadAdmin.js";
 
 const AI_MARKER = "AI 예상 비용";
 
@@ -47,6 +48,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       await getAuth().verifyIdToken(token);
     } catch {
       return res.status(401).json({ success: false, error: "관리자 인증이 만료되었거나 유효하지 않습니다." });
+    }
+
+    const mode = Array.isArray(req.query.mode) ? req.query.mode[0] : req.query.mode;
+    if (mode === "leads") {
+      return handleAiLeadList(res, db);
+    }
+    if (mode === "attachment") {
+      return handleAiLeadAttachment(req, res, db);
     }
 
     const [eventsSnap, consultationsSnap] = await Promise.all([

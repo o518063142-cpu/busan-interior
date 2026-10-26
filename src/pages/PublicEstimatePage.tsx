@@ -7,7 +7,7 @@ import { SITE_CONFIG } from "../config/siteConfig";
 import { db } from "../firebase";
 import {
   WALLPAPER_OPTIONS, FLOOR_OPTIONS, BATHROOM_OPTIONS, PUBLIC_SOURCES, WINDOW_OPTIONS,
-  FILM_QUANTITY_OPTIONS, filmPrice, DOOR_OPTIONS, EXTRA_WORK_SCOPES, EXTRA_WORK_OPTIONS,
+  FILM_QUANTITY_OPTIONS, filmPrice, DOOR_OPTIONS, MOLDING_OPTIONS, EXTRA_WORK_SCOPES, EXTRA_WORK_OPTIONS,
   type ExtraWorkChoice,
   defaultPublicSelection, calculatePublicSelection, formatWon, publicSelectionSummary,
   type PublicSelection32,
@@ -151,10 +151,15 @@ export function PublicEstimatePage() {
         </section>
         <section className={card}>
           <h2 className="font-black text-lg">9. 추가 공사 범위</h2>
-          <p className="text-xs text-stone-600 mt-2 leading-5">원하는 공사를 선택해 주세요. 방문은 사양·수량과 적용 조건을 확인해 공개가격 소계에 반영하며, 가격이 확인되지 않은 공사는 상담 확인 대상으로 전달됩니다.</p>
+          <p className="text-xs text-stone-600 mt-2 leading-5">원하는 공사를 선택해 주세요. 방문·몰딩은 사양·수량과 적용 조건을 확인해 공개가격 소계에 반영하며, 가격이 확인되지 않은 공사는 상담 확인 대상으로 전달됩니다.</p>
           <div className="space-y-4 mt-4">{EXTRA_WORK_SCOPES.map(scope => <div key={scope.id}>
-            <label className="block text-sm font-bold">{scope.label}<select aria-label={scope.label} className={control} value={selection.extraWork?.[scope.id] ?? "keep"} onChange={e => update({ extraWork: { ...selection.extraWork, [scope.id]: e.target.value as ExtraWorkChoice }, ...(scope.id === "doors" ? { doorSpec: "unknown", doorCount: 1, doorsSeparateFromFilm: false } : {}) })}>{EXTRA_WORK_OPTIONS.map(option => <option key={option.id} value={option.id}>{option.label}</option>)}</select></label>
+            <label className="block text-sm font-bold">{scope.label}<select aria-label={scope.label} className={control} value={selection.extraWork?.[scope.id] ?? "keep"} onChange={e => update({ extraWork: { ...selection.extraWork, [scope.id]: e.target.value as ExtraWorkChoice }, ...(scope.id === "doors" ? { doorSpec: "unknown", doorCount: 1, doorsSeparateFromFilm: false } : {}), ...(scope.id === "carpentry" ? { moldingScope: "unknown", moldingRooms: 0 } : {}) })}>{EXTRA_WORK_OPTIONS.map(option => <option key={option.id} value={option.id}>{option.label}</option>)}</select></label>
             <p className="text-xs text-stone-500 mt-2 leading-5">{scope.detail}</p>
+            {scope.id === "carpentry" && selection.extraWork?.carpentry === "work" && <div className="rounded-xl bg-stone-50 p-3 mt-3 space-y-3">
+              <label className="block text-sm">몰딩 범위<select aria-label="몰딩 범위" className={control} value={selection.moldingScope ?? "unknown"} onChange={e => update({ moldingScope: e.target.value })}>{MOLDING_OPTIONS.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}</select></label>
+              <label className="block text-sm">몰딩 기준 방 개수<select aria-label="몰딩 기준 방 개수" className={control} value={selection.moldingRooms ?? 0} onChange={e => update({ moldingRooms: Number(e.target.value) })}><option value={0}>모르겠어요 / 다른 구조</option>{[2, 3, 4].map(n => <option key={n} value={n}>방 {n}개</option>)}</select></label>
+              <p className="text-xs text-amber-800 leading-5">방 개수별 전체 몰딩의 공개 시공 예시이며 전체 목공비가 아닙니다. 길이·제품·철거·운반·마감·VAT는 별도 확인합니다. 마루와 함께 선택한 하단 몰딩은 원문의 별도 행사 조건을 확인해야 하므로 합산하지 않습니다.</p>
+            </div>}
             {scope.id === "doors" && selection.extraWork?.doors === "work" && <div className="rounded-xl bg-stone-50 p-3 mt-3 space-y-3">
               <label className="block text-sm">방문 사양<select aria-label="방문 사양" className={control} value={selection.doorSpec ?? "unknown"} onChange={e => update({ doorSpec: e.target.value })}>{DOOR_OPTIONS.map(o => <option key={o.id} value={o.id}>{choiceLabel(o)}{o.price !== null ? "/개" : ""}</option>)}</select></label>
               <label className="block text-sm">방문 교체 수량<select aria-label="방문 교체 수량" className={control} value={selection.doorCount ?? 1} onChange={e => update({ doorCount: Number(e.target.value) })}>{Array.from({ length: 10 }, (_, i) => i + 1).map(n => <option key={n} value={n}>{n}개</option>)}</select></label>

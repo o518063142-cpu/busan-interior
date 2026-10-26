@@ -1,5 +1,5 @@
 // Public supplier estimates only; never import GENE's private cost/margin data.
-export const PUBLIC_CATALOG_VERSION = "public-32-2026-10-26-v4";
+export const PUBLIC_CATALOG_VERSION = "public-32-2026-10-26-v5";
 const checkedAt = "2026-10-26";
 export const PUBLIC_SOURCES = {
   wallpaper: { name: "의정부 부부도배사", url: "https://eamu.info/web/service/wallpaper-cost-32py/", region: "의정부·양주", checkedAt, publishedAt: null, vat: "미확인", condition: "공급 32평·천장 포함. 자재·공임·부자재·폐기물·식대 포함. 확장·보수·짐 이동은 현장 확인." },
@@ -9,6 +9,7 @@ export const PUBLIC_SOURCES = {
   bathroom: { name: "마미견적서 욕실", url: "https://www.mommyestimate.com/estimation/bathroom", region: "부산 적용 미확인", checkedAt, publishedAt: null, vat: "미확인", condition: "욕실 1개소 예시. 전체철거+방수 항목과 철거비 별도 공통 안내가 함께 있어 실제 철거·폐기·양중 범위 재확인 필요. 욕실 크기·기본 도기 사양 미확인." },
   windows: { name: "마미견적서 창호", url: "https://www.mommyestimate.com/estimation/window", region: "부산 적용 미확인", checkedAt, publishedAt: null, vat: "미확인", condition: "아파트/오피스텔 30평대의 내창·외창·내외창 예시. 창별 규격·브랜드·유리·철거·양중은 별도 확인. 32평 모든 현장의 동일 사양을 보장하지 않음." },
   film: { name: "마미견적서 필름", url: "https://www.mommyestimate.com/estimation/firm", region: "부산 적용 미확인", checkedAt, publishedAt: null, vat: "미확인", condition: "부위별 수량 1·2·3·5·10개의 공개 시공 예시. 수량별 금액이며 개당 단가로 곱하지 않음. 표에 없는 수량·여러 부위 동시시공·바탕 보수·부속품·철거·양중은 별도 확인." },
+  molding: { name: "마미견적서 목공·몰딩", url: "https://www.mommyestimate.com/estimation/molding", region: "서울·경기 공개 예시 · 부산 적용 미확인", checkedAt, publishedAt: null, vat: "미확인", condition: "아파트/오피스텔 방 2·3·4개별 상단/하단 몰딩 예시. 길이당 단가나 전체 목공비가 아님. 짐비·철거비·양중비 제외. 마루 동시시공 하단 몰딩은 별도 이벤트 조건으로 금액 미확인. 제품·길이·실측·VAT 별도 확인." },
   doors: { name: "마미견적서 방문", url: "https://www.mommyestimate.com/estimation/door", region: "서울·경기 공개 예시 · 부산 적용 미확인", checkedAt, publishedAt: null, vat: "미확인", condition: "방문 개당 단가×수량. 다른 시공과 함께 진행하는 조건이며 단독 시공 불가. 실측 필수. 철거·폐기·부속품·문선 마감·규격과 VAT는 별도 확인." },
   kitchen: { name: "마미견적서 싱크대", url: "https://www.mommyestimate.com/estimation/sink", region: "부산 적용 미확인", checkedAt, publishedAt: null, vat: "미확인", condition: "상·하부장·기본 상판·하이드후드·기본 수전/싱크볼 예시. 철거·짐 이동·양중 별도. ㄱ/ㄷ자 연결부 중첩 길이 확인 필요." },
 } as const;
@@ -50,6 +51,18 @@ export function filmPrice(part: keyof typeof FILM_PRICE_TABLES, quantity: number
   return (FILM_PRICE_TABLES[part] as Record<number, number>)[quantity] ?? null;
 }
 
+export const MOLDING_OPTIONS = [
+  { id: "unknown", label: "몰딩 범위를 상담 후 결정" },
+  { id: "upper", label: "전체 상단 몰딩" },
+  { id: "lower", label: "전체 하단 몰딩 / 걸레받이" },
+  { id: "both", label: "전체 상단+하단 몰딩" },
+] as const;
+// One apartment's published total by room count, never multiplied by rooms.
+export const MOLDING_PRICES = {
+  2: { upper: 650000, lower: 450000, both: 1100000 },
+  3: { upper: 700000, lower: 500000, both: 1200000 },
+  4: { upper: 900000, lower: 600000, both: 1500000 },
+} as const;
 export const DOOR_OPTIONS = [
   { id: "unknown", label: "사양을 상담 후 결정", price: null },
   { id: "leaf", label: "문짝만 · 현대 예시", price: 240000 },
@@ -74,6 +87,8 @@ export type ExtraWorkId = typeof EXTRA_WORK_SCOPES[number]["id"];
 export type ExtraWorkChoice = typeof EXTRA_WORK_OPTIONS[number]["id"];
 
 export interface PublicSelection32 {
+  moldingScope?: string;
+  moldingRooms?: number;
   doorSpec?: string;
   doorCount?: number;
   doorsSeparateFromFilm?: boolean;
@@ -96,7 +111,7 @@ export interface PublicSelection32 {
   elevator: boolean;
 }
 export const defaultPublicSelection = (): PublicSelection32 => ({
-  extraWork: {}, doorSpec: "unknown", doorCount: 1, doorsSeparateFromFilm: false,
+  extraWork: {}, moldingScope: "unknown", moldingRooms: 0, doorSpec: "unknown", doorCount: 1, doorsSeparateFromFilm: false,
   wallpaper: "keep", floor: "keep", bathrooms: [{ method: "keep", largeTile: false }, { method: "keep", largeTile: false }],
   kitchen: false, kitchenLengthM: 3, shoeCabinet: false, windows: false, film: false,
   windowScope: "unknown", filmDoors: 0, filmShoeCabinets: 0, filmEntryDoors: 0,
@@ -112,6 +127,9 @@ export function validatePublicSelection(value: unknown): string | null {
       if (!EXTRA_WORK_SCOPES.some(scope => scope.id === key) || !EXTRA_WORK_OPTIONS.some(option => option.id === choice)) return "추가 공사 범위의 선택이 올바르지 않습니다.";
     }
   }
+  if (!MOLDING_OPTIONS.some(o => o.id === (s.moldingScope ?? "unknown"))) return "몰딩 공사 범위를 확인해 주세요.";
+  if (s.moldingRooms !== undefined && ![0, 2, 3, 4].includes(s.moldingRooms)) return "몰딩 기준 방 개수를 확인해 주세요.";
+  if (s.extraWork?.carpentry !== "work" && ((s.moldingScope && s.moldingScope !== "unknown") || s.moldingRooms)) return "목공·몰딩 공사 선택을 확인해 주세요.";
   if (!DOOR_OPTIONS.some(o => o.id === (s.doorSpec ?? "unknown"))) return "방문 사양을 확인해 주세요.";
   if (s.doorCount !== undefined && (!Number.isInteger(s.doorCount) || s.doorCount < 1 || s.doorCount > 10)) return "방문 수량은 1~10개 정수로 입력해 주세요.";
   if (s.doorsSeparateFromFilm !== undefined && typeof s.doorsSeparateFromFilm !== "boolean") return "문 교체·필름 대상을 확인해 주세요.";
@@ -180,6 +198,22 @@ export function calculatePublicSelection(value: unknown) {
     if (parts.every(p => p.count === 0)) pending.push("필름 · 시공 부위·면적·가격 확인");
     else pending.push("필름 · 실제 대상 규격·표면 보수·부속품 및 여러 부위 동시시공 금액 확인");
   }
+  let pricedMolding = false;
+  if (s.extraWork?.carpentry === "work") {
+    const scope = s.moldingScope ?? "unknown";
+    const rooms = s.moldingRooms ?? 0;
+    if (scope !== "unknown" && rooms > 0) {
+      const prices = MOLDING_PRICES[rooms as keyof typeof MOLDING_PRICES];
+      const withWood = ["wood", "widewood"].includes(s.floor);
+      const pricedScope = withWood && scope === "both" ? "upper" : scope;
+      if (!(withWood && scope === "lower")) {
+        add("molding", `방 ${rooms}개 · ${MOLDING_OPTIONS.find(o => o.id === pricedScope)!.label} 예시`, prices[pricedScope as keyof typeof prices], "molding", 1, ["방 개수별 전체 몰딩 예시"]);
+        pricedMolding = true;
+        pending.push("몰딩 · 실측 길이·제품·기존 몰딩 철거·짐 이동·양중·마감 확인");
+      }
+      if (withWood && ["lower", "both"].includes(scope)) pending.push("하단 몰딩 · 마루 동시시공 이벤트 조건·포함 범위·금액 미확인 · 소계 제외");
+    }
+  }
   let pricedDoors = false;
   if (s.extraWork?.doors === "work") {
     const door = DOOR_OPTIONS.find(o => o.id === (s.doorSpec ?? "unknown"))!;
@@ -196,6 +230,10 @@ export function calculatePublicSelection(value: unknown) {
   const scopeChoices = EXTRA_WORK_SCOPES.map(scope => ({ id: scope.id, label: scope.label, choice: s.extraWork?.[scope.id] ?? "keep" }));
   for (const scope of scopeChoices) {
     if (scope.id === "doors" && pricedDoors) continue;
+    if (scope.id === "carpentry" && pricedMolding) {
+      pending.push("목공 · 선택 몰딩 외 천장·벽체·등박스 등의 공사 필요 여부와 금액 확인");
+      continue;
+    }
     if (scope.choice !== "keep") pending.push(`${scope.label} · ${scope.choice === "work" ? "공사/교체 희망" : "상담 후 결정"} · 범위·수량·금액 확인`);
   }
   const selectedCount = items.length + pending.length;
@@ -207,6 +245,7 @@ export function calculatePublicSelection(value: unknown) {
     area: { supplyPyung: 32, exampleExclusivePyung: 24 },
     items,
     scopeChoices,
+    moldingSelection: { scope: s.moldingScope ?? "unknown", rooms: s.moldingRooms ?? 0 },
     doorSelection: { spec: s.doorSpec ?? "unknown", count: s.extraWork?.doors === "work" ? s.doorCount ?? 1 : 0, separateFromFilm: s.doorsSeparateFromFilm ?? false },
     sourceIds: [...new Set(items.map(i => i.source))],
     pending: [...new Set(pending)],
@@ -221,6 +260,7 @@ export function formatWon(amount: number) { return `${amount.toLocaleString("ko-
 export function publicSelectionSummary(selection: PublicSelection32, quote: ReturnType<typeof calculatePublicSelection>) {
   return ["[32평 공종 선택형 공개가격 참고]", `조건: ${selection.occupied ? "거주 중" : "빈집"} / ${selection.expanded ? "확장" : "미확장"} / 엘리베이터 ${selection.elevator ? "있음" : "없음"}`,
     ...EXTRA_WORK_SCOPES.map(scope => `${scope.label}: ${EXTRA_WORK_OPTIONS.find(o => o.id === (selection.extraWork?.[scope.id] ?? "keep"))!.label}`),
+    ...(selection.extraWork?.carpentry === "work" ? [`몰딩 상세: ${MOLDING_OPTIONS.find(o => o.id === (selection.moldingScope ?? "unknown"))!.label} / 방 ${selection.moldingRooms || "개수 미확인"}${selection.moldingRooms ? "개" : ""}`] : []),
     ...(selection.extraWork?.doors === "work" ? [`방문 상세: ${DOOR_OPTIONS.find(o => o.id === (selection.doorSpec ?? "unknown"))!.label} / ${selection.doorCount ?? 1}개 / 필름과 다른 대상 확인: ${selection.doorsSeparateFromFilm ? "예" : "미확인"}`] : []),
     ...quote.items.map(i => `${i.label}: ${formatWon(i.amount)}`),
     `가격 확인 항목 소계: ${quote.subtotalWon === null ? "산출 항목 없음" : formatWon(quote.subtotalWon)}`,

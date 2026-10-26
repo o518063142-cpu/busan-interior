@@ -165,3 +165,35 @@ test("방문 상세는 잘못된 사양·수량·상태를 거부하고 이전 �
   const s = defaultPublicSelection(); delete s.doorSpec; delete s.doorCount; delete s.doorsSeparateFromFilm;
   assert.equal(calculatePublicSelection(s).subtotalWon, null);
 });
+
+
+test("몰딩은 실제 방 개수별 전체 가격이며 방 수로 곱하지 않는다", () => {
+  for (const [rooms, upper, lower, both] of [[2,650000,450000,1100000],[3,700000,500000,1200000],[4,900000,600000,1500000]]) {
+    for (const [scope, amount] of [["upper",upper],["lower",lower],["both",both]] as const) {
+      const s = { ...defaultPublicSelection(), extraWork: { carpentry: "work" as const }, moldingRooms: rooms, moldingScope: scope };
+      const quote = calculatePublicSelection(s);
+      assert.equal(quote.subtotalWon, amount);
+      assert.equal(quote.items[0].quantity, 1);
+      assert.equal(quote.moldingSelection.rooms, rooms);
+      assert.match(publicSelectionSummary(s, quote), /몰딩 상세:/);
+    }
+  }
+});
+test("마루 동시시공 하단 몰딩의 미확인 행사 금액을 합산하지 않는다", () => {
+  const s = { ...defaultPublicSelection(), floor: "wood", extraWork: { carpentry: "work" as const }, moldingRooms: 3 };
+  assert.equal(calculatePublicSelection({ ...s, moldingScope: "lower" }).subtotalWon,2640000);
+  const both = calculatePublicSelection({ ...s, moldingScope: "both" });
+  assert.equal(both.subtotalWon,3340000);
+  assert.ok(both.pending.some(p => p.includes("하단 몰딩") && p.includes("소계 제외")));
+  assert.match(both.items.find(i => i.id === "molding")!.label, /상단 몰딩/);
+  assert.equal(calculatePublicSelection({ ...s, floor: "vinyl18", moldingScope: "both" }).subtotalWon,2112000);
+});
+test("몰딩 미확인 방 개수와 이전 버전은 가격을 만들지 않고 잘못된 입력은 거부한다", () => {
+  const s = { ...defaultPublicSelection(), extraWork: { carpentry: "work" as const }, moldingScope: "both" };
+  assert.equal(calculatePublicSelection(s).subtotalWon,null);
+  for (const patch of [{ moldingScope:"bad" },{ moldingRooms:1 },{ moldingRooms:3.5 },{ moldingRooms:"3" },{ moldingRooms:null },{ moldingRooms:3 }]) {
+    assert.ok(validatePublicSelection({ ...defaultPublicSelection(), ...patch }));
+  }
+  const old = defaultPublicSelection(); delete old.moldingRooms; delete old.moldingScope;
+  assert.equal(calculatePublicSelection(old).hasSelection,false);
+});

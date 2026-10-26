@@ -26,7 +26,9 @@ interface EstimateInput {
 
 const MODEL_NAME = process.env.GEMINI_MODEL || "gemini-3.6-flash";
 const MAX_ATTACHMENTS = 5;
-const MAX_UPLOAD_BYTES = 600 * 1024;
+const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
+const FIRESTORE_CHUNK_BYTES = 450 * 1024;
+const MAX_AI_ATTACHMENT_BYTES = 10 * 1024 * 1024;
 const ALLOWED_MIME_TYPES = new Set([
   "image/jpeg",
   "image/png",
@@ -60,8 +62,15 @@ function normalizeArea(value: unknown) {
 }
 
 async function readUploadBody(req: VercelRequest) {
-  if (Buffer.isBuffer(req.body)) return req.body;
-  if (typeof req.body === "string") return Buffer.from(req.body, "binary");
+  if (Buffer.isBuffer(req.body)) {
+    if (req.body.length > MAX_UPLOAD_BYTES) throw new Error("FILE_TOO_LARGE");
+    return req.body;
+  }
+  if (typeof req.body === "string") {
+    const buffer = Buffer.from(req.body, "binary");
+    if (buffer.length > MAX_UPLOAD_BYTES) throw new Error("FILE_TOO_LARGE");
+    return buffer;
+  }
 
   const chunks: Buffer[] = [];
   let total = 0;
@@ -92,7 +101,7 @@ async function handleUpload(req: VercelRequest, res: VercelResponse) {
 
   const declaredLength = Number(cleanHeader(req.headers["content-length"], 30));
   if (Number.isFinite(declaredLength) && declaredLength > MAX_UPLOAD_BYTES) {
-    return res.status(413).json({ success: false, error: "AI 분석용 첨부자료는 파일당 600KB 이하로 준비해 주세요." });
+    return res.status(413).json({ success: false, error: "파일당 최대 4MB까지 업로드할 수 있습니다." });
   }
 
   try {
@@ -107,22 +116,40 @@ async function handleUpload(req: VercelRequest, res: VercelResponse) {
       return res.status(503).json({ success: false, error: "첨부자료 저장 연결이 설정되지 않았습니다." });
     }
 
-    const docRef = await db.collection("aiEstimateUploads").add({
+    const uploadRef = db.collection("aiEstimateUploads").doc();
+    const expiresAt = Timestamp.fromMillis(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    const batch = db.batch();
+    const chunkCount = Math.ceil(buffer.length / FIRESTORE_CHUNK_BYTES);
+
+    batch.set(uploadRef, {
       sessionId,
       kind,
       name,
       mimeType,
       size: buffer.length,
-      dataBase64: buffer.toString("base64"),
+      chunkCount,
       createdAt: FieldValue.serverTimestamp(),
-      expiresAt: Timestamp.fromMillis(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      expiresAt,
     });
+
+    for (let index = 0; index < chunkCount; index += 1) {
+      const start = index * FIRESTORE_CHUNK_BYTES;
+      const end = Math.min(start + FIRESTORE_CHUNK_BYTES, buffer.length);
+      const chunk = buffer.subarray(start, end);
+      const chunkRef = uploadRef.collection("chunks").doc(String(index).padStart(3, "0"));
+      batch.set(chunkRef, {
+        index,
+        dataBase64: chunk.toString("base64"),
+      });
+    }
+
+    await batch.commit();
 
     return res.status(200).json({
       success: true,
       file: {
-        ref: docRef.id,
-        path: docRef.id,
+        ref: uploadRef.id,
+        path: uploadRef.id,
         name,
         mimeType,
         size: buffer.length,
@@ -131,7 +158,7 @@ async function handleUpload(req: VercelRequest, res: VercelResponse) {
     });
   } catch (error: any) {
     if (error?.message === "FILE_TOO_LARGE") {
-      return res.status(413).json({ success: false, error: "AI 분석용 첨부자료는 파일당 600KB 이하로 준비해 주세요." });
+      return res.status(413).json({ success: false, error: "파일당 최대 4MB까지 업로드할 수 있습니다." });
     }
     console.error("AI estimate attachment upload error:", error?.message || error);
     return res.status(500).json({ success: false, error: "첨부자료 저장 중 오류가 발생했습니다." });
@@ -194,29 +221,62 @@ function normalizeAttachments(body: EstimateInput) {
     .filter((item) => /^[A-Za-z0-9_-]{8,120}$/.test(item.ref) && ALLOWED_MIME_TYPES.has(item.mimeType));
 }
 
+async function rebuildStoredFile(snap: FirebaseFirestore.DocumentSnapshot) {
+  const data = snap.data() || {};
+
+  if (typeof data.dataBase64 === "string" && data.dataBase64) {
+    return Buffer.from(data.dataBase64, "base64");
+  }
+
+  const chunksSnap = await snap.ref.collection("chunks").orderBy("index", "asc").get();
+  const buffers = chunksSnap.docs
+    .map((chunkDoc) => chunkDoc.data()?.dataBase64)
+    .filter((value): value is string => typeof value === "string" && value.length > 0)
+    .map((value) => Buffer.from(value, "base64"));
+
+  return Buffer.concat(buffers);
+}
+
 async function loadAttachmentParts(sessionId: string, attachments: ReturnType<typeof normalizeAttachments>) {
   const parts: any[] = [];
-  if (!attachments.length) return parts;
+  const includedKinds: string[] = [];
+  const skippedNames: string[] = [];
+  let totalBytes = 0;
 
+  if (!attachments.length) return { parts, includedKinds, skippedNames };
   const db = await getFirestoreAdmin();
-  if (!db) return parts;
+  if (!db) return { parts, includedKinds, skippedNames };
 
-  for (const item of attachments) {
+  const prioritized = [...attachments].sort((a, b) => {
+    if (a.kind === b.kind) return 0;
+    return a.kind === "floorplan" ? -1 : 1;
+  });
+
+  for (const item of prioritized) {
     try {
       const snap = await db.collection("aiEstimateUploads").doc(item.ref).get();
       if (!snap.exists) continue;
       const data = snap.data() || {};
       if (data.sessionId !== sessionId) continue;
       if (!ALLOWED_MIME_TYPES.has(data.mimeType)) continue;
-      if (typeof data.dataBase64 !== "string" || !data.dataBase64) continue;
 
-      parts.push({ inlineData: { mimeType: data.mimeType, data: data.dataBase64 } });
+      const buffer = await rebuildStoredFile(snap);
+      if (!buffer.length) continue;
+      if (totalBytes + buffer.length > MAX_AI_ATTACHMENT_BYTES) {
+        skippedNames.push(data.name || item.name);
+        continue;
+      }
+
+      totalBytes += buffer.length;
+      includedKinds.push(data.kind || item.kind);
+      parts.push({ inlineData: { mimeType: data.mimeType, data: buffer.toString("base64") } });
       parts.push({ text: `[첨부자료 메모] 종류=${data.kind || item.kind}, 파일명=${data.name || item.name}` });
     } catch (error: any) {
       console.warn("AI attachment load skipped:", item.ref, error?.message || error);
     }
   }
-  return parts;
+
+  return { parts, includedKinds, skippedNames };
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -255,9 +315,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const ai = new GoogleGenAI({ apiKey });
-    const attachmentParts = await loadAttachmentParts(input.sessionId, attachments);
-    const hasFloorplan = attachments.some((item) => item.kind === "floorplan");
-    const photoCount = attachments.filter((item) => item.kind === "photo").length;
+    const loaded = await loadAttachmentParts(input.sessionId, attachments);
+    const photoCount = loaded.includedKinds.filter((kind) => kind === "photo").length;
+    const hasFloorplan = loaded.includedKinds.includes("floorplan");
 
     const prompt = `
 당신은 부산의 실내건축공사업 등록업체 '지니 인테리어'의 상담 보조 AI입니다.
@@ -281,8 +341,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 - 고객 예상 예산: ${input.budget}
 - 선호 스타일: ${input.style}
 - 추가 요청: ${input.details || "없음"}
-- 현장 사진 수: ${photoCount}장
-- 평면도 포함: ${hasFloorplan ? "예" : "아니오"}
+- AI 분석에 포함된 현장 사진: ${photoCount}장
+- AI 분석에 포함된 평면도: ${hasFloorplan ? "예" : "아니오"}
+- 용량 제한으로 이번 AI 분석에서 제외된 자료: ${loaded.skippedNames.length ? loaded.skippedNames.join(", ") : "없음"}
 
 [작성 기준]
 1. estimatedScope: 추천 주요 공사 범위 5~8개
@@ -297,7 +358,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const response = await ai.models.generateContent({
       model: MODEL_NAME,
-      contents: [{ role: "user", parts: [{ text: prompt }, ...attachmentParts] }] as any,
+      contents: [{ role: "user", parts: [{ text: prompt }, ...loaded.parts] }] as any,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -330,7 +391,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (!response.text) throw new Error("AI 응답 본문이 비어 있습니다.");
     const parsed = JSON.parse(response.text);
-    return res.status(200).json({ success: true, source: "gemini", attachmentCount: attachments.length, data: parsed });
+    return res.status(200).json({
+      success: true,
+      source: "gemini",
+      attachmentCount: attachments.length,
+      analyzedAttachmentCount: loaded.includedKinds.length,
+      skippedAttachmentNames: loaded.skippedNames,
+      data: parsed,
+    });
   } catch (error: any) {
     console.error("AI estimate API fallback:", error?.message || error);
     return res.status(200).json({ success: true, source: "calculated", warning: "AI 시각 분석을 사용할 수 없어 참고 계산 결과를 표시했습니다.", attachmentCount: attachments.length, data: fallback });

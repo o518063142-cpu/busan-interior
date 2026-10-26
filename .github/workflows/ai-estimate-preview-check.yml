@@ -23,7 +23,7 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 12
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
@@ -40,5 +40,16 @@ jobs:
         continue-on-error: true
         run: npm run lint
 
-      - name: Build
+      - name: Application build
         run: npm run build
+
+      - name: Install pinned Vercel CLI
+        run: npm install --no-save --no-audit --no-fund vercel@64.7.0
+
+      - name: Prepare Vercel project metadata
+        run: |
+          mkdir -p .vercel
+          printf '%s' '{"orgId":"team_klypeyZIZQxotXI79RX2W5cz","projectId":"prj_BSz0h3DyINWAqAmvB0MXhyjY18UA"}' > .vercel/project.json
+
+      - name: Vercel local build
+        run: npx vercel build --yes

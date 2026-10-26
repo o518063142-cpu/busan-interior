@@ -1,5 +1,5 @@
 // Public supplier examples and owner-approved customer rates; never import private cost/margin data.
-export const PUBLIC_CATALOG_VERSION = "public-32-2026-10-26-v9";
+export const PUBLIC_CATALOG_VERSION = "public-32-2026-10-26-v10";
 const checkedAt = "2026-10-26";
 export const PUBLIC_SOURCES = {
   geneFurniture: { name: "지니 인테리어 제공 가견적 기준", url: "/ai-estimate", region: "지니 기준 · 실측 후 확정", checkedAt, publishedAt: null, vat: "미확인", condition: "사업자 제공 검토용 단가. 싱크대 100만원/m(상·하부장+기본 상판), 신발장 60만원/m. 하이그로시 또는 PET 동일 기준. 상판 종류·신발장 높이·철거·설치·부가세·부속품 범위 미확인. 인터넷 공개가격과 구분." },
@@ -151,9 +151,14 @@ export const EXTRA_WORK_SCOPES = [
 export type ExtraWorkId = typeof EXTRA_WORK_SCOPES[number]["id"];
 export type ExtraWorkChoice = typeof EXTRA_WORK_OPTIONS[number]["id"];
 
+export const TILE_METHODS = [{ id: "unknown", label: "상담 후 결정" }, { id: "overlay", label: "기존 타일 위 덧방 검토" }, { id: "remove", label: "기존 타일 철거 후 재시공" }] as const;
+export const TILE_SIZES = [{ id: "unknown", label: "상담 후 선택" }, { id: "300", label: "300×300mm" }, { id: "600", label: "600×600mm" }, { id: "600x1200", label: "600×1200mm" }] as const;
+export type TileSelection = { areaM2: number | null; method: string; size: string; surface: "floor" | "floor-wall"; condition: "unknown" | "sound" | "damaged" | "leak" };
+export const defaultTileSelection = (): TileSelection => ({ areaM2: null, method: "unknown", size: "unknown", surface: "floor", condition: "unknown" });
 export interface PublicSelection32 {
   demolitionScope?: string;
   electricalWorks?: string[];
+  tileBySpace?: Partial<Record<"balconyTile" | "entranceTile", TileSelection>>;
   moldingBySpace?: Record<string, MoldingSpace>;
   /** Previous whole-home reference; never converted to a per-space rate. */
   moldingScope?: string;
@@ -198,6 +203,14 @@ export function validatePublicSelection(value: unknown): string | null {
     if (!s.extraWork || typeof s.extraWork !== "object" || Array.isArray(s.extraWork)) return "추가 공사 범위를 확인해 주세요.";
     for (const [key, choice] of Object.entries(s.extraWork)) {
       if (!EXTRA_WORK_SCOPES.some(scope => scope.id === key) || !EXTRA_WORK_OPTIONS.some(option => option.id === choice)) return "추가 공사 범위의 선택이 올바르지 않습니다.";
+    }
+  }
+  if (s.tileBySpace !== undefined) {
+    if (!s.tileBySpace || typeof s.tileBySpace !== "object" || Array.isArray(s.tileBySpace)) return "타일 공간을 확인해 주세요.";
+    for (const [space, tile] of Object.entries(s.tileBySpace)) {
+      if (!["balconyTile", "entranceTile"].includes(space) || s.extraWork?.[space as ExtraWorkId] !== "work") return "타일 공사 선택을 확인해 주세요.";
+      if (!tile || typeof tile !== "object" || Array.isArray(tile) || !TILE_METHODS.some(o => o.id === tile.method) || !TILE_SIZES.some(o => o.id === tile.size) || !["floor", "floor-wall"].includes(tile.surface) || !["unknown", "sound", "damaged", "leak"].includes(tile.condition)) return "타일 상세 선택을 확인해 주세요.";
+      if (tile.areaM2 !== null && (typeof tile.areaM2 !== "number" || !Number.isFinite(tile.areaM2) || tile.areaM2 <= 0 || tile.areaM2 > 200)) return "타일 면적은 0 초과 200㎡ 이하로 입력해 주세요.";
     }
   }
   if (!DEMOLITION_SCOPE_OPTIONS.some(o => o.id === (s.demolitionScope ?? "unknown"))) return "철거 범위를 확인해 주세요.";
@@ -340,6 +353,19 @@ export function calculatePublicSelection(value: unknown) {
     ? s.bathrooms.flatMap((bath, i) => bath.method === "full" ? [`욕실 ${i + 1} 전체철거+방수 패키지와 전체 철거의 범위·폐기비 중복 확인`] : []) : [];
   pending.push(...demolitionOverlapChecks);
   if (s.extraWork?.electrical === "work") for (const option of ELECTRICAL_WORK_OPTIONS.filter(o => s.electricalWorks?.includes(o.id))) pending.push(`전기·조명 · ${option.label} · 수량·현장 조건·금액 확인`);
+  const tileSelection = (["balconyTile", "entranceTile"] as const).filter(id => s.extraWork?.[id] === "work").map(id => {
+    const tile = s.tileBySpace?.[id] ?? defaultTileSelection();
+    const label = id === "balconyTile" ? "발코니 타일" : "현관 타일";
+    const methodLabel = TILE_METHODS.find(o => o.id === tile.method)!.label;
+    const sizeLabel = TILE_SIZES.find(o => o.id === tile.size)!.label;
+    const conditionLabel = ({ unknown: "상태 미확인", sound: "눈에 띄는 이상 없음", damaged: "들뜸·깨짐 있음", leak: "누수·배수 문제 있음" })[tile.condition];
+    const surfaceLabel = tile.surface === "floor" ? "바닥만" : "바닥+벽 (면적 합계)";
+    pending.push(`${label} · ${tile.areaM2 === null ? "면적 미확인" : `${tile.areaM2}㎡`} · ${methodLabel} · ${sizeLabel} · ${surfaceLabel} · ${conditionLabel} · 금액 별도 확인`);
+    if (tile.method === "overlay") pending.push(`${label} 덧방 가능 여부·문 간섭·단차 현장 확인`);
+    if (tile.method === "remove" && s.extraWork?.demolition === "work") pending.push(`${label} 철거·폐기와 별도 철거 공사의 포함 범위 중복 확인`);
+    if (tile.condition === "leak") pending.push(`${label} 누수 원인·배수·물매·방수 범위 확인 (타일 교체만으로 해결 확정 불가)`);
+    return { id, label, ...tile, methodLabel, sizeLabel, surfaceLabel, conditionLabel, pricingStatus: "pending" as const, excludedFromSubtotal: true as const };
+  });
   const scopeChoices = EXTRA_WORK_SCOPES.map(scope => ({ id: scope.id, label: scope.label, choice: s.extraWork?.[scope.id] ?? "keep" }));
   for (const scope of scopeChoices) {
     if (scope.id === "doors" && pricedDoors) continue;
@@ -358,6 +384,7 @@ export function calculatePublicSelection(value: unknown) {
     area: { supplyPyung: 32, exampleExclusivePyung: 24 },
     items,
     scopeChoices,
+    tileSelection,
     additionalWorkSelection: { demolitionScope: s.demolitionScope ?? "unknown", electricalWorks: [...(s.electricalWorks ?? [])] },
     additionalWorkReferences: workReferences,
     additionalReferenceSourceIds: [...new Set(workReferences.map(reference => reference.source))],
@@ -388,6 +415,7 @@ export function publicSelectionSummary(selection: PublicSelection32, quote: Retu
     ...quote.moldingReferences.map(reference => `몰딩 공개 단가 참고 (소계 제외·예시 사양): ${reference.label} / ${formatWon(reference.minWonPerM)}~${formatWon(reference.maxWonPerM)}/m / 부가세 ${reference.vat} / 최소 시공비 미확인 / ${reference.sourceName} / ${reference.url} / 확인일 ${reference.checkedAt}`),
     ...(quote.moldingSelection.legacyReference ? [`이전 몰딩 선택: ${quote.moldingSelection.legacyReference.scope} / 방 ${quote.moldingSelection.legacyReference.rooms || "개수 미확인"} · 공간별 범위 재확인 필요`] : []),
     ...(selection.extraWork?.doors === "work" ? [`방문 상세: ${DOOR_OPTIONS.find(o => o.id === (selection.doorSpec ?? "unknown"))!.label} / ${selection.doorCount ?? 1}개 / 필름과 다른 대상 확인: ${selection.doorsSeparateFromFilm ? "예" : "미확인"}`] : []),
+    ...quote.tileSelection.map(tile => `타일 상세: ${tile.label} / ${tile.areaM2 === null ? "면적 미확인" : `${tile.areaM2}㎡`} / ${tile.methodLabel} / ${tile.sizeLabel} / ${tile.surfaceLabel} / ${tile.conditionLabel} / 금액 별도 확인·소계 제외`),
     ...quote.items.map(i => `${i.label}: ${formatWon(i.amount)} / 출처: ${PUBLIC_SOURCES[i.source].name}`),
     `지니 기준 소계: ${formatWon(quote.geneSubtotalWon)} / 타 업체 공개가격 소계: ${formatWon(quote.publicSubtotalWon)}`,
     `가격 확인 항목 소계: ${quote.subtotalWon === null ? "산출 항목 없음" : formatWon(quote.subtotalWon)}`,

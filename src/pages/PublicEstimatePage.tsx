@@ -7,6 +7,7 @@ import { SITE_CONFIG } from "../config/siteConfig";
 import { db } from "../firebase";
 import { getConversionSessionId, trackEstimateEvent } from "../utils/conversionTracking";
 import {
+  TILE_METHODS, TILE_SIZES, defaultTileSelection,
   WALLPAPER_OPTIONS, FLOOR_OPTIONS, BATHROOM_OPTIONS, PUBLIC_SOURCES, WINDOW_OPTIONS,
   FILM_QUANTITY_OPTIONS, filmPrice, DOOR_OPTIONS, MOLDING_SPACES, MOLDING_PARTS, MOLDING_METHODS, defaultMoldingSpace, getMoldingReference, DEMOLITION_SCOPE_OPTIONS, ELECTRICAL_WORK_OPTIONS, EXTRA_WORK_SCOPES, EXTRA_WORK_OPTIONS,
   type ExtraWorkChoice, type MoldingMethod, type MoldingSpace,
@@ -164,8 +165,22 @@ export function PublicEstimatePage() {
           <h2 className="font-black text-lg">9. 추가 공사 범위</h2>
           <p className="text-xs text-stone-600 mt-2 leading-5">원하는 공사를 선택해 주세요. 방문은 사양·수량과 적용 조건을 확인해 공개가격 소계에 반영하며, 몰딩 등 가격이 확인되지 않은 공사는 상담 확인 대상으로 전달됩니다.</p>
           <div className="space-y-4 mt-4">{EXTRA_WORK_SCOPES.map(scope => <div key={scope.id}>
-            <label className="block text-sm font-bold">{scope.label}<select aria-label={scope.label} className={control} value={selection.extraWork?.[scope.id] ?? "keep"} onChange={e => update({ extraWork: { ...selection.extraWork, [scope.id]: e.target.value as ExtraWorkChoice }, ...(scope.id === "demolition" ? { demolitionScope: "unknown" } : {}), ...(scope.id === "electrical" ? { electricalWorks: [] } : {}), ...(scope.id === "doors" ? { doorSpec: "unknown", doorCount: 1, doorsSeparateFromFilm: false } : {}), ...(scope.id === "carpentry" ? { moldingBySpace: {}, moldingScope: "unknown", moldingRooms: 0 } : {}) })}>{EXTRA_WORK_OPTIONS.map(option => <option key={option.id} value={option.id}>{option.label}</option>)}</select></label>
+            <label className="block text-sm font-bold">{scope.label}<select aria-label={scope.label} className={control} value={selection.extraWork?.[scope.id] ?? "keep"} onChange={e => update({ extraWork: { ...selection.extraWork, [scope.id]: e.target.value as ExtraWorkChoice }, ...(["balconyTile", "entranceTile"].includes(scope.id) ? { tileBySpace: Object.fromEntries(Object.entries(selection.tileBySpace ?? {}).filter(([key]) => key !== scope.id)) } : {}), ...(scope.id === "demolition" ? { demolitionScope: "unknown" } : {}), ...(scope.id === "electrical" ? { electricalWorks: [] } : {}), ...(scope.id === "doors" ? { doorSpec: "unknown", doorCount: 1, doorsSeparateFromFilm: false } : {}), ...(scope.id === "carpentry" ? { moldingBySpace: {}, moldingScope: "unknown", moldingRooms: 0 } : {}) })}>{EXTRA_WORK_OPTIONS.map(option => <option key={option.id} value={option.id}>{option.label}</option>)}</select></label>
             <p className="text-xs text-stone-500 mt-2 leading-5">{scope.detail}</p>
+            {(scope.id === "balconyTile" || scope.id === "entranceTile") && selection.extraWork?.[scope.id] === "work" && (() => {
+              const id = scope.id as "balconyTile" | "entranceTile";
+              const tile = selection.tileBySpace?.[id] ?? defaultTileSelection();
+              const change = (patch: Partial<typeof tile>) => update({ tileBySpace: { ...selection.tileBySpace, [id]: { ...tile, ...patch } } });
+              return <div className="rounded-xl bg-stone-50 p-3 mt-3 space-y-3" data-testid={`tile-detail-${id}`}>
+                <label className="block text-sm">{scope.label} 시공 면적(㎡)<input aria-label={`${scope.label} 시공 면적(㎡)`} className={control} type="number" min="0.01" max="200" step="0.01" value={tile.areaM2 ?? ""} onChange={e => { const n = Number(e.target.value); if (!e.target.value) change({ areaM2: null }); else if (Number.isFinite(n) && n > 0 && n <= 200) change({ areaM2: n }); }} /></label>
+                <p className="text-xs text-stone-600">모르면 비워 두세요. 여러 발코니는 시공할 부분의 면적을 합쳐 입력합니다. 32평에서 면적을 자동 추정하지 않습니다.</p>
+                <label className="block text-sm">시공 범위<select aria-label={`${scope.label} 시공 범위`} className={control} value={tile.surface} onChange={e => change({ surface: e.target.value as typeof tile.surface })}><option value="floor">바닥만</option><option value="floor-wall">바닥+벽 (입력 면적은 합계)</option></select></label>
+                <label className="block text-sm">시공 방식<select aria-label={`${scope.label} 시공 방식`} className={control} value={tile.method} onChange={e => change({ method: e.target.value })}>{TILE_METHODS.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}</select></label>
+                <label className="block text-sm">타일 규격<select aria-label={`${scope.label} 규격`} className={control} value={tile.size} onChange={e => change({ size: e.target.value })}>{TILE_SIZES.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}</select></label>
+                <label className="block text-sm">기존 상태<select aria-label={`${scope.label} 기존 상태`} className={control} value={tile.condition} onChange={e => change({ condition: e.target.value as typeof tile.condition })}><option value="unknown">잘 모르겠음</option><option value="sound">눈에 띄는 이상 없음</option><option value="damaged">들뜸·깨짐 있음</option><option value="leak">누수·배수 문제 있음</option></select></label>
+                <p className="text-xs text-amber-800 leading-5">면적·시공 방식은 상담으로 전달합니다. 자재·부자재·최소 공임·철거·폐기·줄눈·방수·부가세를 포함한 가격은 실측 후 안내하며 현재 소계에 포함되지 않습니다. 덧방의 문 간섭·단차, 발코니 배수·물매도 확인합니다.</p>
+              </div>;
+            })()}
             {scope.id === "demolition" && selection.extraWork?.demolition === "work" && <div className="rounded-xl bg-stone-50 p-3 mt-3 space-y-3">
               <label className="block text-sm">철거 범위<select aria-label="철거 범위" className={control} value={selection.demolitionScope ?? "unknown"} onChange={e => update({ demolitionScope: e.target.value })}>{DEMOLITION_SCOPE_OPTIONS.map(option => <option key={option.id} value={option.id}>{option.label}</option>)}</select></label>
               {selection.demolitionScope === "partial" && <p className="text-xs text-stone-600">부분 철거에는 전체 철거 참고가격을 적용하지 않습니다. 철거 대상·폐기물 양을 상담으로 확인합니다.</p>}

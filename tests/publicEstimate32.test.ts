@@ -324,3 +324,21 @@ test("지니 가구 기준은 출처를 분리하고 길이와 마감 선택을 
   assert.ok(validatePublicSelection({ ...base, film: true, filmShoeCabinets: 1 }));
   assert.equal(calculatePublicSelection({ ...defaultPublicSelection(), kitchen: true }).subtotalWon, 2700000);
 });
+
+test("타일은 공간별 면적·방식·규격을 보존하고 미확인 가격을 합산하지 않는다", () => {
+  const s = { ...defaultPublicSelection(), extraWork: { balconyTile: "work" as const, entranceTile: "work" as const, demolition: "work" as const }, demolitionScope: "whole", tileBySpace: { balconyTile: { areaM2: 12.5, method: "remove", size: "300", surface: "floor" as const, condition: "leak" as const }, entranceTile: { areaM2: 2.2, method: "overlay", size: "600", surface: "floor" as const, condition: "sound" as const } } };
+  const q = calculatePublicSelection(s);
+  assert.equal(q.subtotalWon, null);
+  assert.equal(q.tileSelection.length, 2);
+  assert.equal(q.tileSelection[0].areaM2,12.5);
+  assert.ok(q.tileSelection.every(t => t.excludedFromSubtotal && t.pricingStatus === "pending"));
+  assert.match(q.pending.join(' '), /철거·폐기와 별도 철거/);
+  assert.match(q.pending.join(' '), /누수 원인/);
+  assert.match(q.pending.join(' '), /문 간섭/);
+  assert.match(publicSelectionSummary(s,q), /현관 타일 \/ 2.2㎡/);
+  assert.equal(calculatePublicSelection({ ...defaultPublicSelection(), extraWork: { balconyTile: "work" } }).tileSelection[0].areaM2,null);
+  for (const areaM2 of [0,-1,201,NaN,Infinity,"2"]) assert.ok(validatePublicSelection({ ...s,tileBySpace: { balconyTile: {...s.tileBySpace.balconyTile,areaM2} } }));
+  assert.ok(validatePublicSelection({ ...s,extraWork: { balconyTile: "keep" } }));
+  assert.ok(validatePublicSelection({ ...s,tileBySpace: { bedroom: s.tileBySpace.balconyTile } }));
+  assert.ok(validatePublicSelection({ ...s,tileBySpace: { balconyTile: {...s.tileBySpace.balconyTile,method:"invented"} } }));
+});

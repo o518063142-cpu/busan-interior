@@ -31,6 +31,14 @@
       "dest": "/api/ai-estimate?mode=upload"
     },
     {
+      "src": "/api/ai-leads/?$",
+      "dest": "/api/funnel-metrics?mode=leads"
+    },
+    {
+      "src": "/api/ai-estimate-attachment/?$",
+      "dest": "/api/funnel-metrics?mode=attachment"
+    },
+    {
       "src": "/admin/ai-leads/?$",
       "dest": "/index.html"
     },

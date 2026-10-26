@@ -30,14 +30,21 @@ export async function handleAiLeadList(
   const leads = snap.docs
     .map((doc) => {
       const data = doc.data() as any;
-      const isAiLead = data.source === "ai-estimate" ||
+      const isAiLead =
+        data.source === "ai-estimate" ||
         (typeof data.details === "string" && data.details.includes(AI_MARKER));
       if (!isAiLead) return null;
 
       const createdAt = data.createdAt?.toDate?.()?.toISOString?.() || null;
-      const attachmentPaths = Array.isArray(data.attachmentPaths) ? data.attachmentPaths.slice(0, 5) : [];
-      const attachmentNames = Array.isArray(data.attachmentNames) ? data.attachmentNames.slice(0, 5) : [];
-      const attachmentKinds = Array.isArray(data.attachmentKinds) ? data.attachmentKinds.slice(0, 5) : [];
+      const attachmentPaths = Array.isArray(data.attachmentPaths)
+        ? data.attachmentPaths.slice(0, 5)
+        : [];
+      const attachmentNames = Array.isArray(data.attachmentNames)
+        ? data.attachmentNames.slice(0, 5)
+        : [];
+      const attachmentKinds = Array.isArray(data.attachmentKinds)
+        ? data.attachmentKinds.slice(0, 5)
+        : [];
 
       return {
         id: doc.id,
@@ -52,6 +59,8 @@ export async function handleAiLeadList(
         source: asString(data.source, "ai-estimate"),
         sessionId: asString(data.sessionId),
         genePlanStatus: asString(data.genePlanStatus),
+        genePlanDraftVersion: asString(data.genePlanDraftVersion),
+        genePlanDraft: data.genePlanDraft || null,
         createdAt,
         aiEstimateSnapshot: data.aiEstimateSnapshot || null,
         attachments: attachmentPaths.map((ref: string, index: number) => ({

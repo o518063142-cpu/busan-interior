@@ -19,7 +19,7 @@ const card = "rounded-2xl border border-stone-200 bg-white p-5 sm:p-6";
 const choiceLabel = (o: { label: string; price: number | null }) => `${o.label}${o.price === null ? "" : ` · ${formatWon(o.price)}`}`;
 
 export function PublicEstimatePage() {
-  const [selection, setSelection] = useState(defaultPublicSelection);
+  const [selection, setSelection] = useState(() => ({ ...defaultPublicSelection(), furnitureBasis: "gene" as const }));
   const quote = useMemo(() => calculatePublicSelection(selection), [selection]);
   const [contact, setContact] = useState({ name: "", phone: "", location: "", details: "" });
   const [consent, setConsent] = useState(false);
@@ -93,7 +93,7 @@ export function PublicEstimatePage() {
     <header className="rounded-3xl bg-stone-950 text-white p-6 sm:p-10 space-y-4">
       <p className="text-amber-300 text-xs font-bold tracking-wide">지니 인테리어 · 공종 선택형 예상견적</p>
       <h1 className="text-3xl sm:text-4xl font-black break-keep leading-tight">원하는 공사를 고르면,<br />예상 금액이 바로 바뀝니다.</h1>
-      <p className="text-stone-300 text-sm leading-6 max-w-3xl">공급 32평 아파트를 기준으로 공종과 자재를 선택해 보세요. 인터넷에 공개된 타 업체 견적을 참고하며, 지니 인테리어의 확정 견적은 상담·실측 후 안내합니다.</p>
+      <p className="text-stone-300 text-sm leading-6 max-w-3xl">공급 32평 아파트를 기준으로 공종과 자재를 선택해 보세요. 타 업체 공개가격과 지니의 가구 기준단가를 구분해 참고하며, 지니 인테리어의 확정 견적은 상담·실측 후 안내합니다.</p>
     </header>
     <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-stone-700 leading-6">
       기준은 <strong>공급 32평 · 전용 약 24평 예시</strong>입니다. 실제 도면의 면적과 다를 수 있습니다. 원문마다 부가세·철거·보양 조건이 달라, 아래 소계는 전체 공사 총액이 아닙니다.
@@ -134,7 +134,7 @@ export function PublicEstimatePage() {
         <section className={card}>
           <h2 className="font-black text-lg">5. 주방</h2>
           <label className="flex items-center gap-2 text-sm mt-4"><input type="checkbox" checked={selection.kitchen} onChange={e => update({ kitchen: e.target.checked })} />주방 기본 구성 교체</label>
-          {selection.kitchen && <div className="mt-4 space-y-3"><label className="block text-sm">주방 길이(m)<input aria-label="주방 길이(m)" className={control} type="number" min="1" max="12" step="0.1" value={selection.kitchenLengthM} onChange={e => { const n = Number(e.target.value); if (Number.isFinite(n) && n >= 1 && n <= 12) update({ kitchenLengthM: n }); }} /></label><p className="text-xs text-stone-500 leading-5">상·하부장, 기본 상판·후드·수전·싱크볼 예시입니다. ㄱ/ㄷ자는 연결부를 포함한 총 길이를 확인해야 하며 기존 가구 철거·설비 이동 등은 별도입니다.</p></div>}
+          {selection.kitchen && <div className="mt-4 space-y-3"><label className="block text-sm">싱크대 마감재<select aria-label="싱크대 마감재" className={control} value={selection.kitchenFinish ?? "unknown"} onChange={e => update({ kitchenFinish: e.target.value as PublicSelection32["kitchenFinish"] })}><option value="unknown">상담 후 선택</option><option value="highgloss">하이그로시</option><option value="pet">PET</option></select></label><label className="block text-sm">주방 길이(m)<input aria-label="주방 길이(m)" className={control} type="number" min="1" max="12" step="0.1" value={selection.kitchenLengthM} onChange={e => { const n = Number(e.target.value); if (Number.isFinite(n) && n >= 1 && n <= 12) update({ kitchenLengthM: n }); }} /></label><p className="text-xs text-stone-500 leading-5">지니 기준 100만원/m · 상·하부장과 기본 상판 포함. 하이그로시·PET 동일 기준입니다. 상판 종류·후드·수전·싱크볼·철거·설치·부가세는 확인이 필요합니다. ㄱ/ㄷ자 꺾임 구간은 실측 후 확정합니다.</p></div>}
         </section>
         <section className={card}>
           <h2 className="font-black text-lg">6. 샤시</h2>
@@ -157,7 +157,8 @@ export function PublicEstimatePage() {
         <section className={card}>
           <h2 className="font-black text-lg">8. 신발장</h2>
           <label className="flex items-center gap-2 text-sm mt-4"><input type="checkbox" checked={selection.shoeCabinet} onChange={e => update({ shoeCabinet: e.target.checked, filmShoeCabinets: e.target.checked ? 0 : selection.filmShoeCabinets ?? 0 })} />신발장 교체</label>
-          <p className="text-xs text-stone-500 leading-5 mt-3">신발장은 크기·도어 사양·현장 설치 및 철거 범위를 확인한 후 별도 안내합니다. 교체와 같은 대상의 필름 시공을 중복해서 계산하지 않습니다.</p>
+          {selection.shoeCabinet && <div className="mt-4 space-y-3"><label className="block text-sm">신발장 가로 길이(m)<input aria-label="신발장 가로 길이(m)" className={control} type="number" min="0.3" max="12" step="0.1" value={selection.shoeCabinetLengthM ?? ""} onChange={e => { const n = Number(e.target.value); if (e.target.value === "") update({ shoeCabinetLengthM: null }); else if (Number.isFinite(n) && n >= 0.3 && n <= 12) update({ shoeCabinetLengthM: n }); }} /></label><label className="block text-sm">신발장 마감재<select aria-label="신발장 마감재" className={control} value={selection.shoeCabinetFinish ?? "unknown"} onChange={e => update({ shoeCabinetFinish: e.target.value as PublicSelection32["shoeCabinetFinish"] })}><option value="unknown">상담 후 선택</option><option value="highgloss">하이그로시</option><option value="pet">PET</option></select></label></div>}
+          <p className="text-xs text-stone-500 leading-5 mt-3">지니 기준 60만원/m · 기본 하이그로시 또는 PET. 높이·깊이·철거·설치·부가세는 확인이 필요합니다. 길이를 입력하기 전에는 금액을 합산하지 않습니다. 같은 신발장 교체와 필름은 중복 계산하지 않습니다.</p>
         </section>
         <section className={card}>
           <h2 className="font-black text-lg">9. 추가 공사 범위</h2>
@@ -233,7 +234,7 @@ export function PublicEstimatePage() {
         </section>}
         <section className={card}>
           <h3 className="font-black text-lg">이 선택으로 실측 상담</h3>
-          <p className="text-xs text-stone-500 mt-2">선택 내역과 공개가격 소계, 별도 확인 항목을 함께 전달합니다.</p>
+          <p className="text-xs text-stone-500 mt-2">선택 내역과 출처별 참고 소계, 별도 확인 항목을 함께 전달합니다.</p>
           {saved ? <div role="status" className="mt-4 rounded-xl bg-emerald-50 p-4 text-emerald-800"><CheckCircle2 className="w-6 h-6 mb-2" /><strong>상담 신청이 접수되었습니다.</strong><p className="text-sm mt-2">담당자가 선택하신 공사 범위를 확인한 뒤 연락드립니다.</p>{notice && <p className="text-xs mt-2">{notice}</p>}</div> : <form onSubmit={submit} className="mt-4 space-y-3">
             <fieldset disabled={busy} className="space-y-3 min-w-0">
               <input aria-label="이름" autoComplete="name" placeholder="이름" required maxLength={50} className={control} value={contact.name} onChange={e => setContact({ ...contact, name: e.target.value })} />
@@ -251,8 +252,8 @@ export function PublicEstimatePage() {
     </div>
     <details className={card}>
       <summary className="font-bold cursor-pointer">가격 출처와 적용 조건 확인 · 2026.10.26 확인</summary>
-      <p className="text-sm text-stone-600 mt-4">업체별 공개 견적 예시를 사용하며 전국 평균이나 부산 시세를 뜻하지 않습니다. 원문 부가세 기준과 게시일이 확인되지 않은 자료는 미확인으로 남겼습니다. 선택하지 않은 공종은 포함되지 않습니다.</p>
-      <div className="grid md:grid-cols-2 gap-4 mt-4">{Object.entries(PUBLIC_SOURCES).map(([key, source]) => <div key={key} className="rounded-xl bg-stone-50 p-4 text-xs leading-6"><a target="_blank" rel="noopener noreferrer" href={source.url} className="font-bold underline inline-flex gap-1 items-center">{source.name}<ArrowUpRight className="w-3 h-3" /></a><p>{source.condition}</p><p className="text-stone-500">지역: {source.region} · 부가세: {source.vat} · 확인일: {source.checkedAt}</p></div>)}</div>
+      <p className="text-sm text-stone-600 mt-4">가구는 지니 제공 기준단가, 그 외 항목은 업체별 공개 견적 예시를 사용합니다. 전국 평균이나 부산 시세를 뜻하지 않습니다. 원문 부가세 기준과 게시일이 확인되지 않은 자료는 미확인으로 남겼습니다. 선택하지 않은 공종은 포함되지 않습니다.</p>
+      <p className="text-sm mt-3">지니 기준: {formatWon(quote.geneSubtotalWon)} · 타 업체 공개가격: {formatWon(quote.publicSubtotalWon)} (선택 공종 참고 소계)</p><div className="grid md:grid-cols-2 gap-4 mt-4">{Object.entries(PUBLIC_SOURCES).map(([key, source]) => <div key={key} className="rounded-xl bg-stone-50 p-4 text-xs leading-6"><a target="_blank" rel="noopener noreferrer" href={source.url} className="font-bold underline inline-flex gap-1 items-center">{source.name}<ArrowUpRight className="w-3 h-3" /></a><p>{source.condition}</p><p className="text-stone-500">지역: {source.region} · 부가세: {source.vat} · 확인일: {source.checkedAt}</p></div>)}</div>
     </details>
     <Link to="/ai-estimate?mode=photos" className="block text-center text-sm font-bold text-stone-600 underline py-4">사진·평면도를 첨부해 상담하고 싶어요</Link>
   </div>;

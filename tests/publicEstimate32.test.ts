@@ -304,3 +304,23 @@ test("이전 입력에 철거·전기 참고를 임의 추가하지 않고 선�
   assert.equal(calculatePublicSelection(s).additionalWorkReferences.length,1);
   assert.equal(calculatePublicSelection({ ...s,electricalWorks:[] }).additionalWorkReferences.length,0);
 });
+
+test("지니 가구 기준은 출처를 분리하고 길이와 마감 선택을 보존한다", () => {
+  const base = { ...defaultPublicSelection(), furnitureBasis: "gene" as const, kitchen: true, kitchenLengthM: 6, kitchenFinish: "pet" as const, shoeCabinet: true, shoeCabinetLengthM: 1.2, shoeCabinetFinish: "highgloss" as const, wallpaper: "paper" };
+  const q = calculatePublicSelection(base);
+  assert.equal(q.geneSubtotalWon, 6720000);
+  assert.equal(q.publicSubtotalWon, 1290000);
+  assert.equal(q.subtotalWon, 8010000);
+  assert.equal(q.items.find(i => i.id === "kitchen")?.source, "geneFurniture");
+  assert.deepEqual(q.items.find(i => i.id === "kitchen")?.includes, ["상·하부장", "기본 상판"]);
+  assert.match(publicSelectionSummary(base, q), /PET/);
+  assert.match(publicSelectionSummary(base, q), /하이그로시/);
+  assert.match(q.pending.join(" "), /부가세/);
+  assert.equal(q.totalIsComplete, false);
+  assert.equal(calculatePublicSelection({ ...base, kitchenFinish: "highgloss", shoeCabinetFinish: "pet" }).subtotalWon, q.subtotalWon);
+  assert.equal(calculatePublicSelection({ ...base, kitchen: false, wallpaper: "keep", shoeCabinetLengthM: null }).subtotalWon, null);
+  for (const length of [-1, 0, 0.2, 13, Infinity, NaN]) assert.ok(validatePublicSelection({ ...base, shoeCabinetLengthM: length }));
+  assert.ok(validatePublicSelection({ ...base, kitchenFinish: "invented" }));
+  assert.ok(validatePublicSelection({ ...base, film: true, filmShoeCabinets: 1 }));
+  assert.equal(calculatePublicSelection({ ...defaultPublicSelection(), kitchen: true }).subtotalWon, 2700000);
+});

@@ -1,7 +1,8 @@
-// Public supplier estimates only; never import GENE's private cost/margin data.
-export const PUBLIC_CATALOG_VERSION = "public-32-2026-10-26-v8";
+// Public supplier examples and owner-approved customer rates; never import private cost/margin data.
+export const PUBLIC_CATALOG_VERSION = "public-32-2026-10-26-v9";
 const checkedAt = "2026-10-26";
 export const PUBLIC_SOURCES = {
+  geneFurniture: { name: "지니 인테리어 제공 가견적 기준", url: "/ai-estimate", region: "지니 기준 · 실측 후 확정", checkedAt, publishedAt: null, vat: "미확인", condition: "사업자 제공 검토용 단가. 싱크대 100만원/m(상·하부장+기본 상판), 신발장 60만원/m. 하이그로시 또는 PET 동일 기준. 상판 종류·신발장 높이·철거·설치·부가세·부속품 범위 미확인. 인터넷 공개가격과 구분." },
   wallpaper: { name: "의정부 부부도배사", url: "https://eamu.info/web/service/wallpaper-cost-32py/", region: "의정부·양주", checkedAt, publishedAt: null, vat: "미확인", condition: "공급 32평·천장 포함. 자재·공임·부자재·폐기물·식대 포함. 확장·보수·짐 이동은 현장 확인." },
   premium: { name: "마미견적서 도배", url: "https://www.mommyestimate.com/estimation/papering", region: "부산 적용 미확인", checkedAt, publishedAt: null, vat: "미확인", condition: "공급 32평/전용 24평 예시·빈집·미확장·엘리베이터 있음·천장 포함." },
   vinyl: { name: "마미견적서 장판", url: "https://www.mommyestimate.com/estimation/floor/jangpan", region: "부산 적용 미확인", checkedAt, publishedAt: null, vat: "미확인", condition: "공급 32평/전용 24평 예시·빈집·미확장·엘리베이터 있음. 기존 바닥 철거·바탕 보수 포함 여부 미확인." },
@@ -166,6 +167,10 @@ export interface PublicSelection32 {
   bathrooms: Array<{ method: string; largeTile: boolean }>;
   kitchen: boolean;
   kitchenLengthM: number;
+  furnitureBasis?: "gene";
+  kitchenFinish?: "unknown" | "highgloss" | "pet";
+  shoeCabinetFinish?: "unknown" | "highgloss" | "pet";
+  shoeCabinetLengthM?: number | null;
   shoeCabinet: boolean;
   windows: boolean;
   film: boolean;
@@ -234,6 +239,9 @@ export function validatePublicSelection(value: unknown): string | null {
     if (!s.film && count) return "필름 공사 선택을 확인해 주세요.";
   }
   if (s.shoeCabinet && s.filmShoeCabinets) return "같은 신발장의 교체와 필름 시공을 동시에 계산할 수 없습니다.";
+  if (s.furnitureBasis !== undefined && s.furnitureBasis !== "gene") return "가구 기준을 확인해 주세요.";
+  for (const finish of [s.kitchenFinish, s.shoeCabinetFinish]) if (finish !== undefined && !["unknown", "highgloss", "pet"].includes(finish)) return "가구 마감재를 확인해 주세요.";
+  if (s.shoeCabinetLengthM !== undefined && s.shoeCabinetLengthM !== null && (!Number.isFinite(s.shoeCabinetLengthM) || s.shoeCabinetLengthM < 0.3 || s.shoeCabinetLengthM > 12)) return "신발장 길이는 0.3~12m 사이로 입력해 주세요.";
   if (!Number.isFinite(s.kitchenLengthM) || s.kitchenLengthM < 1 || s.kitchenLengthM > 12) return "주방 길이는 1~12m 사이로 입력해 주세요.";
   return null;
 }
@@ -262,12 +270,26 @@ export function calculatePublicSelection(value: unknown) {
     pending.push(`욕실 ${i + 1} 크기·도기 사양 및 철거·폐기·양중 포함 범위`);
     if (bath.method === "overlay") pending.push(`욕실 ${i + 1} 덧방 가능 여부·기존 방수 상태`);
   });
+  const finishLabel = (finish?: string) => finish === "highgloss" ? "하이그로시" : finish === "pet" ? "PET" : "마감재 미선택";
   if (s.kitchen) {
     const millimeters = Math.round(s.kitchenLengthM * 1000);
-    add("kitchen", `주방 기본 구성 · ${(millimeters / 1000).toFixed(1)}m`, millimeters * 900, "kitchen", millimeters, ["상·하부장", "기본 상판·후드·수전·싱크볼"]);
-    pending.push("주방 기존 가구 철거·폐기·양중·설비 연결 비용과 꺾임 구간 길이");
+    if (s.furnitureBasis === "gene") {
+      add("kitchen", `싱크대 · 지니 기준 · ${millimeters / 1000}m · ${finishLabel(s.kitchenFinish)}`, millimeters * 1000, "geneFurniture", millimeters / 1000, ["상·하부장", "기본 상판"]);
+      pending.push("싱크대 상판 종류·후드·수전·싱크볼·철거·설치·양중·설비 연결·부가세 및 꺾임 구간 길이 확인");
+      if (!s.kitchenFinish || s.kitchenFinish === "unknown") pending.push("싱크대 하이그로시/PET 선택 확인");
+    } else {
+      add("kitchen", `주방 기본 구성 · ${(millimeters / 1000).toFixed(1)}m`, millimeters * 900, "kitchen", millimeters, ["상·하부장", "기본 상판·후드·수전·싱크볼"]);
+      pending.push("주방 기존 가구 철거·폐기·양중·설비 연결 비용과 꺾임 구간 길이");
+    }
   }
-  if (s.shoeCabinet) pending.push("신발장 교체 · 크기·사양·판매가격 확인");
+  if (s.shoeCabinet) {
+    if (s.furnitureBasis === "gene" && s.shoeCabinetLengthM != null) {
+      const length = Math.round(s.shoeCabinetLengthM * 1000) / 1000;
+      add("shoeCabinet", `신발장 · 지니 기준 · ${length}m · ${finishLabel(s.shoeCabinetFinish)}`, Math.round(length * 600000), "geneFurniture", length, ["기본 하이그로시 또는 PET 가구"]);
+      pending.push("신발장 높이·깊이·내부 구성·철거·설치·양중·부가세 확인");
+      if (!s.shoeCabinetFinish || s.shoeCabinetFinish === "unknown") pending.push("신발장 하이그로시/PET 선택 확인");
+    } else pending.push("신발장 교체 · 길이·크기·사양·가격 확인");
+  }
   if (s.windows) {
     const window = WINDOW_OPTIONS.find(o => o.id === (s.windowScope ?? "unknown"))!;
     if (window.price !== null) add("windows", window.label, window.price, "windows", 1, ["평형대별 원문 시공 예시"]);
@@ -345,17 +367,19 @@ export function calculatePublicSelection(value: unknown) {
     moldingSelection: { mode: "by-space" as const, spaces: moldingSpaces, legacyReference: hasLegacyMolding ? { scope: s.moldingScope ?? "unknown", rooms: s.moldingRooms ?? 0 } : null },
     doorSelection: { spec: s.doorSpec ?? "unknown", count: s.extraWork?.doors === "work" ? s.doorCount ?? 1 : 0, separateFromFilm: s.doorsSeparateFromFilm ?? false },
     sourceIds: [...new Set(items.map(i => i.source))],
+    geneSubtotalWon: items.filter(i => i.source === "geneFurniture").reduce((sum, i) => sum + i.amount, 0),
+    publicSubtotalWon: items.filter(i => i.source !== "geneFurniture").reduce((sum, i) => sum + i.amount, 0),
     pending: [...new Set(pending)],
     subtotalWon: items.length ? items.reduce((sum, item) => sum + item.amount, 0) : null,
     hasSelection: selectedCount > 0,
     totalIsComplete: false,
     vatStatus: "source_unverified" as const,
-    notice: "공개된 타 업체 가격의 참고 소계입니다. 부산 현장 적용·부가세·선택 공종의 부대비용은 별도 확인이 필요하며 지니 인테리어의 확정 판매가격이 아닙니다.",
+    notice: "타 업체 공개가격과 지니 제공 가견적 기준을 출처별로 구분한 참고 소계입니다. 부산 현장 적용·부가세·선택 공종의 부대비용은 별도 확인이 필요하며 지니 인테리어의 확정 판매가격이 아닙니다.",
   };
 }
 export function formatWon(amount: number) { return `${amount.toLocaleString("ko-KR")}원`; }
 export function publicSelectionSummary(selection: PublicSelection32, quote: ReturnType<typeof calculatePublicSelection>) {
-  return ["[32평 공종 선택형 공개가격 참고]", `조건: ${selection.occupied ? "거주 중" : "빈집"} / ${selection.expanded ? "확장" : "미확장"} / 엘리베이터 ${selection.elevator ? "있음" : "없음"}`,
+  return ["[32평 공종 선택형 참고견적]", `조건: ${selection.occupied ? "거주 중" : "빈집"} / ${selection.expanded ? "확장" : "미확장"} / 엘리베이터 ${selection.elevator ? "있음" : "없음"}`,
     ...EXTRA_WORK_SCOPES.map(scope => `${scope.label}: ${EXTRA_WORK_OPTIONS.find(o => o.id === (selection.extraWork?.[scope.id] ?? "keep"))!.label}`),
     ...(selection.extraWork?.demolition === "work" ? [`철거 상세: ${DEMOLITION_SCOPE_OPTIONS.find(o => o.id === (selection.demolitionScope ?? "unknown"))!.label}`] : []),
     ...(selection.extraWork?.electrical === "work" ? [`전기·조명 상세: ${ELECTRICAL_WORK_OPTIONS.filter(o => selection.electricalWorks?.includes(o.id)).map(o => o.label).join(", ") || "범위 상담 후 결정"}`] : []),
@@ -364,7 +388,8 @@ export function publicSelectionSummary(selection: PublicSelection32, quote: Retu
     ...quote.moldingReferences.map(reference => `몰딩 공개 단가 참고 (소계 제외·예시 사양): ${reference.label} / ${formatWon(reference.minWonPerM)}~${formatWon(reference.maxWonPerM)}/m / 부가세 ${reference.vat} / 최소 시공비 미확인 / ${reference.sourceName} / ${reference.url} / 확인일 ${reference.checkedAt}`),
     ...(quote.moldingSelection.legacyReference ? [`이전 몰딩 선택: ${quote.moldingSelection.legacyReference.scope} / 방 ${quote.moldingSelection.legacyReference.rooms || "개수 미확인"} · 공간별 범위 재확인 필요`] : []),
     ...(selection.extraWork?.doors === "work" ? [`방문 상세: ${DOOR_OPTIONS.find(o => o.id === (selection.doorSpec ?? "unknown"))!.label} / ${selection.doorCount ?? 1}개 / 필름과 다른 대상 확인: ${selection.doorsSeparateFromFilm ? "예" : "미확인"}`] : []),
-    ...quote.items.map(i => `${i.label}: ${formatWon(i.amount)}`),
+    ...quote.items.map(i => `${i.label}: ${formatWon(i.amount)} / 출처: ${PUBLIC_SOURCES[i.source].name}`),
+    `지니 기준 소계: ${formatWon(quote.geneSubtotalWon)} / 타 업체 공개가격 소계: ${formatWon(quote.publicSubtotalWon)}`,
     `가격 확인 항목 소계: ${quote.subtotalWon === null ? "산출 항목 없음" : formatWon(quote.subtotalWon)}`,
     `금액 별도 확인: ${quote.pending.join(", ") || "선택 공종의 부대비용·현장 조건"}`, quote.notice, `기준표: ${quote.version}`].join("\n");
 }

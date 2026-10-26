@@ -52,7 +52,12 @@ function safeFileName(value: string) {
   } catch {
     // Keep original value if decoding fails.
   }
-  return (decoded.replace(/[\\/]/g, "-").replace(/[^0-9A-Za-z가-힣._ -]/g, "").trim() || "첨부파일").slice(0, 120);
+  return (
+    decoded
+      .replace(/[\\/]/g, "-")
+      .replace(/[^0-9A-Za-z가-힣._ -]/g, "")
+      .trim() || "첨부파일"
+  ).slice(0, 120);
 }
 
 function normalizeArea(value: unknown) {
@@ -96,12 +101,18 @@ async function handleUpload(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ success: false, error: "파일 종류가 올바르지 않습니다." });
   }
   if (!ALLOWED_MIME_TYPES.has(mimeType)) {
-    return res.status(415).json({ success: false, error: "JPG, PNG, WEBP 또는 PDF 파일만 업로드할 수 있습니다." });
+    return res.status(415).json({
+      success: false,
+      error: "JPG, PNG, WEBP 또는 PDF 파일만 업로드할 수 있습니다.",
+    });
   }
 
   const declaredLength = Number(cleanHeader(req.headers["content-length"], 30));
   if (Number.isFinite(declaredLength) && declaredLength > MAX_UPLOAD_BYTES) {
-    return res.status(413).json({ success: false, error: "파일당 최대 4MB까지 업로드할 수 있습니다." });
+    return res.status(413).json({
+      success: false,
+      error: "파일당 최대 4MB까지 업로드할 수 있습니다.",
+    });
   }
 
   try {
@@ -113,7 +124,10 @@ async function handleUpload(req: VercelRequest, res: VercelResponse) {
 
     const db = await getFirestoreAdmin();
     if (!db) {
-      return res.status(503).json({ success: false, error: "첨부자료 저장 연결이 설정되지 않았습니다." });
+      return res.status(503).json({
+        success: false,
+        error: "첨부자료 저장 연결이 설정되지 않았습니다.",
+      });
     }
 
     const uploadRef = db.collection("aiEstimateUploads").doc();
@@ -158,14 +172,43 @@ async function handleUpload(req: VercelRequest, res: VercelResponse) {
     });
   } catch (error: any) {
     if (error?.message === "FILE_TOO_LARGE") {
-      return res.status(413).json({ success: false, error: "파일당 최대 4MB까지 업로드할 수 있습니다." });
+      return res.status(413).json({
+        success: false,
+        error: "파일당 최대 4MB까지 업로드할 수 있습니다.",
+      });
     }
     console.error("AI estimate attachment upload error:", error?.message || error);
-    return res.status(500).json({ success: false, error: "첨부자료 저장 중 오류가 발생했습니다." });
+    return res.status(500).json({
+      success: false,
+      error: "첨부자료 저장 중 오류가 발생했습니다.",
+    });
   }
 }
 
-function buildFallback(input: Required<Omit<EstimateInput, "attachments">>, attachmentCount: number) {
+function emptyGenePlanDraft(attachmentCount: number) {
+  return {
+    version: "gene-plan-draft-1",
+    spaces: [],
+    objects: [],
+    tradeCandidates: [],
+    measurementChecks: attachmentCount
+      ? [
+          "공간별 실제 벽 길이와 천장고를 현장에서 확인",
+          "문·창 개구부의 폭·높이·방향을 실측",
+          "주방·욕실·세탁실 배관 및 전기 위치를 현장에서 재확인",
+        ]
+      : ["사진 또는 평면도를 추가하면 GENE PLAN 구조화 후보를 생성할 수 있습니다."],
+    conflicts: [],
+    sourceSummary: attachmentCount
+      ? "첨부자료는 저장되었지만 AI 시각 구조화가 불가능해 실측 검토가 필요합니다."
+      : "첨부자료가 없어 공간·객체 구조화는 생성하지 않았습니다.",
+  };
+}
+
+function buildFallback(
+  input: Required<Omit<EstimateInput, "attachments">>,
+  attachmentCount: number
+) {
   const pyung = normalizeArea(input.area);
   const isFull = input.scope === "전체공사";
   const basePerPyungMin = isFull ? 120 : 60;
@@ -186,16 +229,41 @@ function buildFallback(input: Required<Omit<EstimateInput, "attachments">>, atta
       "창호·필름·도배 등 마감 범위 확인",
     ],
     constructionPhases: [
-      { phaseName: "1단계: 상담 및 현장 실측", description: "현장 상태, 치수, 기존 설비와 고객 요청 범위를 확인합니다.", durationDays: "1~3일" },
-      { phaseName: "2단계: 공사 범위 및 견적 확정", description: "철거, 목공, 전기, 설비, 타일, 마감 등 필요한 공정을 정리합니다.", durationDays: "2~5일" },
-      { phaseName: "3단계: 철거 및 기초 공사", description: "기존 마감 철거 후 배선·배관·바탕 상태를 정리합니다.", durationDays: "2~4일" },
-      { phaseName: "4단계: 주요 공정 시공", description: "목공, 타일, 필름, 도장, 도배, 바닥, 가구, 조명을 순차 시공합니다.", durationDays: "7~15일" },
-      { phaseName: "5단계: 마감 및 최종 점검", description: "마감 상태와 작동 여부를 점검하고 보완 후 인도합니다.", durationDays: "1~3일" },
+      {
+        phaseName: "1단계: 상담 및 현장 실측",
+        description: "현장 상태, 치수, 기존 설비와 고객 요청 범위를 확인합니다.",
+        durationDays: "1~3일",
+      },
+      {
+        phaseName: "2단계: 공사 범위 및 견적 확정",
+        description: "철거, 목공, 전기, 설비, 타일, 마감 등 필요한 공정을 정리합니다.",
+        durationDays: "2~5일",
+      },
+      {
+        phaseName: "3단계: 철거 및 기초 공사",
+        description: "기존 마감 철거 후 배선·배관·바탕 상태를 정리합니다.",
+        durationDays: "2~4일",
+      },
+      {
+        phaseName: "4단계: 주요 공정 시공",
+        description: "목공, 타일, 필름, 도장, 도배, 바닥, 가구, 조명을 순차 시공합니다.",
+        durationDays: "7~15일",
+      },
+      {
+        phaseName: "5단계: 마감 및 최종 점검",
+        description: "마감 상태와 작동 여부를 점검하고 보완 후 인도합니다.",
+        durationDays: "1~3일",
+      },
     ],
     costRange: `약 ${minCost.toLocaleString()}만 원 ~ ${maxCost.toLocaleString()}만 원 (입력 정보 기준 참고 범위)`,
     durationRange: `약 ${weeksMin}주 ~ ${weeksMax}주`,
-    visualFindings: attachmentCount ? ["첨부 자료는 저장되었으며, AI 시각 분석을 사용할 수 없어 현장 실측 시 함께 확인합니다."] : [],
-    floorplanNotes: attachmentCount ? ["도면 치수와 벽체 성격, 배관 위치는 현장 실측과 원본 도면으로 재확인이 필요합니다."] : [],
+    visualFindings: attachmentCount
+      ? ["첨부 자료는 저장되었으며, AI 시각 분석을 사용할 수 없어 현장 실측 시 함께 확인합니다."]
+      : [],
+    floorplanNotes: attachmentCount
+      ? ["도면 치수와 벽체 성격, 배관 위치는 현장 실측과 원본 도면으로 재확인이 필요합니다."]
+      : [],
+    genePlanDraft: emptyGenePlanDraft(attachmentCount),
     expertTips: [
       `${input.location} 현장의 실제 구조와 노후 설비 상태는 실측 후 확인이 필요합니다.`,
       "철거·폐기물·보양·양중·주차 등 부대비용 포함 여부를 견적서에서 확인하세요.",
@@ -210,7 +278,9 @@ function normalizeAttachments(body: EstimateInput) {
   const sessionId = cleanText(body.sessionId, "").slice(0, 100);
   if (!/^s_[A-Za-z0-9_-]{8,100}$/.test(sessionId)) return [];
 
-  const raw = Array.isArray(body.attachments) ? body.attachments.slice(0, MAX_ATTACHMENTS) : [];
+  const raw = Array.isArray(body.attachments)
+    ? body.attachments.slice(0, MAX_ATTACHMENTS)
+    : [];
   return raw
     .map((item) => ({
       ref: cleanText(item?.ref || item?.path, "").slice(0, 120),
@@ -218,7 +288,11 @@ function normalizeAttachments(body: EstimateInput) {
       mimeType: cleanText(item?.mimeType, "").slice(0, 100),
       kind: item?.kind === "floorplan" ? "floorplan" : "photo",
     }))
-    .filter((item) => /^[A-Za-z0-9_-]{8,120}$/.test(item.ref) && ALLOWED_MIME_TYPES.has(item.mimeType));
+    .filter(
+      (item) =>
+        /^[A-Za-z0-9_-]{8,120}$/.test(item.ref) &&
+        ALLOWED_MIME_TYPES.has(item.mimeType)
+    );
 }
 
 async function rebuildStoredFile(snap: FirebaseFirestore.DocumentSnapshot) {
@@ -228,16 +302,25 @@ async function rebuildStoredFile(snap: FirebaseFirestore.DocumentSnapshot) {
     return Buffer.from(data.dataBase64, "base64");
   }
 
-  const chunksSnap = await snap.ref.collection("chunks").orderBy("index", "asc").get();
+  const chunksSnap = await snap.ref
+    .collection("chunks")
+    .orderBy("index", "asc")
+    .get();
   const buffers = chunksSnap.docs
     .map((chunkDoc) => chunkDoc.data()?.dataBase64)
-    .filter((value): value is string => typeof value === "string" && value.length > 0)
+    .filter(
+      (value): value is string =>
+        typeof value === "string" && value.length > 0
+    )
     .map((value) => Buffer.from(value, "base64"));
 
   return Buffer.concat(buffers);
 }
 
-async function loadAttachmentParts(sessionId: string, attachments: ReturnType<typeof normalizeAttachments>) {
+async function loadAttachmentParts(
+  sessionId: string,
+  attachments: ReturnType<typeof normalizeAttachments>
+) {
   const parts: any[] = [];
   const includedKinds: string[] = [];
   const skippedNames: string[] = [];
@@ -269,25 +352,123 @@ async function loadAttachmentParts(sessionId: string, attachments: ReturnType<ty
 
       totalBytes += buffer.length;
       includedKinds.push(data.kind || item.kind);
-      parts.push({ inlineData: { mimeType: data.mimeType, data: buffer.toString("base64") } });
-      parts.push({ text: `[첨부자료 메모] 종류=${data.kind || item.kind}, 파일명=${data.name || item.name}` });
+      parts.push({
+        inlineData: {
+          mimeType: data.mimeType,
+          data: buffer.toString("base64"),
+        },
+      });
+      parts.push({
+        text: `[첨부자료 메모] 종류=${data.kind || item.kind}, 파일명=${
+          data.name || item.name
+        }`,
+      });
     } catch (error: any) {
-      console.warn("AI attachment load skipped:", item.ref, error?.message || error);
+      console.warn(
+        "AI attachment load skipped:",
+        item.ref,
+        error?.message || error
+      );
     }
   }
 
   return { parts, includedKinds, skippedNames };
 }
 
+const confidenceSchema = { type: Type.STRING };
+
+const genePlanDraftSchema = {
+  type: Type.OBJECT,
+  properties: {
+    version: { type: Type.STRING },
+    spaces: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          spaceName: { type: Type.STRING },
+          spaceType: { type: Type.STRING },
+          evidence: { type: Type.STRING },
+          confidence: confidenceSchema,
+          needsMeasurement: { type: Type.BOOLEAN },
+        },
+        required: [
+          "spaceName",
+          "spaceType",
+          "evidence",
+          "confidence",
+          "needsMeasurement",
+        ],
+      },
+    },
+    objects: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          objectType: { type: Type.STRING },
+          label: { type: Type.STRING },
+          spaceName: { type: Type.STRING },
+          evidence: { type: Type.STRING },
+          confidence: confidenceSchema,
+          needsMeasurement: { type: Type.BOOLEAN },
+        },
+        required: [
+          "objectType",
+          "label",
+          "spaceName",
+          "evidence",
+          "confidence",
+          "needsMeasurement",
+        ],
+      },
+    },
+    tradeCandidates: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          trade: { type: Type.STRING },
+          reason: { type: Type.STRING },
+          confidence: confidenceSchema,
+        },
+        required: ["trade", "reason", "confidence"],
+      },
+    },
+    measurementChecks: {
+      type: Type.ARRAY,
+      items: { type: Type.STRING },
+    },
+    conflicts: {
+      type: Type.ARRAY,
+      items: { type: Type.STRING },
+    },
+    sourceSummary: { type: Type.STRING },
+  },
+  required: [
+    "version",
+    "spaces",
+    "objects",
+    "tradeCandidates",
+    "measurementChecks",
+    "conflicts",
+    "sourceSummary",
+  ],
+};
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Cache-Control", "no-store");
 
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
-    return res.status(405).json({ success: false, error: "POST 요청만 지원합니다." });
+    return res
+      .status(405)
+      .json({ success: false, error: "POST 요청만 지원합니다." });
   }
 
-  const mode = Array.isArray(req.query.mode) ? req.query.mode[0] : req.query.mode;
+  const mode = Array.isArray(req.query.mode)
+    ? req.query.mode[0]
+    : req.query.mode;
   if (mode === "upload") {
     return handleUpload(req, res);
   }
@@ -310,18 +491,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const apiKey = process.env.GEMINI_API_KEY;
 
   if (!apiKey) {
-    return res.status(200).json({ success: true, source: "calculated", attachmentCount: attachments.length, data: fallback });
+    return res.status(200).json({
+      success: true,
+      source: "calculated",
+      attachmentCount: attachments.length,
+      data: fallback,
+    });
   }
 
   try {
     const ai = new GoogleGenAI({ apiKey });
     const loaded = await loadAttachmentParts(input.sessionId, attachments);
-    const photoCount = loaded.includedKinds.filter((kind) => kind === "photo").length;
+    const photoCount = loaded.includedKinds.filter(
+      (kind) => kind === "photo"
+    ).length;
     const hasFloorplan = loaded.includedKinds.includes("floorplan");
 
     const prompt = `
-당신은 부산의 실내건축공사업 등록업체 '지니 인테리어'의 상담 보조 AI입니다.
-고객이 입력한 정보와 첨부 사진/평면도를 바탕으로 현장 실측 전 단계의 참고용 진단을 작성하세요.
+당신은 부산의 실내건축공사업 등록업체 '지니 인테리어'의 상담 보조 AI이자 GENE PLAN 사전 객체화 보조자입니다.
+고객이 입력한 정보와 첨부 사진/평면도를 바탕으로 현장 실측 전 단계의 참고용 진단과 GENE PLAN 검토용 구조화 초안을 작성하세요.
 
 [절대 원칙]
 - 확정 견적을 단정하지 마세요.
@@ -329,8 +517,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 - 사진에 보이지 않는 누수, 배관 내부, 전기 용량, 구조체 상태를 사실처럼 단정하지 마세요.
 - 평면도에서 내력벽/비내력벽을 확정하지 마세요.
 - 도면에 명확한 치수가 없으면 임의 치수를 만들지 마세요.
-- 문, 창, 주방, 욕실, 수납, 드레스룸 등의 객체는 보이는 범위에서 '후보'로만 설명하세요.
-- 현장 사진과 도면이 충돌하면 현장 실측이 우선이라고 명시하세요.
+- 문, 창, 주방, 욕실, 수납, 드레스룸 등의 객체는 보이는 범위에서 후보로만 추출하세요.
+- 드레스룸 옆 수납 가구는 일반 붙박이장으로 자동 확정하지 말고 시스템옷장 후보와 구분하세요.
+- 드레스룸 내부 화장대 후보는 드레스룸/시스템옷장과 별도 객체로 구분하세요.
+- 현장 사진과 도면이 충돌하면 conflicts에 기록하고 현장 실측이 우선이라고 명시하세요.
+- confidence는 high, medium, low 중 하나만 사용하세요.
+- needsMeasurement는 실제 실측이나 원본도면 확인이 필요하면 true로 표시하세요.
+
+[GENE PLAN 객체 후보 vocabulary]
+wall, door, window, kitchen, built_in_wardrobe, shoe_cabinet, dressing_room, system_wardrobe, vanity, bathroom, balcony, plumbing_point, lighting, ceiling, floor, other
+
+[공종 후보 vocabulary]
+철거, 목공, 전기, 설비, 타일, 도배, 바닥, 필름, 도장, 샷시, 문, 가구, 주방, 욕실, 조명, 기타
 
 [고객 입력]
 - 공간 유형: ${input.spaceType}
@@ -343,7 +541,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 - 추가 요청: ${input.details || "없음"}
 - AI 분석에 포함된 현장 사진: ${photoCount}장
 - AI 분석에 포함된 평면도: ${hasFloorplan ? "예" : "아니오"}
-- 용량 제한으로 이번 AI 분석에서 제외된 자료: ${loaded.skippedNames.length ? loaded.skippedNames.join(", ") : "없음"}
+- 용량 제한으로 이번 AI 분석에서 제외된 자료: ${
+      loaded.skippedNames.length ? loaded.skippedNames.join(", ") : "없음"
+    }
 
 [작성 기준]
 1. estimatedScope: 추천 주요 공사 범위 5~8개
@@ -352,19 +552,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 4. durationRange: 예상 공사기간 범위
 5. visualFindings: 첨부 사진에서 실제로 확인 가능한 상태/마감/노후 요소. 보이지 않으면 추정하지 말 것
 6. floorplanNotes: 평면도에서 확인 가능한 공간 구성 및 객체 후보와, GENE PLAN 객체화 전에 실측해야 할 항목
-7. expertTips: 추가금·누락·현장 변수 방지를 위해 꼭 확인할 사항 3~6개
-8. summaryMessage: 고객이 다음 단계인 현장 실측 상담을 이해할 수 있는 짧은 요약
+7. genePlanDraft:
+   - version은 gene-plan-draft-1
+   - spaces는 도면/사진에서 식별 가능한 공간 후보만 기록
+   - objects는 객체 vocabulary를 사용해 후보를 기록. 불명확하면 other 또는 낮은 confidence 사용
+   - tradeCandidates는 보이는 근거 또는 고객 요청으로 판단 가능한 공종 후보만 기록
+   - measurementChecks는 GENE PLAN 확정 전 실측/확인이 필요한 치수·배관·벽체·창호·가구 항목
+   - conflicts는 사진과 도면, 고객 입력 사이의 충돌 또는 불명확 사항
+   - sourceSummary는 이번 구조화가 어떤 자료를 근거로 했는지 한 문장 요약
+8. expertTips: 추가금·누락·현장 변수 방지를 위해 꼭 확인할 사항 3~6개
+9. summaryMessage: 고객이 다음 단계인 현장 실측 상담을 이해할 수 있는 짧은 요약
 `;
 
     const response = await ai.models.generateContent({
       model: MODEL_NAME,
-      contents: [{ role: "user", parts: [{ text: prompt }, ...loaded.parts] }] as any,
+      contents: [
+        { role: "user", parts: [{ text: prompt }, ...loaded.parts] },
+      ] as any,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
           properties: {
-            estimatedScope: { type: Type.ARRAY, items: { type: Type.STRING } },
+            estimatedScope: {
+              type: Type.ARRAY,
+              items: { type: Type.STRING },
+            },
             constructionPhases: {
               type: Type.ARRAY,
               items: {
@@ -374,17 +587,41 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                   description: { type: Type.STRING },
                   durationDays: { type: Type.STRING },
                 },
-                required: ["phaseName", "description", "durationDays"],
+                required: [
+                  "phaseName",
+                  "description",
+                  "durationDays",
+                ],
               },
             },
             costRange: { type: Type.STRING },
             durationRange: { type: Type.STRING },
-            visualFindings: { type: Type.ARRAY, items: { type: Type.STRING } },
-            floorplanNotes: { type: Type.ARRAY, items: { type: Type.STRING } },
-            expertTips: { type: Type.ARRAY, items: { type: Type.STRING } },
+            visualFindings: {
+              type: Type.ARRAY,
+              items: { type: Type.STRING },
+            },
+            floorplanNotes: {
+              type: Type.ARRAY,
+              items: { type: Type.STRING },
+            },
+            genePlanDraft: genePlanDraftSchema,
+            expertTips: {
+              type: Type.ARRAY,
+              items: { type: Type.STRING },
+            },
             summaryMessage: { type: Type.STRING },
           },
-          required: ["estimatedScope", "constructionPhases", "costRange", "durationRange", "visualFindings", "floorplanNotes", "expertTips", "summaryMessage"],
+          required: [
+            "estimatedScope",
+            "constructionPhases",
+            "costRange",
+            "durationRange",
+            "visualFindings",
+            "floorplanNotes",
+            "genePlanDraft",
+            "expertTips",
+            "summaryMessage",
+          ],
         },
       },
     });
@@ -401,6 +638,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   } catch (error: any) {
     console.error("AI estimate API fallback:", error?.message || error);
-    return res.status(200).json({ success: true, source: "calculated", warning: "AI 시각 분석을 사용할 수 없어 참고 계산 결과를 표시했습니다.", attachmentCount: attachments.length, data: fallback });
+    return res.status(200).json({
+      success: true,
+      source: "calculated",
+      warning:
+        "AI 시각 분석을 사용할 수 없어 참고 계산 결과를 표시했습니다.",
+      attachmentCount: attachments.length,
+      data: fallback,
+    });
   }
 }

@@ -65,3 +65,52 @@ test("API는 조작된 소계를 무시하고 서버 기준으로 다시 계산�
   await handler({ method: "POST", query: {}, body: { publicSelection: defaultPublicSelection() } } as any, res as any);
   assert.equal(status, 400);
 });
+
+test("샤시 내외창은 원문의 묶음 가격을 사용하고 두 항목을 중복 합산하지 않는다", () => {
+  for (const [windowScope, amount] of [["inner", 6200000], ["outer", 6620000], ["all", 12140000]] as const) {
+    const quote = calculatePublicSelection({ ...defaultPublicSelection(), windows: true, windowScope });
+    assert.equal(quote.subtotalWon, amount);
+    assert.equal(quote.items.length, 1);
+    assert.equal(quote.items[0].source, "windows");
+    assert.ok(quote.pending.some(p => p.includes("유리·철거·양중")));
+  }
+});
+
+test("필름 수량별 가격을 개당 가격으로 곱하거나 원문 밖 수량으로 보간하지 않는다", () => {
+  for (const [count, amount] of [[1, 390000], [2, 420000], [3, 510000], [5, 820000], [10, 1590000]]) {
+    const quote = calculatePublicSelection({ ...defaultPublicSelection(), film: true, filmDoors: count });
+    assert.equal(quote.subtotalWon, amount);
+    assert.equal(quote.items[0].quantity, count);
+  }
+  const unknown = calculatePublicSelection({ ...defaultPublicSelection(), film: true, filmDoors: 4 });
+  assert.equal(unknown.subtotalWon, null);
+  assert.ok(unknown.pending.some(p => p.includes("원문 수량별 가격 없음")));
+});
+
+test("필름 부위별 소계와 묶음 확인 항목을 보존한다", () => {
+  const quote = calculatePublicSelection({ ...defaultPublicSelection(), film: true, filmDoors: 3, filmEntryDoors: 1 });
+  assert.equal(quote.subtotalWon, 870000);
+  assert.equal(quote.items.length, 2);
+  assert.ok(quote.pending.some(p => p.includes("여러 부위")));
+  assert.equal(quote.totalIsComplete, false);
+});
+
+test("신발장 교체와 필름 중복, 비활성 공사 수량, 잘못된 수량을 거부한다", () => {
+  for (const patch of [
+    { shoeCabinet: true, film: true, filmShoeCabinets: 1 },
+    { film: false, filmDoors: 1 }, { film: true, filmDoors: -1 },
+    { film: true, filmDoors: 1.5 }, { film: true, filmDoors: 21 },
+    { windows: false, windowScope: "all" }, { windows: true, windowScope: "fake" },
+  ]) assert.ok(validatePublicSelection({ ...defaultPublicSelection(), ...patch }));
+});
+
+test("기존 v1 선택에는 새 가격을 임의 추가하지 않는다", () => {
+  const legacy = defaultPublicSelection();
+  delete legacy.windowScope; delete legacy.filmDoors;
+  delete legacy.filmShoeCabinets; delete legacy.filmEntryDoors;
+  legacy.windows = true; legacy.film = true;
+  const quote = calculatePublicSelection(legacy);
+  assert.equal(quote.subtotalWon, null);
+  assert.ok(quote.pending.some(p => p.includes("샷시")));
+  assert.ok(quote.pending.some(p => p.includes("필름")));
+});

@@ -6,7 +6,8 @@ import { MetaManager } from "../components/seo/MetaManager";
 import { SITE_CONFIG } from "../config/siteConfig";
 import { db } from "../firebase";
 import {
-  WALLPAPER_OPTIONS, FLOOR_OPTIONS, BATHROOM_OPTIONS, PUBLIC_SOURCES,
+  WALLPAPER_OPTIONS, FLOOR_OPTIONS, BATHROOM_OPTIONS, PUBLIC_SOURCES, WINDOW_OPTIONS,
+  FILM_QUANTITY_OPTIONS, filmPrice,
   defaultPublicSelection, calculatePublicSelection, formatWon, publicSelectionSummary,
   type PublicSelection32,
 } from "../../shared/publicEstimate32";
@@ -125,9 +126,27 @@ export function PublicEstimatePage() {
           {selection.kitchen && <div className="mt-4 space-y-3"><label className="block text-sm">주방 길이(m)<input aria-label="주방 길이(m)" className={control} type="number" min="1" max="12" step="0.1" value={selection.kitchenLengthM} onChange={e => { const n = Number(e.target.value); if (Number.isFinite(n) && n >= 1 && n <= 12) update({ kitchenLengthM: n }); }} /></label><p className="text-xs text-stone-500 leading-5">상·하부장, 기본 상판·후드·수전·싱크볼 예시입니다. ㄱ/ㄷ자는 연결부를 포함한 총 길이를 확인해야 하며 기존 가구 철거·설비 이동 등은 별도입니다.</p></div>}
         </section>
         <section className={card}>
-          <h2 className="font-black text-lg">6. 추가로 상담할 공사</h2>
-          <p className="text-xs text-stone-500 mt-2">규격·가격 자료가 더 필요한 항목입니다. 선택해도 0원 처리하지 않습니다.</p>
-          <div className="grid sm:grid-cols-3 gap-4 mt-4">{([["shoeCabinet", "신발장 교체"], ["windows", "샷시 교체"], ["film", "필름 공사"]] as const).map(([key, label]) => <label key={key} className="flex items-center gap-2 text-sm"><input type="checkbox" checked={selection[key]} onChange={e => update({ [key]: e.target.checked })} />{label}</label>)}</div>
+          <h2 className="font-black text-lg">6. 샤시</h2>
+          <label className="flex items-center gap-2 text-sm mt-4"><input type="checkbox" checked={selection.windows} onChange={e => update({ windows: e.target.checked, windowScope: "unknown" })} />샷시 교체</label>
+          {selection.windows && <div className="mt-4"><label className="text-sm">교체 범위<select aria-label="샤시 교체 범위" className={control} value={selection.windowScope ?? "unknown"} onChange={e => update({ windowScope: e.target.value })}>{WINDOW_OPTIONS.map(o => <option key={o.id} value={o.id}>{choiceLabel(o)}</option>)}</select></label><p className="text-xs text-stone-500 leading-5 mt-3">30평대 공개 시공 예시입니다. 내창+외창은 묶음 가격으로 계산합니다. 실제 창 수·규격·브랜드·유리와 철거·양중 조건은 별도 확인합니다.</p></div>}
+        </section>
+        <section className={card}>
+          <h2 className="font-black text-lg">7. 필름</h2>
+          <label className="flex items-center gap-2 text-sm mt-4"><input type="checkbox" checked={selection.film} onChange={e => update({ film: e.target.checked, filmDoors: 0, filmShoeCabinets: 0, filmEntryDoors: 0 })} />필름 공사</label>
+          {selection.film && <div className="space-y-4 mt-4">
+            {([
+              ["filmDoors", "doors", "문·문틀 필름 수량"],
+              ["filmShoeCabinets", "shoeCabinets", "신발장 필름 수량"],
+              ["filmEntryDoors", "entryDoors", "현관문 안쪽 필름 수량"],
+            ] as const).map(([key, part, label]) => <label key={key} className="block text-sm">{label}<select aria-label={label} disabled={key === "filmShoeCabinets" && selection.shoeCabinet} className={control} value={selection[key] ?? 0} onChange={e => update({ [key]: Number(e.target.value) })}>{FILM_QUANTITY_OPTIONS.map(count => <option key={count} value={count}>{count === 0 ? "시공 안 함" : `${count}개 · ${filmPrice(part, count) === null ? "가격 확인 필요" : formatWon(filmPrice(part, count)!)}`}</option>)}</select></label>)}
+            <p className="text-xs text-stone-500 leading-5">수량별 공개 금액이며 개당 가격을 곱하지 않습니다. 4개 등 원문에 없는 수량은 별도 확인으로 남깁니다. 신발장 수량을 문짝 수로 자동 환산하지 않습니다. 실제 단위·규격, 여러 부위 묶음 금액과 바탕 보수·부속품은 상담으로 확인합니다.</p>
+            {selection.shoeCabinet && <p className="text-xs text-amber-800">신발장 교체를 선택해 같은 대상의 필름 시공은 제외했습니다.</p>}
+          </div>}
+        </section>
+        <section className={card}>
+          <h2 className="font-black text-lg">8. 신발장</h2>
+          <label className="flex items-center gap-2 text-sm mt-4"><input type="checkbox" checked={selection.shoeCabinet} onChange={e => update({ shoeCabinet: e.target.checked, filmShoeCabinets: e.target.checked ? 0 : selection.filmShoeCabinets ?? 0 })} />신발장 교체</label>
+          <p className="text-xs text-stone-500 leading-5 mt-3">신발장은 크기·도어 사양·현장 설치 및 철거 범위를 확인한 후 별도 안내합니다. 교체와 같은 대상의 필름 시공을 중복해서 계산하지 않습니다.</p>
         </section>
       </fieldset>
       <aside id="selected-estimate" className="scroll-mt-44 lg:col-span-5 lg:sticky lg:top-28 space-y-4 min-w-0">

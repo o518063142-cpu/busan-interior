@@ -1,5 +1,5 @@
 // Public supplier estimates only; never import GENE's private cost/margin data.
-export const PUBLIC_CATALOG_VERSION = "public-32-2026-10-26-v1";
+export const PUBLIC_CATALOG_VERSION = "public-32-2026-10-26-v2";
 const checkedAt = "2026-10-26";
 export const PUBLIC_SOURCES = {
   wallpaper: { name: "의정부 부부도배사", url: "https://eamu.info/web/service/wallpaper-cost-32py/", region: "의정부·양주", checkedAt, publishedAt: null, vat: "미확인", condition: "공급 32평·천장 포함. 자재·공임·부자재·폐기물·식대 포함. 확장·보수·짐 이동은 현장 확인." },
@@ -7,6 +7,8 @@ export const PUBLIC_SOURCES = {
   vinyl: { name: "마미견적서 장판", url: "https://www.mommyestimate.com/estimation/floor/jangpan", region: "부산 적용 미확인", checkedAt, publishedAt: null, vat: "미확인", condition: "공급 32평/전용 24평 예시·빈집·미확장·엘리베이터 있음. 기존 바닥 철거·바탕 보수 포함 여부 미확인." },
   wood: { name: "마미견적서 마루", url: "https://www.mommyestimate.com/estimation/floor/maru", region: "부산 적용 미확인", checkedAt, publishedAt: null, vat: "미확인", condition: "공급 32평/전용 24평 예시·빈집·미확장·엘리베이터 있음. 기존 바닥 철거·바탕 보수 포함 여부 미확인." },
   bathroom: { name: "마미견적서 욕실", url: "https://www.mommyestimate.com/estimation/bathroom", region: "부산 적용 미확인", checkedAt, publishedAt: null, vat: "미확인", condition: "욕실 1개소 예시. 전체철거+방수 항목과 철거비 별도 공통 안내가 함께 있어 실제 철거·폐기·양중 범위 재확인 필요. 욕실 크기·기본 도기 사양 미확인." },
+  windows: { name: "마미견적서 창호", url: "https://www.mommyestimate.com/estimation/window", region: "부산 적용 미확인", checkedAt, publishedAt: null, vat: "미확인", condition: "아파트/오피스텔 30평대의 내창·외창·내외창 예시. 창별 규격·브랜드·유리·철거·양중은 별도 확인. 32평 모든 현장의 동일 사양을 보장하지 않음." },
+  film: { name: "마미견적서 필름", url: "https://www.mommyestimate.com/estimation/firm", region: "부산 적용 미확인", checkedAt, publishedAt: null, vat: "미확인", condition: "부위별 수량 1·2·3·5·10개의 공개 시공 예시. 수량별 금액이며 개당 단가로 곱하지 않음. 표에 없는 수량·여러 부위 동시시공·바탕 보수·부속품·철거·양중은 별도 확인." },
   kitchen: { name: "마미견적서 싱크대", url: "https://www.mommyestimate.com/estimation/sink", region: "부산 적용 미확인", checkedAt, publishedAt: null, vat: "미확인", condition: "상·하부장·기본 상판·하이드후드·기본 수전/싱크볼 예시. 철거·짐 이동·양중 별도. ㄱ/ㄷ자 연결부 중첩 길이 확인 필요." },
 } as const;
 
@@ -30,6 +32,23 @@ export const BATHROOM_OPTIONS = [
   { id: "full", label: "전체 철거 + 방수 기본 공사", price: 4800000 },
   { id: "waterproof", label: "방수만 검토 · 금액 별도 확인", price: null },
 ] as const;
+export const WINDOW_OPTIONS = [
+  { id: "unknown", label: "교체 범위를 상담 후 결정", price: null },
+  { id: "inner", label: "30평대 내창 교체 예시", price: 6200000 },
+  { id: "outer", label: "30평대 외창 교체 예시", price: 6620000 },
+  { id: "all", label: "30평대 내창+외창 교체 예시", price: 12140000 },
+] as const;
+// Values are total published estimates for each exact quantity, not unit rates.
+export const FILM_PRICE_TABLES = {
+  doors: { 1: 390000, 2: 420000, 3: 510000, 5: 820000, 10: 1590000 },
+  shoeCabinets: { 1: 390000, 2: 420000, 3: 510000, 5: 820000, 10: 1590000 },
+  entryDoors: { 1: 360000, 2: 370000, 3: 390000, 5: 410000, 10: 740000 },
+} as const;
+export const FILM_QUANTITY_OPTIONS = [0, 1, 2, 3, 4, 5, 10];
+export function filmPrice(part: keyof typeof FILM_PRICE_TABLES, quantity: number): number | null {
+  return (FILM_PRICE_TABLES[part] as Record<number, number>)[quantity] ?? null;
+}
+
 export interface PublicSelection32 {
   wallpaper: string;
   floor: string;
@@ -39,6 +58,10 @@ export interface PublicSelection32 {
   shoeCabinet: boolean;
   windows: boolean;
   film: boolean;
+  windowScope?: string;
+  filmDoors?: number;
+  filmShoeCabinets?: number;
+  filmEntryDoors?: number;
   floorRemoval: string;
   occupied: boolean;
   expanded: boolean;
@@ -47,6 +70,7 @@ export interface PublicSelection32 {
 export const defaultPublicSelection = (): PublicSelection32 => ({
   wallpaper: "keep", floor: "keep", bathrooms: [{ method: "keep", largeTile: false }, { method: "keep", largeTile: false }],
   kitchen: false, kitchenLengthM: 3, shoeCabinet: false, windows: false, film: false,
+  windowScope: "unknown", filmDoors: 0, filmShoeCabinets: 0, filmEntryDoors: 0,
   floorRemoval: "unknown", occupied: false, expanded: false, elevator: true,
 });
 
@@ -57,6 +81,13 @@ export function validatePublicSelection(value: unknown): string | null {
   if (!Array.isArray(s.bathrooms) || s.bathrooms.length !== 2 || s.bathrooms.some(b => !b || !BATHROOM_OPTIONS.some(o => o.id === b.method) || typeof b.largeTile !== "boolean" || (b.largeTile && !["overlay", "full"].includes(b.method)))) return "욕실 공사와 타일 선택을 확인해 주세요.";
   if (["kitchen", "shoeCabinet", "windows", "film", "occupied", "expanded", "elevator"].some(key => typeof s[key as keyof PublicSelection32] !== "boolean")) return "선택 조건이 올바르지 않습니다.";
   if (!["unknown", "none", "vinyl", "wood"].includes(s.floorRemoval)) return "기존 바닥 상태를 확인해 주세요.";
+  if (!WINDOW_OPTIONS.some(o => o.id === (s.windowScope ?? "unknown"))) return "샤시 교체 범위를 확인해 주세요.";
+  if (!s.windows && s.windowScope && s.windowScope !== "unknown") return "샤시 교체 선택을 확인해 주세요.";
+  for (const count of [s.filmDoors, s.filmShoeCabinets, s.filmEntryDoors]) {
+    if (count !== undefined && (!Number.isInteger(count) || count < 0 || count > 20)) return "필름 수량은 0~20 사이 정수로 입력해 주세요.";
+    if (!s.film && count) return "필름 공사 선택을 확인해 주세요.";
+  }
+  if (s.shoeCabinet && s.filmShoeCabinets) return "같은 신발장의 교체와 필름 시공을 동시에 계산할 수 없습니다.";
   if (!Number.isFinite(s.kitchenLengthM) || s.kitchenLengthM < 1 || s.kitchenLengthM > 12) return "주방 길이는 1~12m 사이로 입력해 주세요.";
   return null;
 }
@@ -91,8 +122,25 @@ export function calculatePublicSelection(value: unknown) {
     pending.push("주방 기존 가구 철거·폐기·양중·설비 연결 비용과 꺾임 구간 길이");
   }
   if (s.shoeCabinet) pending.push("신발장 교체 · 크기·사양·판매가격 확인");
-  if (s.windows) pending.push("샷시 교체 · 창별 규격·유리·설치가격 확인");
-  if (s.film) pending.push("필름 · 시공 부위·면적·가격 확인");
+  if (s.windows) {
+    const window = WINDOW_OPTIONS.find(o => o.id === (s.windowScope ?? "unknown"))!;
+    if (window.price !== null) add("windows", window.label, window.price, "windows", 1, ["평형대별 원문 시공 예시"]);
+    pending.push(window.price === null ? "샷시 교체 · 창별 규격·유리·설치가격 확인" : "샷시 교체 · 창 개수·실측·브랜드·유리·철거·양중 범위 확인");
+  }
+  if (s.film) {
+    const parts = [
+      { key: "doors" as const, count: s.filmDoors ?? 0, label: "문·문틀" },
+      { key: "shoeCabinets" as const, count: s.filmShoeCabinets ?? 0, label: "신발장" },
+      { key: "entryDoors" as const, count: s.filmEntryDoors ?? 0, label: "현관문 안쪽" },
+    ];
+    for (const part of parts.filter(p => p.count > 0)) {
+      const amount = filmPrice(part.key, part.count);
+      if (amount === null) pending.push(`필름 ${part.label} ${part.count}개 · 원문 수량별 가격 없음`);
+      else add(`film-${part.key}`, `필름 ${part.label} · ${part.count}개`, amount, "film", part.count, ["부위별 수량 합계 예시"]);
+    }
+    if (parts.every(p => p.count === 0)) pending.push("필름 · 시공 부위·면적·가격 확인");
+    else pending.push("필름 · 실제 대상 규격·표면 보수·부속품 및 여러 부위 동시시공 금액 확인");
+  }
   const selectedCount = items.length + pending.length;
   if (selectedCount && s.occupied) pending.push("거주 중 가구 이동·보양 추가비");
   if (selectedCount && s.expanded) pending.push("확장 구조에 따른 실제 시공 면적·가격");

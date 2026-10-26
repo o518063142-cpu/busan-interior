@@ -12,6 +12,7 @@ import { ContactPage } from "../pages/ContactPage";
 import { AIEstimatePage } from "../pages/AIEstimatePage";
 import { AdminPage } from "../pages/AdminPage";
 import { FunnelDashboardPage } from "../pages/FunnelDashboardPage";
+import { AILeadInboxPage } from "../pages/AILeadInboxPage";
 import { ProjectCategory, ProjectItem, NavigationMenu } from "../types";
 
 interface AppRoutesProps {
@@ -133,6 +134,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
       />
       <Route path="/admin" element={<AdminPage />} />
       <Route path="/admin/funnel" element={<FunnelDashboardPage />} />
+      <Route path="/admin/ai-leads" element={<AILeadInboxPage />} />
 
       {/* Fallback to home */}
       <Route path="*" element={<Navigate to="/" replace />} />

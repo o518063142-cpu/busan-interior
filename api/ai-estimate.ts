@@ -1,7 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { GoogleGenAI, Type } from "@google/genai";
-import { getStorage } from "firebase-admin/storage";
-import { getFirebaseAdminApp } from "./_lib/firebaseAdmin.js";
+import { downloadPrivateStorageObject } from "./_lib/firebaseStorage.js";
 
 interface AttachmentInput {
   path?: string;
@@ -63,40 +62,16 @@ function buildFallback(input: Required<Omit<EstimateInput, "attachments">>, atta
       "창호·필름·도배 등 마감 범위 확인",
     ],
     constructionPhases: [
-      {
-        phaseName: "1단계: 상담 및 현장 실측",
-        description: "현장 상태, 치수, 기존 설비와 고객 요청 범위를 확인합니다.",
-        durationDays: "1~3일",
-      },
-      {
-        phaseName: "2단계: 공사 범위 및 견적 확정",
-        description: "철거, 목공, 전기, 설비, 타일, 마감 등 필요한 공정을 정리합니다.",
-        durationDays: "2~5일",
-      },
-      {
-        phaseName: "3단계: 철거 및 기초 공사",
-        description: "기존 마감 철거 후 배선·배관·바탕 상태를 정리합니다.",
-        durationDays: "2~4일",
-      },
-      {
-        phaseName: "4단계: 주요 공정 시공",
-        description: "목공, 타일, 필름, 도장, 도배, 바닥, 가구, 조명을 순차 시공합니다.",
-        durationDays: "7~15일",
-      },
-      {
-        phaseName: "5단계: 마감 및 최종 점검",
-        description: "마감 상태와 작동 여부를 점검하고 보완 후 인도합니다.",
-        durationDays: "1~3일",
-      },
+      { phaseName: "1단계: 상담 및 현장 실측", description: "현장 상태, 치수, 기존 설비와 고객 요청 범위를 확인합니다.", durationDays: "1~3일" },
+      { phaseName: "2단계: 공사 범위 및 견적 확정", description: "철거, 목공, 전기, 설비, 타일, 마감 등 필요한 공정을 정리합니다.", durationDays: "2~5일" },
+      { phaseName: "3단계: 철거 및 기초 공사", description: "기존 마감 철거 후 배선·배관·바탕 상태를 정리합니다.", durationDays: "2~4일" },
+      { phaseName: "4단계: 주요 공정 시공", description: "목공, 타일, 필름, 도장, 도배, 바닥, 가구, 조명을 순차 시공합니다.", durationDays: "7~15일" },
+      { phaseName: "5단계: 마감 및 최종 점검", description: "마감 상태와 작동 여부를 점검하고 보완 후 인도합니다.", durationDays: "1~3일" },
     ],
     costRange: `약 ${minCost.toLocaleString()}만 원 ~ ${maxCost.toLocaleString()}만 원 (입력 정보 기준 참고 범위)`,
     durationRange: `약 ${weeksMin}주 ~ ${weeksMax}주`,
-    visualFindings: attachmentCount
-      ? ["첨부 자료는 저장되었으며, AI 시각 분석을 사용할 수 없어 현장 실측 시 함께 확인합니다."]
-      : [],
-    floorplanNotes: attachmentCount
-      ? ["도면 치수와 벽체 성격, 배관 위치는 현장 실측과 원본 도면으로 재확인이 필요합니다."]
-      : [],
+    visualFindings: attachmentCount ? ["첨부 자료는 저장되었으며, AI 시각 분석을 사용할 수 없어 현장 실측 시 함께 확인합니다."] : [],
+    floorplanNotes: attachmentCount ? ["도면 치수와 벽체 성격, 배관 위치는 현장 실측과 원본 도면으로 재확인이 필요합니다."] : [],
     expertTips: [
       `${input.location} 현장의 실제 구조와 노후 설비 상태는 실측 후 확인이 필요합니다.`,
       "철거·폐기물·보양·양중·주차 등 부대비용 포함 여부를 견적서에서 확인하세요.",
@@ -125,37 +100,21 @@ function normalizeAttachments(body: EstimateInput) {
 }
 
 async function loadAttachmentParts(attachments: ReturnType<typeof normalizeAttachments>) {
-  if (!attachments.length) return [] as any[];
-
-  const app = await getFirebaseAdminApp();
-  if (!app) return [] as any[];
-
-  const bucket = getStorage(app).bucket();
   const parts: any[] = [];
-
   for (const item of attachments) {
     try {
-      const [buffer] = await bucket.file(item.path).download();
-      parts.push({
-        inlineData: {
-          mimeType: item.mimeType,
-          data: buffer.toString("base64"),
-        },
-      });
-      parts.push({
-        text: `[첨부자료 메모] 종류=${item.kind}, 파일명=${item.name}`,
-      });
+      const buffer = await downloadPrivateStorageObject(item.path);
+      parts.push({ inlineData: { mimeType: item.mimeType, data: buffer.toString("base64") } });
+      parts.push({ text: `[첨부자료 메모] 종류=${item.kind}, 파일명=${item.name}` });
     } catch (error: any) {
       console.warn("AI attachment load skipped:", item.path, error?.message || error);
     }
   }
-
   return parts;
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Cache-Control", "no-store");
-
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
     return res.status(405).json({ success: false, error: "POST 요청만 지원합니다." });
@@ -179,12 +138,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const apiKey = process.env.GEMINI_API_KEY;
 
   if (!apiKey) {
-    return res.status(200).json({
-      success: true,
-      source: "calculated",
-      attachmentCount: attachments.length,
-      data: fallback,
-    });
+    return res.status(200).json({ success: true, source: "calculated", attachmentCount: attachments.length, data: fallback });
   }
 
   try {
@@ -231,12 +185,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const response = await ai.models.generateContent({
       model: MODEL_NAME,
-      contents: [
-        {
-          role: "user",
-          parts: [{ text: prompt }, ...attachmentParts],
-        },
-      ],
+      contents: [{ role: "user", parts: [{ text: prompt }, ...attachmentParts] }],
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -262,39 +211,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             expertTips: { type: Type.ARRAY, items: { type: Type.STRING } },
             summaryMessage: { type: Type.STRING },
           },
-          required: [
-            "estimatedScope",
-            "constructionPhases",
-            "costRange",
-            "durationRange",
-            "visualFindings",
-            "floorplanNotes",
-            "expertTips",
-            "summaryMessage",
-          ],
+          required: ["estimatedScope", "constructionPhases", "costRange", "durationRange", "visualFindings", "floorplanNotes", "expertTips", "summaryMessage"],
         },
       },
     });
 
-    if (!response.text) {
-      throw new Error("AI 응답 본문이 비어 있습니다.");
-    }
-
+    if (!response.text) throw new Error("AI 응답 본문이 비어 있습니다.");
     const parsed = JSON.parse(response.text);
-    return res.status(200).json({
-      success: true,
-      source: "gemini",
-      attachmentCount: attachments.length,
-      data: parsed,
-    });
+    return res.status(200).json({ success: true, source: "gemini", attachmentCount: attachments.length, data: parsed });
   } catch (error: any) {
     console.error("AI estimate API fallback:", error?.message || error);
-    return res.status(200).json({
-      success: true,
-      source: "calculated",
-      warning: "AI 시각 분석을 사용할 수 없어 참고 계산 결과를 표시했습니다.",
-      attachmentCount: attachments.length,
-      data: fallback,
-    });
+    return res.status(200).json({ success: true, source: "calculated", warning: "AI 시각 분석을 사용할 수 없어 참고 계산 결과를 표시했습니다.", attachmentCount: attachments.length, data: fallback });
   }
 }

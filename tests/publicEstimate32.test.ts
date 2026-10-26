@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { defaultPublicSelection, calculatePublicSelection, validatePublicSelection, PUBLIC_SOURCES } from "../shared/publicEstimate32.ts";
+import { defaultPublicSelection, calculatePublicSelection, validatePublicSelection, publicSelectionSummary, PUBLIC_SOURCES } from "../shared/publicEstimate32.ts";
 import handler from "../api/ai-estimate.ts";
 
 test("선택이 없거나 가격 미확인 항목만 있으면 0원 견적으로 표시하지 않는다", () => {
@@ -113,4 +113,35 @@ test("기존 v1 선택에는 새 가격을 임의 추가하지 않는다", () =>
   assert.equal(quote.subtotalWon, null);
   assert.ok(quote.pending.some(p => p.includes("샷시")));
   assert.ok(quote.pending.some(p => p.includes("필름")));
+});
+
+
+test("추가 공사만 선택해도 0원 대신 금액 확인 대상으로 접수 가능하다", () => {
+  const selection = { ...defaultPublicSelection(), extraWork: { demolition: "work", electrical: "consult" } } as const;
+  const quote = calculatePublicSelection(selection);
+  assert.equal(quote.subtotalWon, null);
+  assert.equal(quote.hasSelection, true);
+  assert.equal(quote.pending.length, 2);
+  assert.match(publicSelectionSummary(selection, quote), /전기·조명: 상담 후 결정/);
+  assert.match(publicSelectionSummary(selection, quote), /목공·몰딩: 유지 \/ 공사 없음/);
+});
+test("추가 공사 확인 대상은 기존 소계를 바꾸거나 철거비를 중복 가산하지 않는다", () => {
+  const selection = defaultPublicSelection();
+  selection.bathrooms[0].method = "full";
+  selection.extraWork = { demolition: "work", carpentry: "consult", doors: "work", balconyTile: "work", entranceTile: "consult" };
+  const quote = calculatePublicSelection(selection);
+  assert.equal(quote.subtotalWon, 4800000);
+  assert.equal(quote.scopeChoices.filter(s => s.choice !== "keep").length, 5);
+  selection.extraWork = {};
+  assert.ok(!calculatePublicSelection(selection).pending.some(p => p.includes("공사/교체 희망")));
+});
+test("추가 공사 잘못된 값은 거부하고 이전 버전 입력은 호환한다", () => {
+  for (const extraWork of [null, [], "work", { unknown: "work" }, { doors: "bad" }]) {
+    assert.ok(validatePublicSelection({ ...defaultPublicSelection(), extraWork }));
+  }
+  const selection = defaultPublicSelection();
+  delete selection.extraWork;
+  const quote = calculatePublicSelection(selection);
+  assert.equal(quote.hasSelection, false);
+  assert.ok(quote.scopeChoices.every(s => s.choice === "keep"));
 });

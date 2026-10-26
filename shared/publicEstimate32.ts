@@ -1,5 +1,5 @@
 // Public supplier estimates only; never import GENE's private cost/margin data.
-export const PUBLIC_CATALOG_VERSION = "public-32-2026-10-26-v2";
+export const PUBLIC_CATALOG_VERSION = "public-32-2026-10-26-v3";
 const checkedAt = "2026-10-26";
 export const PUBLIC_SOURCES = {
   wallpaper: { name: "의정부 부부도배사", url: "https://eamu.info/web/service/wallpaper-cost-32py/", region: "의정부·양주", checkedAt, publishedAt: null, vat: "미확인", condition: "공급 32평·천장 포함. 자재·공임·부자재·폐기물·식대 포함. 확장·보수·짐 이동은 현장 확인." },
@@ -49,7 +49,24 @@ export function filmPrice(part: keyof typeof FILM_PRICE_TABLES, quantity: number
   return (FILM_PRICE_TABLES[part] as Record<number, number>)[quantity] ?? null;
 }
 
+export const EXTRA_WORK_OPTIONS = [
+  { id: "keep", label: "유지 / 공사 없음" },
+  { id: "work", label: "공사 / 교체 희망" },
+  { id: "consult", label: "상담 후 결정" },
+] as const;
+export const EXTRA_WORK_SCOPES = [
+  { id: "demolition", label: "철거·폐기물", detail: "기존 공종에 포함된 철거와 겹치지 않도록 철거 대상·반출·폐기 범위를 확인합니다." },
+  { id: "electrical", label: "전기·조명", detail: "조명 수량, 콘센트·스위치 교체, 배선·분전반 공사 범위를 확인합니다." },
+  { id: "carpentry", label: "목공·몰딩", detail: "천장·벽체·간접등 박스와 몰딩의 시공 길이·면적을 확인합니다." },
+  { id: "doors", label: "방문·문틀", detail: "교체 개수·규격을 확인합니다. 필름도 선택했다면 같은 문인지 구분합니다." },
+  { id: "balconyTile", label: "발코니 타일", detail: "시공 면적, 기존 타일 철거·덧방, 방수·배수 상태를 확인합니다." },
+  { id: "entranceTile", label: "현관 타일", detail: "시공 면적, 기존 타일 철거·덧방, 현관문 하부 간섭을 확인합니다." },
+] as const;
+export type ExtraWorkId = typeof EXTRA_WORK_SCOPES[number]["id"];
+export type ExtraWorkChoice = typeof EXTRA_WORK_OPTIONS[number]["id"];
+
 export interface PublicSelection32 {
+  extraWork?: Partial<Record<ExtraWorkId, ExtraWorkChoice>>;
   wallpaper: string;
   floor: string;
   bathrooms: Array<{ method: string; largeTile: boolean }>;
@@ -68,6 +85,7 @@ export interface PublicSelection32 {
   elevator: boolean;
 }
 export const defaultPublicSelection = (): PublicSelection32 => ({
+  extraWork: {},
   wallpaper: "keep", floor: "keep", bathrooms: [{ method: "keep", largeTile: false }, { method: "keep", largeTile: false }],
   kitchen: false, kitchenLengthM: 3, shoeCabinet: false, windows: false, film: false,
   windowScope: "unknown", filmDoors: 0, filmShoeCabinets: 0, filmEntryDoors: 0,
@@ -77,6 +95,12 @@ export const defaultPublicSelection = (): PublicSelection32 => ({
 export function validatePublicSelection(value: unknown): string | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return "선택 조건을 확인해 주세요.";
   const s = value as PublicSelection32;
+  if (s.extraWork !== undefined) {
+    if (!s.extraWork || typeof s.extraWork !== "object" || Array.isArray(s.extraWork)) return "추가 공사 범위를 확인해 주세요.";
+    for (const [key, choice] of Object.entries(s.extraWork)) {
+      if (!EXTRA_WORK_SCOPES.some(scope => scope.id === key) || !EXTRA_WORK_OPTIONS.some(option => option.id === choice)) return "추가 공사 범위의 선택이 올바르지 않습니다.";
+    }
+  }
   if (!WALLPAPER_OPTIONS.some(o => o.id === s.wallpaper) || !FLOOR_OPTIONS.some(o => o.id === s.floor)) return "도배·바닥 선택이 올바르지 않습니다.";
   if (!Array.isArray(s.bathrooms) || s.bathrooms.length !== 2 || s.bathrooms.some(b => !b || !BATHROOM_OPTIONS.some(o => o.id === b.method) || typeof b.largeTile !== "boolean" || (b.largeTile && !["overlay", "full"].includes(b.method)))) return "욕실 공사와 타일 선택을 확인해 주세요.";
   if (["kitchen", "shoeCabinet", "windows", "film", "occupied", "expanded", "elevator"].some(key => typeof s[key as keyof PublicSelection32] !== "boolean")) return "선택 조건이 올바르지 않습니다.";
@@ -141,6 +165,10 @@ export function calculatePublicSelection(value: unknown) {
     if (parts.every(p => p.count === 0)) pending.push("필름 · 시공 부위·면적·가격 확인");
     else pending.push("필름 · 실제 대상 규격·표면 보수·부속품 및 여러 부위 동시시공 금액 확인");
   }
+  const scopeChoices = EXTRA_WORK_SCOPES.map(scope => ({ id: scope.id, label: scope.label, choice: s.extraWork?.[scope.id] ?? "keep" }));
+  for (const scope of scopeChoices) {
+    if (scope.choice !== "keep") pending.push(`${scope.label} · ${scope.choice === "work" ? "공사/교체 희망" : "상담 후 결정"} · 범위·수량·금액 확인`);
+  }
   const selectedCount = items.length + pending.length;
   if (selectedCount && s.occupied) pending.push("거주 중 가구 이동·보양 추가비");
   if (selectedCount && s.expanded) pending.push("확장 구조에 따른 실제 시공 면적·가격");
@@ -149,6 +177,7 @@ export function calculatePublicSelection(value: unknown) {
     version: PUBLIC_CATALOG_VERSION,
     area: { supplyPyung: 32, exampleExclusivePyung: 24 },
     items,
+    scopeChoices,
     sourceIds: [...new Set(items.map(i => i.source))],
     pending: [...new Set(pending)],
     subtotalWon: items.length ? items.reduce((sum, item) => sum + item.amount, 0) : null,
@@ -161,6 +190,7 @@ export function calculatePublicSelection(value: unknown) {
 export function formatWon(amount: number) { return `${amount.toLocaleString("ko-KR")}원`; }
 export function publicSelectionSummary(selection: PublicSelection32, quote: ReturnType<typeof calculatePublicSelection>) {
   return ["[32평 공종 선택형 공개가격 참고]", `조건: ${selection.occupied ? "거주 중" : "빈집"} / ${selection.expanded ? "확장" : "미확장"} / 엘리베이터 ${selection.elevator ? "있음" : "없음"}`,
+    ...EXTRA_WORK_SCOPES.map(scope => `${scope.label}: ${EXTRA_WORK_OPTIONS.find(o => o.id === (selection.extraWork?.[scope.id] ?? "keep"))!.label}`),
     ...quote.items.map(i => `${i.label}: ${formatWon(i.amount)}`),
     `가격 확인 항목 소계: ${quote.subtotalWon === null ? "산출 항목 없음" : formatWon(quote.subtotalWon)}`,
     `금액 별도 확인: ${quote.pending.join(", ") || "선택 공종의 부대비용·현장 조건"}`, quote.notice, `기준표: ${quote.version}`].join("\n");

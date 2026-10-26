@@ -7,7 +7,8 @@ import { SITE_CONFIG } from "../config/siteConfig";
 import { db } from "../firebase";
 import {
   WALLPAPER_OPTIONS, FLOOR_OPTIONS, BATHROOM_OPTIONS, PUBLIC_SOURCES, WINDOW_OPTIONS,
-  FILM_QUANTITY_OPTIONS, filmPrice,
+  FILM_QUANTITY_OPTIONS, filmPrice, EXTRA_WORK_SCOPES, EXTRA_WORK_OPTIONS,
+  type ExtraWorkChoice,
   defaultPublicSelection, calculatePublicSelection, formatWon, publicSelectionSummary,
   type PublicSelection32,
 } from "../../shared/publicEstimate32";
@@ -147,6 +148,14 @@ export function PublicEstimatePage() {
           <h2 className="font-black text-lg">8. 신발장</h2>
           <label className="flex items-center gap-2 text-sm mt-4"><input type="checkbox" checked={selection.shoeCabinet} onChange={e => update({ shoeCabinet: e.target.checked, filmShoeCabinets: e.target.checked ? 0 : selection.filmShoeCabinets ?? 0 })} />신발장 교체</label>
           <p className="text-xs text-stone-500 leading-5 mt-3">신발장은 크기·도어 사양·현장 설치 및 철거 범위를 확인한 후 별도 안내합니다. 교체와 같은 대상의 필름 시공을 중복해서 계산하지 않습니다.</p>
+        </section>
+        <section className={card}>
+          <h2 className="font-black text-lg">9. 추가 공사 범위</h2>
+          <p className="text-xs text-stone-600 mt-2 leading-5">아래 항목은 공개가격 소계에 포함되지 않습니다. 원하는 공사를 선택하면 금액 확인 대상으로 상담 내역에 전달됩니다.</p>
+          <div className="space-y-4 mt-4">{EXTRA_WORK_SCOPES.map(scope => <div key={scope.id}>
+            <label className="block text-sm font-bold">{scope.label}<select aria-label={scope.label} className={control} value={selection.extraWork?.[scope.id] ?? "keep"} onChange={e => update({ extraWork: { ...selection.extraWork, [scope.id]: e.target.value as ExtraWorkChoice } })}>{EXTRA_WORK_OPTIONS.map(option => <option key={option.id} value={option.id}>{option.label}</option>)}</select></label>
+            <p className="text-xs text-stone-500 mt-2 leading-5">{scope.detail}</p>
+          </div>)}</div>
         </section>
       </fieldset>
       <aside id="selected-estimate" className="scroll-mt-44 lg:col-span-5 lg:sticky lg:top-28 space-y-4 min-w-0">

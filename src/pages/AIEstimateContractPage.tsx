@@ -34,9 +34,39 @@ type UploadedAttachment = {
   kind: "photo" | "floorplan";
 };
 
+type GenePlanConfidence = "high" | "medium" | "low" | string;
+
+type GenePlanDraft = {
+  version?: string;
+  spaces?: Array<{
+    spaceName?: string;
+    spaceType?: string;
+    evidence?: string;
+    confidence?: GenePlanConfidence;
+    needsMeasurement?: boolean;
+  }>;
+  objects?: Array<{
+    objectType?: string;
+    label?: string;
+    spaceName?: string;
+    evidence?: string;
+    confidence?: GenePlanConfidence;
+    needsMeasurement?: boolean;
+  }>;
+  tradeCandidates?: Array<{
+    trade?: string;
+    reason?: string;
+    confidence?: GenePlanConfidence;
+  }>;
+  measurementChecks?: string[];
+  conflicts?: string[];
+  sourceSummary?: string;
+};
+
 type VisualEstimateResult = AIEstimateResult & {
   visualFindings?: string[];
   floorplanNotes?: string[];
+  genePlanDraft?: GenePlanDraft;
 };
 
 interface AIEstimateContractPageProps {
@@ -277,6 +307,7 @@ export const AIEstimateContractPage: React.FC<AIEstimateContractPageProps> = () 
     try {
       const sessionId = getSessionId();
       const details = `${formInput.style} 스타일 / AI 예상 비용 (${result.costRange}) / 추가요청: ${formInput.details || "없음"}`;
+      const hasStructuredDraft = Boolean(result.genePlanDraft);
       const consultationData = {
         name: leadForm.name.trim(),
         phone: leadForm.phone.trim(),
@@ -291,7 +322,14 @@ export const AIEstimateContractPage: React.FC<AIEstimateContractPageProps> = () 
         attachmentPaths: uploaded.map((item) => item.path),
         attachmentNames: uploaded.map((item) => item.name),
         attachmentKinds: uploaded.map((item) => item.kind),
-        genePlanStatus: uploaded.length ? "ready_for_review" : "no_attachment",
+        genePlanStatus:
+          uploaded.length && hasStructuredDraft
+            ? "structured_review_ready"
+            : uploaded.length
+            ? "ready_for_review"
+            : "no_attachment",
+        genePlanDraftVersion: result.genePlanDraft?.version || null,
+        genePlanDraft: result.genePlanDraft || null,
         aiEstimateVersion: "contract-mvp-2026-10-26",
         aiEstimateSnapshot: {
           costRange: result.costRange,

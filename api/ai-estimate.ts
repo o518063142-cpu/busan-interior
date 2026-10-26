@@ -1,5 +1,14 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { GoogleGenAI, Type } from "@google/genai";
+import { getStorage } from "firebase-admin/storage";
+import { getFirebaseAdminApp } from "./_lib/firebaseAdmin.js";
+
+interface AttachmentInput {
+  path?: string;
+  name?: string;
+  mimeType?: string;
+  kind?: "photo" | "floorplan" | string;
+}
 
 interface EstimateInput {
   spaceType?: string;
@@ -10,9 +19,18 @@ interface EstimateInput {
   budget?: string;
   style?: string;
   details?: string;
+  sessionId?: string;
+  attachments?: AttachmentInput[];
 }
 
 const MODEL_NAME = process.env.GEMINI_MODEL || "gemini-3.6-flash";
+const MAX_ATTACHMENTS = 5;
+const ALLOWED_MIME_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "application/pdf",
+]);
 
 function cleanText(value: unknown, fallback = "") {
   return typeof value === "string" ? value.trim().slice(0, 1000) : fallback;
@@ -24,7 +42,7 @@ function normalizeArea(value: unknown) {
   return Math.min(300, Math.max(1, parsed));
 }
 
-function buildFallback(input: Required<EstimateInput>) {
+function buildFallback(input: Required<Omit<EstimateInput, "attachments">>, attachmentCount: number) {
   const pyung = normalizeArea(input.area);
   const isFull = input.scope === "전체공사";
   const basePerPyungMin = isFull ? 120 : 60;
@@ -73,6 +91,12 @@ function buildFallback(input: Required<EstimateInput>) {
     ],
     costRange: `약 ${minCost.toLocaleString()}만 원 ~ ${maxCost.toLocaleString()}만 원 (입력 정보 기준 참고 범위)`,
     durationRange: `약 ${weeksMin}주 ~ ${weeksMax}주`,
+    visualFindings: attachmentCount
+      ? ["첨부 자료는 저장되었으며, AI 시각 분석을 사용할 수 없어 현장 실측 시 함께 확인합니다."]
+      : [],
+    floorplanNotes: attachmentCount
+      ? ["도면 치수와 벽체 성격, 배관 위치는 현장 실측과 원본 도면으로 재확인이 필요합니다."]
+      : [],
     expertTips: [
       `${input.location} 현장의 실제 구조와 노후 설비 상태는 실측 후 확인이 필요합니다.`,
       "철거·폐기물·보양·양중·주차 등 부대비용 포함 여부를 견적서에서 확인하세요.",
@@ -81,6 +105,52 @@ function buildFallback(input: Required<EstimateInput>) {
     ],
     summaryMessage: `지니 인테리어는 입력하신 ${input.spaceType} ${pyung}평 조건을 기준으로 공사 범위와 예상 비용을 참고용으로 정리했습니다. 실제 계약 견적은 현장 실측 후 확정됩니다.`,
   };
+}
+
+function normalizeAttachments(body: EstimateInput) {
+  const sessionId = cleanText(body.sessionId, "").slice(0, 100);
+  if (!/^s_[A-Za-z0-9_-]{8,100}$/.test(sessionId)) return [];
+
+  const raw = Array.isArray(body.attachments) ? body.attachments.slice(0, MAX_ATTACHMENTS) : [];
+  const prefix = `ai-estimate/${sessionId}/`;
+
+  return raw
+    .map((item) => ({
+      path: cleanText(item?.path, "").slice(0, 500),
+      name: cleanText(item?.name, "첨부파일").slice(0, 120),
+      mimeType: cleanText(item?.mimeType, "").slice(0, 100),
+      kind: item?.kind === "floorplan" ? "floorplan" : "photo",
+    }))
+    .filter((item) => item.path.startsWith(prefix) && ALLOWED_MIME_TYPES.has(item.mimeType));
+}
+
+async function loadAttachmentParts(attachments: ReturnType<typeof normalizeAttachments>) {
+  if (!attachments.length) return [] as any[];
+
+  const app = await getFirebaseAdminApp();
+  if (!app) return [] as any[];
+
+  const bucket = getStorage(app).bucket();
+  const parts: any[] = [];
+
+  for (const item of attachments) {
+    try {
+      const [buffer] = await bucket.file(item.path).download();
+      parts.push({
+        inlineData: {
+          mimeType: item.mimeType,
+          data: buffer.toString("base64"),
+        },
+      });
+      parts.push({
+        text: `[첨부자료 메모] 종류=${item.kind}, 파일명=${item.name}`,
+      });
+    } catch (error: any) {
+      console.warn("AI attachment load skipped:", item.path, error?.message || error);
+    }
+  }
+
+  return parts;
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -93,7 +163,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const body = (req.body || {}) as EstimateInput;
   const area = normalizeArea(body.area);
-  const input: Required<EstimateInput> = {
+  const input: Required<Omit<EstimateInput, "attachments">> = {
     spaceType: cleanText(body.spaceType, "아파트") || "아파트",
     location: cleanText(body.location, "부산") || "부산",
     area: String(area),
@@ -102,26 +172,39 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     budget: cleanText(body.budget, "미정") || "미정",
     style: cleanText(body.style, "모던 미니멀") || "모던 미니멀",
     details: cleanText(body.details, ""),
+    sessionId: cleanText(body.sessionId, ""),
   };
-
-  const fallback = buildFallback(input);
+  const attachments = normalizeAttachments(body);
+  const fallback = buildFallback(input, attachments.length);
   const apiKey = process.env.GEMINI_API_KEY;
 
   if (!apiKey) {
     return res.status(200).json({
       success: true,
       source: "calculated",
+      attachmentCount: attachments.length,
       data: fallback,
     });
   }
 
   try {
     const ai = new GoogleGenAI({ apiKey });
+    const attachmentParts = await loadAttachmentParts(attachments);
+    const hasFloorplan = attachments.some((item) => item.kind === "floorplan");
+    const photoCount = attachments.filter((item) => item.kind === "photo").length;
+
     const prompt = `
 당신은 부산의 실내건축공사업 등록업체 '지니 인테리어'의 상담 보조 AI입니다.
-고객이 입력한 정보만으로 확정 견적을 단정하지 말고, 현장 실측 전 단계에서 사용할 참고용 공사 계획과 넓은 예상 비용 범위를 작성하세요.
-내부 원가, 협력업체 단가, 마진 등 비공개 영업정보를 추정하거나 노출하지 마세요.
-구조 변경 가능 여부, 내력벽 여부, 누수·배관 상태 등 현장에서 확인해야 하는 사항은 사실처럼 단정하지 마세요.
+고객이 입력한 정보와 첨부 사진/평면도를 바탕으로 현장 실측 전 단계의 참고용 진단을 작성하세요.
+
+[절대 원칙]
+- 확정 견적을 단정하지 마세요.
+- 내부 원가, 협력업체 단가, 마진 등 비공개 영업정보를 추정하거나 노출하지 마세요.
+- 사진에 보이지 않는 누수, 배관 내부, 전기 용량, 구조체 상태를 사실처럼 단정하지 마세요.
+- 평면도에서 내력벽/비내력벽을 확정하지 마세요.
+- 도면에 명확한 치수가 없으면 임의 치수를 만들지 마세요.
+- 문, 창, 주방, 욕실, 수납, 드레스룸 등의 객체는 보이는 범위에서 '후보'로만 설명하세요.
+- 현장 사진과 도면이 충돌하면 현장 실측이 우선이라고 명시하세요.
 
 [고객 입력]
 - 공간 유형: ${input.spaceType}
@@ -132,28 +215,34 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 - 고객 예상 예산: ${input.budget}
 - 선호 스타일: ${input.style}
 - 추가 요청: ${input.details || "없음"}
+- 현장 사진 수: ${photoCount}장
+- 평면도 포함: ${hasFloorplan ? "예" : "아니오"}
 
 [작성 기준]
 1. estimatedScope: 추천 주요 공사 범위 5~8개
 2. constructionPhases: 상담·실측부터 마감 점검까지 단계별 과정
-3. costRange: 부산 지역의 일반적인 참고 범위로만 표시하고, 확정 견적처럼 표현하지 말 것
+3. costRange: 부산 지역의 일반적인 참고 범위로만 표시하고 확정 견적처럼 표현하지 말 것
 4. durationRange: 예상 공사기간 범위
-5. expertTips: 견적 누락이나 추가금 분쟁을 줄이기 위해 실측·견적 단계에서 꼭 확인할 사항 3~5개
-6. summaryMessage: 고객이 다음 단계인 현장 실측 상담을 이해할 수 있는 짧은 요약
+5. visualFindings: 첨부 사진에서 실제로 확인 가능한 상태/마감/노후 요소. 보이지 않으면 추정하지 말 것
+6. floorplanNotes: 평면도에서 확인 가능한 공간 구성 및 객체 후보와, GENE PLAN 객체화 전에 실측해야 할 항목
+7. expertTips: 추가금·누락·현장 변수 방지를 위해 꼭 확인할 사항 3~6개
+8. summaryMessage: 고객이 다음 단계인 현장 실측 상담을 이해할 수 있는 짧은 요약
 `;
 
     const response = await ai.models.generateContent({
       model: MODEL_NAME,
-      contents: prompt,
+      contents: [
+        {
+          role: "user",
+          parts: [{ text: prompt }, ...attachmentParts],
+        },
+      ],
       config: {
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
           properties: {
-            estimatedScope: {
-              type: Type.ARRAY,
-              items: { type: Type.STRING },
-            },
+            estimatedScope: { type: Type.ARRAY, items: { type: Type.STRING } },
             constructionPhases: {
               type: Type.ARRAY,
               items: {
@@ -168,10 +257,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             },
             costRange: { type: Type.STRING },
             durationRange: { type: Type.STRING },
-            expertTips: {
-              type: Type.ARRAY,
-              items: { type: Type.STRING },
-            },
+            visualFindings: { type: Type.ARRAY, items: { type: Type.STRING } },
+            floorplanNotes: { type: Type.ARRAY, items: { type: Type.STRING } },
+            expertTips: { type: Type.ARRAY, items: { type: Type.STRING } },
             summaryMessage: { type: Type.STRING },
           },
           required: [
@@ -179,6 +267,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             "constructionPhases",
             "costRange",
             "durationRange",
+            "visualFindings",
+            "floorplanNotes",
             "expertTips",
             "summaryMessage",
           ],
@@ -194,6 +284,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json({
       success: true,
       source: "gemini",
+      attachmentCount: attachments.length,
       data: parsed,
     });
   } catch (error: any) {
@@ -201,7 +292,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json({
       success: true,
       source: "calculated",
-      warning: "AI 분석을 사용할 수 없어 참고 계산 결과를 표시했습니다.",
+      warning: "AI 시각 분석을 사용할 수 없어 참고 계산 결과를 표시했습니다.",
+      attachmentCount: attachments.length,
       data: fallback,
     });
   }

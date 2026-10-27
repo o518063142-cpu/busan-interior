@@ -71,6 +71,7 @@ export const StructuredData: React.FC<StructuredDataProps> = (props) => {
           "alternateName": [
             SITE_ENTITY.brand.nameEn,
             SITE_ENTITY.brand.nameKo.replace(/\s+/g, ""),
+            "한신인테리어",
           ],
           "legalName": SITE_ENTITY.legal.businessName,
           "url": `${SITE_ENTITY.url}/`,

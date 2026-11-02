@@ -47,15 +47,24 @@
     },
     {
       "src": "/admin/ai-leads/?$",
-      "dest": "/index.html"
+      "dest": "/index.html",
+      "headers": {
+        "X-Robots-Tag": "noindex, nofollow, noarchive"
+      }
     },
     {
       "src": "/admin/funnel/?$",
-      "dest": "/index.html"
+      "dest": "/index.html",
+      "headers": {
+        "X-Robots-Tag": "noindex, nofollow, noarchive"
+      }
     },
     {
       "src": "/admin/?$",
-      "dest": "/index.html"
+      "dest": "/index.html",
+      "headers": {
+        "X-Robots-Tag": "noindex, nofollow, noarchive"
+      }
     },
     {
       "src": "/service/?$",

@@ -13,3 +13,7 @@
 
 색인 판단: 검증된 공개 견적 페이지는 색인 대상으로 적합하나 실제 색인/검색순위는 검색엔진이 결정한다. 이 작업은 Search Console/서치어드바이저 제출 성공이나 색인 완료를 뜻하지 않는다. 관리자·개별 상담을 색인 대상으로 제출하지 않는다.
 근거: Google JavaScript SEO https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics 및 네이버 https://searchadvisor.naver.com/guide/seo-advanced-javascript.
+
+
+## 운영 HTTP 후속 점검
+PR17 병합 후 062349069f0c6a065d3d23133adfb995b8d08b60 배포에서 공개 /ai-estimate 새 HTML/canonical/index허용·사이트맵 포함은 확인했다. 그러나 관리자 GET의 X-Robots-Tag는 누락됐다. 상위 headers 선언만으로 현재 커스텀 routes 응답에 전달되지 않는 현상이다. 실제 관리자 인증은 정상이며 고객 데이터가 공개된 것은 아니다. 후속 수정에서 기존 /admin, /admin/funnel, /admin/ai-leads의 route 객체에 noindex 응답 헤더를 직접 명시한다. 공개 경로는 변경하지 않는다. 배포 후 HTTP로 다시 확인해야 완료다.

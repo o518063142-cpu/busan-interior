@@ -5,8 +5,16 @@
       "includeFiles": "api/**"
     }
   },
-
   "headers": [
+    {
+      "source": "/admin",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow, noarchive"
+        }
+      ]
+    },
     {
       "source": "/admin/(.*)",
       "headers": [
@@ -17,7 +25,6 @@
       ]
     }
   ],
-
   "redirects": [
     {
       "source": "/information/busanjin-remodeling-checklist",
@@ -25,7 +32,6 @@
       "statusCode": 301
     }
   ],
-
   "routes": [
     {
       "src": "/api/upload-ai-estimate-file/?$",

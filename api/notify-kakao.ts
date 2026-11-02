@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { buildConsultationKakao } from "../shared/kakaoConsultation.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS Headers for safety
@@ -22,16 +23,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const {
-      name = "",
-      phone = "",
-      location = "",
-      spaceType = "",
-      area = "",
-      startDate = "",
-      details = "",
-    } = req.body || {};
-
     const restApiKey = process.env.KAKAO_REST_API_KEY;
     const clientSecret = process.env.KAKAO_CLIENT_SECRET;
     const refreshToken = process.env.KAKAO_REFRESH_TOKEN;
@@ -83,28 +74,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const accessToken = tokenData.access_token;
 
     // 2. Format Notification Message
-    const formattedArea = area ? `${area}평` : "미입력";
-    const messageText = `🔔 GENE INTERIOR 새 상담 접수
-
-성함: ${name}
-연락처: ${phone}
-지역: ${location || "미입력"}
-공간 유형: ${spaceType || "미입력"}
-면적: ${formattedArea}
-희망 일정: ${startDate || "미입력"}
-상세 내용: ${details || "없음"}
-
-관리자 페이지에서 확인해주세요.`;
-
-    const templateObject = {
-      object_type: "text",
-      text: messageText,
-      link: {
-        web_url: "https://gene-interior.vercel.app",
-        mobile_web_url: "https://gene-interior.vercel.app",
-      },
-      button_title: "관리자 페이지",
-    };
+    const templateObject = buildConsultationKakao(req.body || {});
 
     const memoParams = new URLSearchParams();
     memoParams.append("template_object", JSON.stringify(templateObject));

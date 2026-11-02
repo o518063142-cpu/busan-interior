@@ -20,7 +20,7 @@ const card = "rounded-2xl border border-stone-200 bg-white p-5 sm:p-6";
 const choiceLabel = (o: { label: string; price: number | null }) => `${o.label}${o.price === null ? "" : ` · ${formatWon(o.price)}`}`;
 
 export function PublicEstimatePage() {
-  const [selection, setSelection] = useState(() => ({ ...defaultPublicSelection(), furnitureBasis: "gene" as const }));
+  const [selection, setSelection] = useState(() => ({ ...defaultPublicSelection(), furnitureBasis: "gene" as const, tilePricingBasis: "budget-v1" as const }));
   const quote = useMemo(() => calculatePublicSelection(selection), [selection]);
   const [contact, setContact] = useState({ name: "", phone: "", location: "", details: "" });
   const [consent, setConsent] = useState(false);
@@ -97,10 +97,10 @@ export function PublicEstimatePage() {
       <p className="text-stone-300 text-sm leading-6 max-w-3xl">공급 32평 아파트를 기준으로 공종과 자재를 선택해 보세요. 타 업체 공개가격과 지니의 가구 기준단가를 구분해 참고하며, 지니 인테리어의 확정 견적은 상담·실측 후 안내합니다.</p>
     </header>
     <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-stone-700 leading-6">
-      기준은 <strong>공급 32평 · 전용 약 24평 예시</strong>입니다. 실제 도면의 면적과 다를 수 있습니다. 원문마다 부가세·철거·보양 조건이 달라, 아래 소계는 전체 공사 총액이 아닙니다.
+      시작 기준은 <strong>공급 32평 · 전용 약 24평 예시</strong>입니다. 같은 32평도 확장·욕실 수·주방 길이·발코니와 기존 상태에 따라 금액이 달라집니다. 아는 조건만 수정해 주세요. 타일 면적을 모르면 표시된 기본 가정으로 계산합니다. 원문마다 부가세·철거·보양 조건이 달라, 아래 소계는 전체 공사 총액이 아닙니다.
     </div>
     <div className="lg:hidden sticky top-24 z-20 rounded-xl border border-amber-300 bg-white/95 shadow-md p-3 flex items-center justify-between gap-3" aria-live="polite">
-      <div><p className="text-xs text-stone-500">가격 확인 항목 소계</p><strong className="text-lg">{quote.subtotalWon === null ? (quote.hasSelection ? "금액 확인 필요" : "항목을 선택해 주세요") : formatWon(quote.subtotalWon)}</strong></div>
+      <div><p className="text-xs text-stone-500">선택 공사 예상금액</p><strong className="text-lg">{quote.subtotalWon === null ? (quote.hasSelection ? "금액 확인 필요" : "항목을 선택해 주세요") : formatWon(quote.subtotalWon)}</strong></div>
       <a href="#selected-estimate" className="text-xs font-bold text-amber-800 underline shrink-0">상세 내역</a>
     </div>
     <div className="grid lg:grid-cols-12 gap-6 items-start">
@@ -173,12 +173,12 @@ export function PublicEstimatePage() {
               const change = (patch: Partial<typeof tile>) => update({ tileBySpace: { ...selection.tileBySpace, [id]: { ...tile, ...patch } } });
               return <div className="rounded-xl bg-stone-50 p-3 mt-3 space-y-3" data-testid={`tile-detail-${id}`}>
                 <label className="block text-sm">{scope.label} 시공 면적(㎡)<input aria-label={`${scope.label} 시공 면적(㎡)`} className={control} type="number" min="0.01" max="200" step="0.01" value={tile.areaM2 ?? ""} onChange={e => { const n = Number(e.target.value); if (!e.target.value) change({ areaM2: null }); else if (Number.isFinite(n) && n > 0 && n <= 200) change({ areaM2: n }); }} /></label>
-                <p className="text-xs text-stone-600">모르면 비워 두세요. 여러 발코니는 시공할 부분의 면적을 합쳐 입력합니다. 32평에서 면적을 자동 추정하지 않습니다.</p>
+                <p className="text-xs text-stone-600">모르면 비워 두세요. 현관은 3.3㎡, 발코니는 합계 10㎡를 예산용으로 가정합니다. 실제 32평의 표준 면적이 아닙니다. 입력하면 해당 면적으로 다시 계산합니다. 여러 발코니는 시공할 면적을 합쳐 주세요.</p>
                 <label className="block text-sm">시공 범위<select aria-label={`${scope.label} 시공 범위`} className={control} value={tile.surface} onChange={e => change({ surface: e.target.value as typeof tile.surface })}><option value="floor">바닥만</option><option value="floor-wall">바닥+벽 (입력 면적은 합계)</option></select></label>
                 <label className="block text-sm">시공 방식<select aria-label={`${scope.label} 시공 방식`} className={control} value={tile.method} onChange={e => change({ method: e.target.value })}>{TILE_METHODS.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}</select></label>
                 <label className="block text-sm">타일 규격<select aria-label={`${scope.label} 규격`} className={control} value={tile.size} onChange={e => change({ size: e.target.value })}>{TILE_SIZES.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}</select></label>
                 <label className="block text-sm">기존 상태<select aria-label={`${scope.label} 기존 상태`} className={control} value={tile.condition} onChange={e => change({ condition: e.target.value as typeof tile.condition })}><option value="unknown">잘 모르겠음</option><option value="sound">눈에 띄는 이상 없음</option><option value="damaged">들뜸·깨짐 있음</option><option value="leak">누수·배수 문제 있음</option></select></label>
-                <p className="text-xs text-amber-800 leading-5">면적·시공 방식은 상담으로 전달합니다. 자재·부자재·최소 공임·철거·폐기·줄눈·방수·부가세를 포함한 가격은 실측 후 안내하며 현재 소계에 포함되지 않습니다. 덧방의 문 간섭·단차, 발코니 배수·물매도 확인합니다.</p>
+                <p className="text-xs text-amber-800 leading-5">기공·조공 기본 공임과 자재·부자재 예산을 예상금액에 반영합니다. 두 공간은 같은 일정의 공임을 한 번 계산합니다. 방식 미정은 철거 없는 기준이며, 규격 미정은 기본 자재 예산입니다. 철거 선택 시 임시 철거 예산을 더합니다. 방수·물매·바탕 보수·운송·부가세·최종 자재는 실측 후 달라질 수 있습니다.</p>
               </div>;
             })()}
             {scope.id === "demolition" && selection.extraWork?.demolition === "work" && <div className="rounded-xl bg-stone-50 p-3 mt-3 space-y-3">
@@ -238,7 +238,7 @@ export function PublicEstimatePage() {
       </fieldset>
       <aside id="selected-estimate" className="scroll-mt-44 lg:col-span-5 lg:sticky lg:top-28 space-y-4 min-w-0">
         <section className="rounded-3xl bg-stone-950 text-white p-6" aria-live="polite" aria-atomic="true">
-          <h2 className="text-sm text-amber-300 font-bold flex gap-2 items-center"><Calculator className="w-4 h-4" />가격 확인 항목 소계</h2>
+          <h2 className="text-sm text-amber-300 font-bold flex gap-2 items-center"><Calculator className="w-4 h-4" />선택 공사 예상금액</h2>
           <p data-testid="public-subtotal" className="font-black text-3xl mt-3">{quote.subtotalWon === null ? (quote.hasSelection ? "금액 확인 필요" : "공사를 선택해 주세요") : formatWon(quote.subtotalWon)}</p>
           <p className="text-sm text-stone-300 mt-4 leading-6">{quote.notice}</p>
           {quote.items.length > 0 && <ul className="mt-5 space-y-3 border-t border-stone-700 pt-4">{quote.items.map(item => <li key={item.id} className="text-sm flex justify-between gap-4"><span>{item.label}</span><strong className="shrink-0">{formatWon(item.amount)}</strong></li>)}</ul>}
@@ -268,7 +268,8 @@ export function PublicEstimatePage() {
     <details className={card}>
       <summary className="font-bold cursor-pointer">가격 출처와 적용 조건 확인 · 2026.10.26 확인</summary>
       <p className="text-sm text-stone-600 mt-4">가구는 지니 제공 기준단가, 그 외 항목은 업체별 공개 견적 예시를 사용합니다. 전국 평균이나 부산 시세를 뜻하지 않습니다. 원문 부가세 기준과 게시일이 확인되지 않은 자료는 미확인으로 남겼습니다. 선택하지 않은 공종은 포함되지 않습니다.</p>
-      <p className="text-sm mt-3">지니 기준: {formatWon(quote.geneSubtotalWon)} · 타 업체 공개가격: {formatWon(quote.publicSubtotalWon)} (선택 공종 참고 소계)</p><div className="grid md:grid-cols-2 gap-4 mt-4">{Object.entries(PUBLIC_SOURCES).map(([key, source]) => <div key={key} className="rounded-xl bg-stone-50 p-4 text-xs leading-6"><a target="_blank" rel="noopener noreferrer" href={source.url} className="font-bold underline inline-flex gap-1 items-center">{source.name}<ArrowUpRight className="w-3 h-3" /></a><p>{source.condition}</p><p className="text-stone-500">지역: {source.region} · 부가세: {source.vat} · 확인일: {source.checkedAt}</p></div>)}</div>
+      {quote.tileBudget && <div className="rounded-xl bg-amber-50 p-4 text-sm leading-6 mt-4" data-testid="tile-budget-breakdown"><strong>타일 실측 전 예상금액: {formatWon(quote.tileBudget.amountWon)}</strong><p>기공·조공 {quote.tileBudget.teamDays}팀일 공임 {formatWon(quote.tileBudget.laborWon)} + 자재 {formatWon(quote.tileBudget.materialWon)} + 부자재 {formatWon(quote.tileBudget.suppliesWon)} + 철거 예산 {formatWon(quote.tileBudget.demolitionWon)}</p>{quote.tileBudget.spaces.map(tile => <p key={tile.id}>{tile.label}: {tile.areaM2}㎡ · {tile.areaBasis === "program_assumption" ? "기본 가정·실측 아님" : "직접 입력·실측 확인 필요"}</p>)}<details><summary className="cursor-pointer underline">적용한 예산 가정 보기</summary>{quote.tileBudget.assumptions.map(note => <p key={note}>{note}</p>)}</details></div>}
+      <p className="text-sm mt-3">지니 기준: {formatWon(quote.geneSubtotalWon)} · 타 업체 공개가격: {formatWon(quote.publicSubtotalWon)} · 가정값 포함 예산: {formatWon(quote.assumptionSubtotalWon)} (선택 공종 예상금액)</p><div className="grid md:grid-cols-2 gap-4 mt-4">{Object.entries(PUBLIC_SOURCES).map(([key, source]) => <div key={key} className="rounded-xl bg-stone-50 p-4 text-xs leading-6"><a target="_blank" rel="noopener noreferrer" href={source.url} className="font-bold underline inline-flex gap-1 items-center">{source.name}<ArrowUpRight className="w-3 h-3" /></a><p>{source.condition}</p><p className="text-stone-500">지역: {source.region} · 부가세: {source.vat} · 확인일: {source.checkedAt}</p></div>)}</div>
     </details>
     <Link to="/ai-estimate?mode=photos" className="block text-center text-sm font-bold text-stone-600 underline py-4">사진·평면도를 첨부해 상담하고 싶어요</Link>
   </div>;

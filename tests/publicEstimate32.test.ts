@@ -342,3 +342,34 @@ test("타일은 공간별 면적·방식·규격을 보존하고 미확인 가�
   assert.ok(validatePublicSelection({ ...s,tileBySpace: { bedroom: s.tileBySpace.balconyTile } }));
   assert.ok(validatePublicSelection({ ...s,tileBySpace: { balconyTile: {...s.tileBySpace.balconyTile,method:"invented"} } }));
 });
+
+test("실측 전 타일 예산은 기본 면적을 표시하고 두 공간의 팀 공임을 중복하지 않는다", () => {
+  const base = { ...defaultPublicSelection(), tilePricingBasis: "budget-v1" as const };
+  const entry = calculatePublicSelection({ ...base, extraWork: { entranceTile: "work" } });
+  const balcony = calculatePublicSelection({ ...base, extraWork: { balconyTile: "work" } });
+  const both = calculatePublicSelection({ ...base, extraWork: { entranceTile: "work", balconyTile: "work" } });
+  assert.equal(entry.tileBudget?.spaces[0].areaM2,3.3);
+  assert.equal(balcony.tileBudget?.spaces[0].areaM2,10);
+  assert.equal(both.tileBudget?.teamDays,1);
+  assert.equal(both.tileBudget?.laborWon,520000);
+  assert.equal(both.subtotalWon,981510);
+  assert.ok(both.tileBudget?.spaces.every(s => s.areaBasis === "program_assumption"));
+  assert.equal(both.assumptionSubtotalWon,both.subtotalWon);
+  assert.equal(both.publicSubtotalWon,0);
+  assert.equal(both.geneSubtotalWon,0);
+  assert.ok(both.tileSelection.every(t => !t.excludedFromSubtotal));
+  const s = { ...base,extraWork:{entranceTile:"work" as const},tileBySpace:{entranceTile:{areaM2:5,method:"remove",size:"600",surface:"floor" as const,condition:"sound" as const}} };
+  const explicit = calculatePublicSelection(s);
+  assert.equal(explicit.tileBudget?.spaces[0].areaBasis,"customer_input");
+  assert.equal(explicit.tileBudget?.demolitionWon,100000);
+  assert.match(publicSelectionSummary(s,explicit),/고객 입력/);
+  assert.match(publicSelectionSummary(s,explicit),/가정/);
+  const sharedDemo=calculatePublicSelection({...s,extraWork:{...s.extraWork,demolition:"work"},demolitionScope:"whole"});
+  assert.equal(sharedDemo.tileBudget?.demolitionWon,0);
+  assert.ok(sharedDemo.pending.some(t=>t.includes("전체 철거비는 별도")));
+  const large=calculatePublicSelection({...s,tileBySpace:{entranceTile:{...s.tileBySpace.entranceTile,areaM2:40}}});
+  assert.equal(large.tileBudget?.teamDays,2);
+  assert.equal(calculatePublicSelection({...base,extraWork:{entranceTile:"consult"}}).tileBudget,null);
+  assert.equal(calculatePublicSelection({...defaultPublicSelection(),extraWork:{entranceTile:"work"}}).tileBudget,null);
+  assert.ok(validatePublicSelection({...base,tilePricingBasis:"invented"}));
+});

@@ -1,5 +1,5 @@
 // Public supplier examples and owner-approved customer rates; never import private cost/margin data.
-export const PUBLIC_CATALOG_VERSION = "public-32-2026-11-02-v11";
+export const PUBLIC_CATALOG_VERSION = "public-area-2026-11-04-v12";
 const checkedAt = "2026-10-26";
 export const PUBLIC_SOURCES = {
   tileBudget: { name: "타일 실측 전 예산모형 · 가정값 포함", url: "/ai-estimate", region: "현장별 변동 · 부산 확정 단가 아님", checkedAt: "2026-11-02", publishedAt: null, vat: "미확인", condition: "기공35만+조공17만원/팀일은 집지니 공개 견적 참고(https://jipjini.com/trade/tile.html). 10평/팀일, 현관3.3㎡·발코니 합계10㎡, 자재 예산 2.7/3/4만원/㎡, 로스10%, 부자재5천원/㎡·철거2만원/㎡는 프로그램 예산 가정이며 확정 시공 단가 아님. 같은 일정의 두 공간은 공임 1회 계산. 물매·방수·특수바탕·운송 별도." },
@@ -157,6 +157,7 @@ export const TILE_SIZES = [{ id: "unknown", label: "상담 후 선택" }, { id: 
 export type TileSelection = { areaM2: number | null; method: string; size: string; surface: "floor" | "floor-wall"; condition: "unknown" | "sound" | "damaged" | "leak" };
 export const defaultTileSelection = (): TileSelection => ({ areaM2: null, method: "unknown", size: "unknown", surface: "floor", condition: "unknown" });
 export interface PublicSelection32 {
+  supplyPyung?: number; // Missing on older selections means 32, never migrate saved records. 
   tilePricingBasis?: "budget-v1";
   demolitionScope?: string;
   electricalWorks?: string[];
@@ -201,6 +202,7 @@ export const defaultPublicSelection = (): PublicSelection32 => ({
 export function validatePublicSelection(value: unknown): string | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return "선택 조건을 확인해 주세요.";
   const s = value as PublicSelection32;
+  if (s.supplyPyung !== undefined && (typeof s.supplyPyung !== "number" || !Number.isFinite(s.supplyPyung) || s.supplyPyung < 10 || s.supplyPyung > 100)) return "공급면적은 10~100평 사이로 입력해 주세요.";
   if (s.extraWork !== undefined) {
     if (!s.extraWork || typeof s.extraWork !== "object" || Array.isArray(s.extraWork)) return "추가 공사 범위를 확인해 주세요.";
     for (const [key, choice] of Object.entries(s.extraWork)) {
@@ -245,7 +247,7 @@ export function validatePublicSelection(value: unknown): string | null {
   if (s.doorsSeparateFromFilm !== undefined && typeof s.doorsSeparateFromFilm !== "boolean") return "문 교체·필름 대상을 확인해 주세요.";
   if (s.extraWork?.doors !== "work" && ((s.doorSpec && s.doorSpec !== "unknown") || s.doorsSeparateFromFilm)) return "방문 교체 선택을 확인해 주세요.";
   if (!WALLPAPER_OPTIONS.some(o => o.id === s.wallpaper) || !FLOOR_OPTIONS.some(o => o.id === s.floor)) return "도배·바닥 선택이 올바르지 않습니다.";
-  if (!Array.isArray(s.bathrooms) || s.bathrooms.length !== 2 || s.bathrooms.some(b => !b || !BATHROOM_OPTIONS.some(o => o.id === b.method) || typeof b.largeTile !== "boolean" || (b.largeTile && !["overlay", "full"].includes(b.method)))) return "욕실 공사와 타일 선택을 확인해 주세요.";
+  if (!Array.isArray(s.bathrooms) || (s.bathrooms.length < 1 || s.bathrooms.length > 4) || s.bathrooms.some(b => !b || !BATHROOM_OPTIONS.some(o => o.id === b.method) || typeof b.largeTile !== "boolean" || (b.largeTile && !["overlay", "full"].includes(b.method)))) return "욕실 공사와 타일 선택을 확인해 주세요.";
   if (["kitchen", "shoeCabinet", "windows", "film", "occupied", "expanded", "elevator"].some(key => typeof s[key as keyof PublicSelection32] !== "boolean")) return "선택 조건이 올바르지 않습니다.";
   if (!["unknown", "none", "vinyl", "wood"].includes(s.floorRemoval)) return "기존 바닥 상태를 확인해 주세요.";
   if (!WINDOW_OPTIONS.some(o => o.id === (s.windowScope ?? "unknown"))) return "샤시 교체 범위를 확인해 주세요.";
@@ -266,14 +268,17 @@ export function calculatePublicSelection(value: unknown) {
   const error = validatePublicSelection(value);
   if (error) throw new Error(error);
   const s = value as PublicSelection32;
+  const supplyPyung = s.supplyPyung ?? 32;
+  const areaRatio = supplyPyung / 32;
+  const areaAdjusted = (amount: number) => Math.round(amount * areaRatio);
   const items: Array<{ id: string; label: string; amount: number; source: keyof typeof PUBLIC_SOURCES; quantity: number; includes: string[] }> = [];
   const pending: string[] = [];
   const add = (id: string, label: string, amount: number, source: keyof typeof PUBLIC_SOURCES, quantity = 1, includes: string[] = []) => items.push({ id, label, amount, source, quantity, includes });
   const wall = WALLPAPER_OPTIONS.find(o => o.id === s.wallpaper)!;
-  if (wall.id !== "keep") add("wallpaper", wall.label, wall.price!, wall.source!, 1, ["천장 도배"]);
+  if (wall.id !== "keep") add("wallpaper", wall.label + (areaRatio === 1 ? "" : " · 평수 환산 예산"), areaAdjusted(wall.price!), wall.source!, 1, ["천장 도배"]);
   const floor = FLOOR_OPTIONS.find(o => o.id === s.floor)!;
   if (floor.id !== "keep") {
-    add("floor", floor.label, floor.price!, floor.source!);
+    add("floor", floor.label + (areaRatio === 1 ? "" : " · 평수 환산 예산"), areaAdjusted(floor.price!), floor.source!);
     if (s.floorRemoval !== "none") pending.push(s.floorRemoval === "unknown" ? "기존 바닥 철거·폐기·바탕 보수 필요 여부" : "기존 바닥 철거·폐기·바탕 보수 비용");
   }
   s.bathrooms.forEach((bath, i) => {
@@ -308,8 +313,8 @@ export function calculatePublicSelection(value: unknown) {
   }
   if (s.windows) {
     const window = WINDOW_OPTIONS.find(o => o.id === (s.windowScope ?? "unknown"))!;
-    if (window.price !== null) add("windows", window.label, window.price, "windows", 1, ["평형대별 원문 시공 예시"]);
-    pending.push(window.price === null ? "샷시 교체 · 창별 규격·유리·설치가격 확인" : "샷시 교체 · 창 개수·실측·브랜드·유리·철거·양중 범위 확인");
+    if (window.price !== null && supplyPyung >= 30 && supplyPyung < 40) add("windows", window.label, window.price, "windows", 1, ["평형대별 원문 시공 예시"]);
+    pending.push(supplyPyung < 30 || supplyPyung >= 40 ? "샷시 교체 · 30평대 공개 예시는 선택 평형에 적용하지 않음 · 창별 실측 견적 필요" : window.price === null ? "샷시 교체 · 창별 규격·유리·설치가격 확인" : "샷시 교체 · 창 개수·실측·브랜드·유리·철거·양중 범위 확인");
   }
   if (s.film) {
     const parts = [
@@ -371,7 +376,7 @@ export function calculatePublicSelection(value: unknown) {
   });
   const tileBudget = s.tilePricingBasis === "budget-v1" && tileSelection.length ? (() => {
     const spaces = tileSelection.map(tile => {
-      const areaM2 = tile.areaM2 ?? (tile.id === "entranceTile" ? 3.3 : 10);
+      const areaM2 = tile.areaM2 ?? Math.round((tile.id === "entranceTile" ? 3.3 : 10) * areaRatio * 100) / 100;
       const materialRate = tile.size === "600x1200" ? 40000 : tile.size === "600" ? 30000 : 27000;
       const demolitionIncludedElsewhere = tile.method === "remove" && s.extraWork?.demolition === "work" && s.demolitionScope === "whole";
       return { id: tile.id, label: tile.label, areaM2, areaBasis: tile.areaM2 === null ? "program_assumption" as const : "customer_input" as const,
@@ -391,7 +396,7 @@ export function calculatePublicSelection(value: unknown) {
     pending.push("타일 예산 가정 확인: 같은 일정 시공·기본 바닥 기준 10평/팀일. 벽·대형타일·재단·물매·방수·운반·바탕 보수·일정 분리는 실측 후 금액 변동");
     if (spaces.some(tile => tile.demolitionIncludedElsewhere)) pending.push("타일 철거는 전체 철거와 중복 합산하지 않음 · 전체 철거비는 별도 확인 항목");
     return { basis: "budget-v1", spaces, totalAreaM2, teamDays, laborWon, materialWon, suppliesWon, demolitionWon, amountWon,
-      assumptions: ["기공35만원+조공17만원/팀일", "10평/팀일은 예산 계산용 가정", "현관3.3㎡·발코니 합계10㎡는 미입력 시 가정", "자재 예산 2.7/3/4만원/㎡·로스10%", "부자재5천원/㎡·철거2만원/㎡는 임시 예산", "미선택 규격은 기본 자재 예산, 방식 미정은 철거 없는 기준", "기본 공임은 두 공간 동일 일정에 1회", "VAT·특수바탕·방수·물매·운송 등은 별도 확인"] };
+      assumptions: ["기공35만원+조공17만원/팀일", "10평/팀일은 예산 계산용 가정", `미입력 면적은 32평 기준 현관3.3㎡·발코니10㎡에 ${supplyPyung}/32를 곱한 예산 가정 (실측 아님)`, "자재 예산 2.7/3/4만원/㎡·로스10%", "부자재5천원/㎡·철거2만원/㎡는 임시 예산", "미선택 규격은 기본 자재 예산, 방식 미정은 철거 없는 기준", "기본 공임은 두 공간 동일 일정에 1회", "VAT·특수바탕·방수·물매·운송 등은 별도 확인"] };
   })() : null;
   const scopeChoices = EXTRA_WORK_SCOPES.map(scope => ({ id: scope.id, label: scope.label, choice: s.extraWork?.[scope.id] ?? "keep" }));
   for (const scope of scopeChoices) {
@@ -408,7 +413,8 @@ export function calculatePublicSelection(value: unknown) {
   if (selectedCount && !s.elevator) pending.push("계단 운반·양중 조건과 추가비");
   return {
     version: PUBLIC_CATALOG_VERSION,
-    area: { supplyPyung: 32, exampleExclusivePyung: 24 },
+    area: { supplyPyung, exampleExclusivePyung: Math.round(24 * areaRatio * 100) / 100 },
+    areaPricing: { referenceSupplyPyung: 32, ratio: areaRatio, method: "linear_budget_assumption" as const, adjustedItemIds: items.filter(i => ["wallpaper", "floor"].includes(i.id)).map(i => i.id), notice: "도배·바닥은 32평 공개 예시 × 공급평수/32로 환산한 예산 가정입니다. 실제 물량·최소 공임·확장 여부에 따라 달라집니다. 전용면적 환산도 가정이며 실제 전용면적이 아닙니다." },
     items,
     scopeChoices,
     tileSelection,
@@ -430,12 +436,12 @@ export function calculatePublicSelection(value: unknown) {
     hasSelection: selectedCount > 0,
     totalIsComplete: false,
     vatStatus: "source_unverified" as const,
-    notice: "공급32평은 계산 시작용 예시이며 같은 평수라도 물량·금액이 다릅니다. 타 업체 공개가격·지니 기준·가정값 포함 예산을 구분한 실측 전 예상금액입니다. 부산 현장 적용·부가세·선택 공종의 부대비용은 별도 확인이 필요하며 지니 인테리어의 확정 판매가격이 아닙니다.",
+    notice: `공급 ${supplyPyung}평 기준이며 같은 평수라도 물량·금액이 다릅니다. 타 업체 공개가격·지니 기준·가정값 포함 예산을 구분한 실측 전 예상금액입니다. 부산 현장 적용·부가세·선택 공종의 부대비용은 별도 확인이 필요하며 지니 인테리어의 확정 판매가격이 아닙니다.`,
   };
 }
 export function formatWon(amount: number) { return `${amount.toLocaleString("ko-KR")}원`; }
 export function publicSelectionSummary(selection: PublicSelection32, quote: ReturnType<typeof calculatePublicSelection>) {
-  return ["[32평 공종 선택형 참고견적]", `조건: ${selection.occupied ? "거주 중" : "빈집"} / ${selection.expanded ? "확장" : "미확장"} / 엘리베이터 ${selection.elevator ? "있음" : "없음"}`,
+  return [`[${quote.area.supplyPyung}평 공종 선택형 참고견적]`, quote.areaPricing.notice, `조건: ${selection.occupied ? "거주 중" : "빈집"} / ${selection.expanded ? "확장" : "미확장"} / 엘리베이터 ${selection.elevator ? "있음" : "없음"}`,
     ...EXTRA_WORK_SCOPES.map(scope => `${scope.label}: ${EXTRA_WORK_OPTIONS.find(o => o.id === (selection.extraWork?.[scope.id] ?? "keep"))!.label}`),
     ...(selection.extraWork?.demolition === "work" ? [`철거 상세: ${DEMOLITION_SCOPE_OPTIONS.find(o => o.id === (selection.demolitionScope ?? "unknown"))!.label}`] : []),
     ...(selection.extraWork?.electrical === "work" ? [`전기·조명 상세: ${ELECTRICAL_WORK_OPTIONS.filter(o => selection.electricalWorks?.includes(o.id)).map(o => o.label).join(", ") || "범위 상담 후 결정"}`] : []),

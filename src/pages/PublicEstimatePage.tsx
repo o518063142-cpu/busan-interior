@@ -23,6 +23,10 @@ const choiceLabel = (o: { label: string; price: number | null }) => `${o.label}$
 
 export function PublicEstimatePage() {
   const [selection, setSelection] = useState(() => ({ ...defaultPublicSelection(), furnitureBasis: "gene" as const, tilePricingBasis: "budget-v1" as const }));
+  const [areaBand, setAreaBand] = useState("30");
+  const supplyPyung = selection.supplyPyung ?? 32;
+  const areaRatio = supplyPyung / 32;
+  const areaChoiceLabel = (o: { label: string; price: number | null }) => choiceLabel({ ...o, price: o.price === null ? null : Math.round(o.price * areaRatio) });
   const quote = useMemo(() => calculatePublicSelection(selection), [selection]);
   const [contact, setContact] = useState({ name: "", phone: "", location: "", details: "" });
   const [consent, setConsent] = useState(false);
@@ -73,10 +77,10 @@ export function PublicEstimatePage() {
         window.location.hostname !== new URL(SITE_CONFIG.seo.canonicalUrl).hostname;
       const isTest = isPreview || /^\[TEST\]/i.test(contact.name.trim());
       const details = `${isTest ? "[TEST] 테스트 접수 · 실적 집계 제외 · 실제 고객 연락 금지\n" : ""}${publicSelectionSummary(selection, result.data)}\n추가 요청: ${contact.details.trim() || "없음"}`;
-      const payload = { name: contact.name.trim(), phone: contact.phone.trim(), location: contact.location.trim(), spaceType: "아파트", area: "32", startDate: "협의", details };
+      const payload = { name: contact.name.trim(), phone: contact.phone.trim(), location: contact.location.trim(), spaceType: "아파트", area: String(result.data.area.supplyPyung), startDate: "협의", details };
       const sessionId = getConversionSessionId();
       const doc = await addDoc(collection(db, "consultations"), {
-        ...payload, status: "new", source: "ai-estimate", estimateType: "public-selection-32",
+        ...payload, status: "new", source: "ai-estimate", estimateType: "public-selection-area",
         sessionId, isTest, excludeFromMetrics: isTest,
         estimateConditions: selection, publicEstimateSnapshot: result.data, createdAt: serverTimestamp(),
       });
@@ -92,14 +96,14 @@ export function PublicEstimatePage() {
   };
 
   return <div className="mx-auto max-w-7xl px-4 pt-10 pb-32 xl:pb-10 lg:px-8 space-y-6">
-    <MetaManager title="32평 아파트 공종 선택형 예상견적" description="32평 아파트 도배·바닥·욕실·싱크대·타일을 선택해 실측 전 예상 예산을 확인하세요. 같은 평수도 구조·자재·현장 상태에 따라 금액이 달라집니다." canonicalPath="/ai-estimate" />
+    <MetaManager title="아파트 평형별 공종 선택형 예상견적" description="20·30·40·50평형대 아파트의 평수와 도배·바닥·욕실·싱크대·타일을 선택해 실측 전 예상 예산을 확인하세요. 같은 평수도 구조·자재·현장 상태에 따라 금액이 달라집니다." canonicalPath="/ai-estimate" />
     <header className="rounded-3xl bg-stone-950 text-white p-6 sm:p-10 space-y-4">
       <p className="text-amber-300 text-xs font-bold tracking-wide">지니 인테리어 · 공종 선택형 예상견적</p>
       <h1 className="text-3xl sm:text-4xl font-black break-keep leading-tight">원하는 공사를 고르면,<br />예상 금액이 바로 바뀝니다.</h1>
-      <p className="text-stone-300 text-sm leading-6 max-w-3xl">공급 32평 아파트를 기준으로 공종과 자재를 선택해 보세요. 타 업체 공개가격과 지니의 가구 기준단가를 구분해 참고하며, 지니 인테리어의 확정 견적은 상담·실측 후 안내합니다.</p>
+      <p className="text-stone-300 text-sm leading-6 max-w-3xl">아파트 공급평수와 공종·자재를 선택해 보세요. 타 업체 공개가격과 지니의 가구 기준단가를 구분해 참고하며, 지니 인테리어의 확정 견적은 상담·실측 후 안내합니다.</p>
     </header>
     <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-stone-700 leading-6">
-      시작 기준은 <strong>공급 32평 · 전용 약 24평 예시</strong>입니다. 같은 32평도 확장·욕실 수·주방 길이·발코니와 기존 상태에 따라 금액이 달라집니다. 아는 조건만 수정해 주세요. 타일 면적을 모르면 표시된 기본 가정으로 계산합니다. 원문마다 부가세·철거·보양 조건이 달라, 아래 소계는 전체 공사 총액이 아닙니다.
+      현재 <strong>공급 {supplyPyung}평 기준</strong>입니다. 도배·바닥은 32평 공개 예시를 면적 비율로 환산한 예산 가정입니다. 같은 평수도 확장·욕실 수·주방 길이·발코니와 기존 상태에 따라 금액이 달라집니다. 아는 조건만 수정해 주세요. 타일 면적을 모르면 표시된 기본 가정으로 계산합니다. 원문마다 부가세·철거·보양 조건이 달라, 아래 소계는 전체 공사 총액이 아닙니다.
     </div>
     <div className="lg:hidden rounded-xl border border-amber-300 bg-white/95 shadow-md p-3 flex items-center justify-between gap-3" aria-live="polite">
       <div><p className="text-xs text-stone-500">선택 공사 예상금액</p><strong className="text-lg">{quote.subtotalWon === null ? (quote.hasSelection ? "금액 확인 필요" : "항목을 선택해 주세요") : approximateWon(quote.subtotalWon)}</strong></div>
@@ -110,6 +114,11 @@ export function PublicEstimatePage() {
         <legend className="sr-only">공사 항목 선택</legend>
         <section className={card}>
           <h2 className="font-black text-lg">1. 현장 조건</h2>
+          <div className="grid sm:grid-cols-2 gap-4 mt-3">
+            <label className="text-sm font-bold">평형 선택<select aria-label="평형 선택" className={control} value={areaBand} onChange={e => { const band = e.target.value; setAreaBand(band); if (band !== "custom") update({ supplyPyung: ({ "20": 24, "30": 32, "40": 42, "50": 52 } as Record<string, number>)[band] }); }}><option value="20">20평형대 · 24평부터</option><option value="30">30평형대 · 32평부터</option><option value="40">40평형대 · 42평부터</option><option value="50">50평형대 · 52평부터</option><option value="custom">직접 입력</option></select></label>
+            <label className="text-sm font-bold">공급면적(평)<EstimateNumberInput label="공급면적(평)" className={control} min={10} max={100} required value={supplyPyung} onChange={n => { if (n !== null) { setAreaBand("custom"); update({ supplyPyung: n }); } }} /></label>
+          </div>
+          <p className="text-xs text-stone-500 mt-3">흔히 말하는 분양평수로 입력하세요. 평형대 선택값은 시작 예시이며 실제 평수로 수정할 수 있습니다. 평형을 바꿔도 직접 입력한 길이·면적과 공사 선택은 유지됩니다.</p>
           <div className="grid sm:grid-cols-3 gap-4 mt-3">
             <label className="text-sm font-bold">거주 상태<select aria-label="거주 상태" className={control} value={selection.occupied ? "occupied" : "empty"} onChange={e => update({ occupied: e.target.value === "occupied" })}><option value="empty">빈집</option><option value="occupied">거주 중</option></select></label>
             <label className="text-sm font-bold">확장 여부<select aria-label="확장 여부" className={control} value={selection.expanded ? "yes" : "no"} onChange={e => update({ expanded: e.target.value === "yes" })}><option value="no">미확장</option><option value="yes">확장</option></select></label>
@@ -118,16 +127,17 @@ export function PublicEstimatePage() {
         </section>
         <section className={card}>
           <h2 className="font-black text-lg">2. 도배</h2>
-          <label className="text-sm block mt-2">벽지 종류<select aria-label="벽지 종류" className={control} value={selection.wallpaper} onChange={e => update({ wallpaper: e.target.value })}>{WALLPAPER_OPTIONS.map(o => <option key={o.id} value={o.id}>{choiceLabel(o)}</option>)}</select></label>
+          <label className="text-sm block mt-2">벽지 종류<select aria-label="벽지 종류" className={control} value={selection.wallpaper} onChange={e => update({ wallpaper: e.target.value })}>{WALLPAPER_OPTIONS.map(o => <option key={o.id} value={o.id}>{areaChoiceLabel(o)}</option>)}</select></label>
           <p className="text-xs text-stone-500 mt-3">전체 합지·실크는 천장을 포함하는 공개 견적 예시입니다. 벽면 보수와 확장 면적은 별도 확인합니다.</p>
         </section>
         <section className={card}>
           <h2 className="font-black text-lg">3. 바닥</h2>
-          <label className="text-sm block mt-2">바닥재<select aria-label="바닥재" className={control} value={selection.floor} onChange={e => update({ floor: e.target.value })}>{FLOOR_OPTIONS.map(o => <option key={o.id} value={o.id}>{choiceLabel(o)}</option>)}</select></label>
+          <label className="text-sm block mt-2">바닥재<select aria-label="바닥재" className={control} value={selection.floor} onChange={e => update({ floor: e.target.value })}>{FLOOR_OPTIONS.map(o => <option key={o.id} value={o.id}>{areaChoiceLabel(o)}</option>)}</select></label>
           {selection.floor !== "keep" && <label className="text-sm block mt-4">기존 바닥 철거<select aria-label="기존 바닥 철거" className={control} value={selection.floorRemoval} onChange={e => update({ floorRemoval: e.target.value })}><option value="unknown">필요 여부를 모르겠어요</option><option value="none">기존 바닥 철거 없음</option><option value="vinyl">기존 장판 철거 필요</option><option value="wood">기존 마루 철거 필요</option></select></label>}
         </section>
         <section className={card}>
           <h2 className="font-black text-lg">4. 욕실</h2>
+          <label className="text-sm block mt-3">욕실 개수<select aria-label="욕실 개수" className={control} value={selection.bathrooms.length} onChange={e => update({ bathrooms: Array.from({ length: Number(e.target.value) }, (_, i) => selection.bathrooms[i] ?? { method: "keep", largeTile: false }) })}>{[1, 2, 3, 4].map(n => <option key={n} value={n}>{n}개</option>)}</select></label>
           <p className="text-xs text-stone-500 mt-2">욕실별로 선택하세요. 전체 철거+방수는 하나의 패키지로 계산해 방수비를 중복해서 더하지 않습니다.</p>
           {selection.bathrooms.map((bath, index) => <div key={index} className="mt-4 rounded-xl bg-stone-50 p-4">
             <label className="text-sm font-bold">욕실 {index + 1}<select aria-label={`욕실 ${index + 1} 공사`} className={control} value={bath.method} onChange={e => bathChange(index, { method: e.target.value })}>{BATHROOM_OPTIONS.map(o => <option key={o.id} value={o.id}>{choiceLabel(o)}</option>)}</select></label>
@@ -142,7 +152,7 @@ export function PublicEstimatePage() {
         <section className={card}>
           <h2 className="font-black text-lg">6. 샤시</h2>
           <label className="flex items-center gap-2 text-sm mt-4"><input type="checkbox" checked={selection.windows} onChange={e => update({ windows: e.target.checked, windowScope: "unknown" })} />샷시 교체</label>
-          {selection.windows && <div className="mt-4"><label className="text-sm">교체 범위<select aria-label="샤시 교체 범위" className={control} value={selection.windowScope ?? "unknown"} onChange={e => update({ windowScope: e.target.value })}>{WINDOW_OPTIONS.map(o => <option key={o.id} value={o.id}>{choiceLabel(o)}</option>)}</select></label><p className="text-xs text-stone-500 leading-5 mt-3">30평대 공개 시공 예시입니다. 내창+외창은 묶음 가격으로 계산합니다. 실제 창 수·규격·브랜드·유리와 철거·양중 조건은 별도 확인합니다.</p></div>}
+          {selection.windows && <div className="mt-4"><label className="text-sm">교체 범위<select aria-label="샤시 교체 범위" className={control} value={selection.windowScope ?? "unknown"} onChange={e => update({ windowScope: e.target.value })}>{WINDOW_OPTIONS.map(o => <option key={o.id} value={o.id}>{supplyPyung >= 30 && supplyPyung < 40 ? choiceLabel(o) : o.label + (o.price === null ? "" : " · 금액 별도 확인")}</option>)}</select></label><p className="text-xs text-stone-500 leading-5 mt-3">30평대 공개 시공 예시입니다. 내창+외창은 묶음 가격으로 계산합니다. 실제 창 수·규격·브랜드·유리와 철거·양중 조건은 별도 확인합니다.</p></div>}
         </section>
         <section className={card}>
           <h2 className="font-black text-lg">7. 필름</h2>
@@ -175,7 +185,7 @@ export function PublicEstimatePage() {
               const change = (patch: Partial<typeof tile>) => update({ tileBySpace: { ...selection.tileBySpace, [id]: { ...tile, ...patch } } });
               return <div className="rounded-xl bg-stone-50 p-3 mt-3 space-y-3" data-testid={`tile-detail-${id}`}>
                 <label className="block text-sm">{scope.label} 시공 면적(㎡)<EstimateNumberInput label={`${scope.label} 시공 면적(㎡)`} className={control} min={0.01} max={200} value={tile.areaM2} onChange={n => change({ areaM2: n })} /></label>
-                <p className="text-xs text-stone-600">모르면 비워 두세요. 현관은 3.3㎡, 발코니는 합계 10㎡를 예산용으로 가정합니다. 실제 32평의 표준 면적이 아닙니다. 입력하면 해당 면적으로 다시 계산합니다. 여러 발코니는 시공할 면적을 합쳐 주세요.</p>
+                <p className="text-xs text-stone-600">모르면 비워 두세요. 현재 평수에서 현관은 {Math.round(3.3 * areaRatio * 100) / 100}㎡, 발코니는 합계 {Math.round(10 * areaRatio * 100) / 100}㎡를 예산용으로 가정합니다. 32평 가정에 평수 비율을 적용한 값이며 표준 면적이 아닙니다. 입력하면 해당 면적으로 다시 계산합니다. 여러 발코니는 시공할 면적을 합쳐 주세요.</p>
                 <label className="block text-sm">시공 범위<select aria-label={`${scope.label} 시공 범위`} className={control} value={tile.surface} onChange={e => change({ surface: e.target.value as typeof tile.surface })}><option value="floor">바닥만</option><option value="floor-wall">바닥+벽 (입력 면적은 합계)</option></select></label>
                 <label className="block text-sm">시공 방식<select aria-label={`${scope.label} 시공 방식`} className={control} value={tile.method} onChange={e => change({ method: e.target.value })}>{TILE_METHODS.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}</select></label>
                 <label className="block text-sm">타일 규격<select aria-label={`${scope.label} 규격`} className={control} value={tile.size} onChange={e => change({ size: e.target.value })}>{TILE_SIZES.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}</select></label>
@@ -243,7 +253,7 @@ export function PublicEstimatePage() {
           <h2 className="text-sm text-amber-300 font-bold flex gap-2 items-center"><Calculator className="w-4 h-4" />선택 공사 예상금액</h2>
           <p data-testid="public-subtotal" className="font-black text-3xl mt-3">{quote.subtotalWon === null ? (quote.hasSelection ? "금액 확인 필요" : "공사를 선택해 주세요") : approximateWon(quote.subtotalWon)}</p>
           <p className="text-xs text-amber-200 mt-2">만원 단위 반올림 · 부가세 포함 여부 미확정 · 선택한 공사만 반영</p>
-          <p className="text-sm text-stone-300 mt-4 leading-6">{quote.notice}</p>
+          <p className="text-sm text-stone-300 mt-4 leading-6">{quote.notice}</p><p className="text-xs text-stone-300 mt-3 leading-5">{quote.areaPricing.notice} 욕실은 개수별, 가구는 길이별로 계산하며 몰딩은 입력 길이를 유지합니다.</p>
           {quote.items.length > 0 && <><h3 className="text-sm font-bold mt-5">예상금액에 반영한 항목</h3><ul className="mt-5 space-y-3 border-t border-stone-700 pt-4">{quote.items.map(item => <li key={item.id} className="text-sm flex justify-between gap-4"><span>{item.label}</span><strong className="shrink-0">{approximateWon(item.amount)}</strong></li>)}</ul></>}
         </section>
       {quote.tileBudget && <div className="rounded-xl bg-amber-50 p-4 text-sm leading-6 mt-0" data-testid="tile-budget-breakdown"><strong>타일 예산에 적용한 가정 · {approximateWon(quote.tileBudget.amountWon)}</strong><p>기공·조공 {quote.tileBudget.teamDays}팀일 공임 {formatWon(quote.tileBudget.laborWon)} + 자재 {formatWon(quote.tileBudget.materialWon)} + 부자재 {formatWon(quote.tileBudget.suppliesWon)} + 철거 예산 {formatWon(quote.tileBudget.demolitionWon)}</p>{quote.tileBudget.spaces.map(tile => <p key={tile.id}>{tile.label}: {tile.areaM2}㎡ · {tile.areaBasis === "program_assumption" ? "기본 가정·실측 아님" : "직접 입력·실측 확인 필요"}</p>)}<details><summary className="cursor-pointer underline">적용한 예산 가정 보기</summary>{quote.tileBudget.assumptions.map(note => <p key={note}>{note}</p>)}</details></div>}

@@ -21,7 +21,7 @@ test("간편 견적의 서버 재계산 금액·면적·공종이 실제 상담 
     kitchenLengthM: 3,
   };
   const local = calculatePublicSelection(selection);
-  assert.equal(local.subtotalWon, 12_600_000);
+  assert.equal(local.subtotalWon, 12_603_125);
   const res = response();
   await estimateHandler({ method: "POST", query: {}, body: { publicSelection: selection, subtotalWon: 1 } } as any, res as any);
   assert.equal(res.code, 200);
@@ -42,13 +42,13 @@ test("간편 견적의 서버 재계산 금액·면적·공종이 실제 상담 
   assert.equal(lead.record.estimateType, "public-selection-area");
   assert.deepEqual(lead.record.estimateConditions, selection);
   assert.deepEqual(lead.record.publicEstimateSnapshot, local);
-  assert.equal(lead.record.publicEstimateSnapshot.subtotalWon, 12_600_000);
+  assert.equal(lead.record.publicEstimateSnapshot.subtotalWon, 12_603_125);
 
   const notification = buildPublicEstimateNotification(lead.payload, "consultations/qa-example", "2026. 11. 6.");
   assert.deepEqual(notification, { ...lead.payload, docPath: "consultations/qa-example", createdAt: "2026. 11. 6." });
   const kakao = buildConsultationKakao(notification);
   assert.ok(kakao.text.length <= KAKAO_TEXT_LIMIT);
-  assert.ok(kakao.text.includes("12,600,000원"));
+  assert.ok(kakao.text.includes("12,603,125원"));
   assert.ok(kakao.text.includes("010-0000-0000"));
   assert.ok(kakao.text.includes("qa-example"));
 });

@@ -9,6 +9,7 @@ import { QuickEstimatePanel } from "../components/QuickEstimatePanel";
 import { approximateWon } from "../utils/estimatePresentation";
 import { db } from "../firebase";
 import { getConversionSessionId, trackEstimateEvent } from "../utils/conversionTracking";
+import { buildPublicEstimateLead, buildPublicEstimateNotification } from "../utils/publicEstimateLead";
 import {
   TILE_METHODS, TILE_SIZES, defaultTileSelection,
   WALLPAPER_OPTIONS, FLOOR_OPTIONS, BATHROOM_OPTIONS, PUBLIC_SOURCES, WINDOW_OPTIONS,
@@ -76,19 +77,12 @@ export function PublicEstimatePage() {
       if (!response.ok || !result.success || result.source !== "public-reference") throw new Error(result.error || "선택 견적 확인에 실패했습니다.");
       const isPreview = window.location.hostname.endsWith(".vercel.app") &&
         window.location.hostname !== new URL(SITE_CONFIG.seo.canonicalUrl).hostname;
-      const isTest = isPreview || /^\[TEST\]/i.test(contact.name.trim());
-      const details = `${isTest ? "[TEST] 테스트 접수 · 실적 집계 제외 · 실제 고객 연락 금지\n" : ""}${publicSelectionSummary(selection, result.data)}\n추가 요청: ${contact.details.trim() || "없음"}`;
-      const payload = { name: contact.name.trim(), phone: contact.phone.trim(), location: contact.location.trim(), spaceType: "아파트", area: String(result.data.area.supplyPyung), startDate: "협의", details };
-      const sessionId = getConversionSessionId();
-      const doc = await addDoc(collection(db, "consultations"), {
-        ...payload, status: "new", source: "ai-estimate", estimateType: "public-selection-area",
-        sessionId, isTest, excludeFromMetrics: isTest,
-        estimateConditions: selection, publicEstimateSnapshot: result.data, createdAt: serverTimestamp(),
-      });
+      const { payload, record } = buildPublicEstimateLead(selection, result.data, contact, getConversionSessionId(), isPreview);
+      const doc = await addDoc(collection(db, "consultations"), { ...record, createdAt: serverTimestamp() });
       setSaved(true);
-      void trackEstimateEvent("consultation_submitted", sessionId);
+      void trackEstimateEvent("consultation_submitted", record.sessionId);
       try {
-        const notified = await fetch("/api/notify-kakao", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...payload, docPath: doc.path, createdAt: new Date().toLocaleString("ko-KR") }), signal: AbortSignal.timeout(10000) });
+        const notified = await fetch("/api/notify-kakao", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(buildPublicEstimateNotification(payload, doc.path, new Date().toLocaleString("ko-KR")) ), signal: AbortSignal.timeout(10000) });
         const notification = await notified.json();
         if (!notified.ok || !notification.success) setNotice("담당자 알림 확인이 지연됩니다. 상담은 저장되어 다시 접수하지 않으셔도 됩니다.");
       } catch { setNotice("담당자 알림 확인이 지연됩니다. 상담은 저장되어 다시 접수하지 않으셔도 됩니다."); }

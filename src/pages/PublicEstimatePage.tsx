@@ -283,7 +283,7 @@ export function PublicEstimatePage() {
           <p className="text-xs text-stone-500 mt-2">선택 내역과 출처별 참고 소계, 별도 확인 항목을 함께 전달합니다.</p>
           {saved ? <div role="status" className="mt-4 rounded-xl bg-emerald-50 p-4 text-emerald-800"><CheckCircle2 className="w-6 h-6 mb-2" /><strong>상담 신청이 접수되었습니다.</strong><p className="text-sm mt-2">담당자가 선택하신 공사 범위를 확인한 뒤 연락드립니다.</p>{notice && <p className="text-xs mt-2">{notice}</p>}</div> : isPreviewHost ? <div className="mt-4 space-y-3" role="status">
             <p className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-stone-800 leading-6">이 화면은 미리보기이므로 실제 상담이 접수되지 않습니다. 선택한 견적은 확인할 수 있지만, 이 선택 내역이 운영 홈페이지에 자동 전달되지는 않습니다.</p>
-            <a href={new URL("/contact", SITE_CONFIG.seo.canonicalUrl).toString()}/contact`} className="flex items-center justify-center rounded-xl bg-amber-500 p-4 text-sm font-black text-stone-950">공식 홈페이지에서 상담 신청하기</a>
+            <a href={new URL("/contact", SITE_CONFIG.seo.canonicalUrl).toString()} className="flex items-center justify-center rounded-xl bg-amber-500 p-4 text-sm font-black text-stone-950">공식 홈페이지에서 상담 신청하기</a>
           </div> : <form onSubmit={submit} className="mt-4 space-y-3">
             <fieldset disabled={busy} className="space-y-3 min-w-0">
               <input aria-label="이름" autoComplete="name" placeholder="이름" required maxLength={50} className={control} value={contact.name} onChange={e => setContact({ ...contact, name: e.target.value })} />

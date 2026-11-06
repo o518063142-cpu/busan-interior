@@ -2,7 +2,7 @@ import React from "react";
 import { ArrowDown, Calculator, Check, Ruler } from "lucide-react";
 import { approximateWon } from "../utils/estimatePresentation";
 import type { PublicSelection32 } from "../../shared/publicEstimate32";
-import { calculatePublicSelection } from "../../shared/publicEstimate32";
+import { calculatePublicSelection, WALLPAPER_OPTIONS, FLOOR_OPTIONS } from "../../shared/publicEstimate32";
 
 type Quote = ReturnType<typeof calculatePublicSelection>;
 
@@ -21,26 +21,30 @@ export function QuickEstimatePanel({ selection, quote, onAreaChange, onUpdate }:
   const area = selection.supplyPyung ?? 32;
   const bathSelected = selection.bathrooms.some(b => b.method !== "keep");
   const electricalSelected = selection.extraWork?.electrical === "work";
+  const wallpaperOption = WALLPAPER_OPTIONS.find(option => option.id === selection.wallpaper);
+  const floorOption = FLOOR_OPTIONS.find(option => option.id === selection.floor);
+  const selectedBathrooms = selection.bathrooms.filter(bath => bath.method !== "keep").length;
+  const quickAreaPresets = [24, 32, 42, 52] as const;
 
   const choices = [
     {
       id: "wallpaper",
       name: "도배",
-      example: "전체 실크 · 천장 포함",
+      example: selection.wallpaper === "keep" ? "시작 예시: 전체 실크" : wallpaperOption?.label ?? "상세 도배 선택",
       selected: selection.wallpaper !== "keep",
       toggle: () => onUpdate({ wallpaper: selection.wallpaper === "keep" ? "silk" : "keep" }),
     },
     {
       id: "floor",
       name: "바닥",
-      example: "일반 강마루",
+      example: selection.floor === "keep" ? "시작 예시: 일반 강마루" : floorOption?.label ?? "상세 바닥 선택",
       selected: selection.floor !== "keep",
       toggle: () => onUpdate({ floor: selection.floor === "keep" ? "wood" : "keep" }),
     },
     {
       id: "bathroom",
       name: "욕실",
-      example: "욕실 1곳 덧방 예시",
+      example: bathSelected ? `${selectedBathrooms}곳 · 상세 시공 방식 적용` : "시작 예시: 1곳 덧방",
       selected: bathSelected,
       toggle: () => onUpdate({
         bathrooms: selection.bathrooms.map((bath, index) =>
@@ -52,14 +56,14 @@ export function QuickEstimatePanel({ selection, quote, onAreaChange, onUpdate }:
     {
       id: "kitchen",
       name: "주방",
-      example: "기본 3m · 길이 수정 가능",
+      example: selection.kitchen ? `선택 길이 ${selection.kitchenLengthM}m` : "시작 예시: 3m",
       selected: selection.kitchen,
       toggle: () => onUpdate({ kitchen: !selection.kitchen }),
     },
     {
       id: "shoe",
       name: "신발장",
-      example: "길이 입력 후 금액 확인",
+      example: selection.shoeCabinet && selection.shoeCabinetLengthM != null ? `선택 길이 ${selection.shoeCabinetLengthM}m` : "길이 입력 후 금액 확인",
       selected: selection.shoeCabinet,
       toggle: () => onUpdate({
         shoeCabinet: !selection.shoeCabinet,
@@ -92,6 +96,12 @@ export function QuickEstimatePanel({ selection, quote, onAreaChange, onUpdate }:
       </div>
       <input id="quick-area" aria-label="공급평수 슬라이더" type="range" min="10" max="100" step="1" value={area} onChange={event => onAreaChange(Number(event.target.value))} className="w-full mt-4 accent-amber-600" />
       <div className="flex justify-between text-xs text-stone-500 mt-1"><span>10평</span><span>100평</span></div>
+      <div className="grid grid-cols-4 gap-2 mt-3" role="group" aria-label="자주 찾는 평형 바로 선택">
+        {quickAreaPresets.map(preset => <button key={preset} type="button" aria-pressed={area === preset} onClick={() => onAreaChange(preset)}
+          className={`rounded-lg border px-1 py-2 text-xs sm:text-sm font-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-600 ${area === preset ? "bg-amber-100 border-amber-600 text-stone-950" : "border-stone-200 text-stone-700 hover:bg-stone-50"}`}>
+          {preset}평
+        </button>)}
+      </div>
       <p className="text-xs text-stone-500 mt-3">정확한 평수·소수점 입력은 아래 상세 선택에서 가능합니다.</p>
     </div>
     <div className="space-y-3">
@@ -105,7 +115,7 @@ export function QuickEstimatePanel({ selection, quote, onAreaChange, onUpdate }:
           <span className="block text-xs text-stone-500 leading-5 mt-2">{choice.example}</span>
         </button>)}
       </div>
-      <p className="text-xs leading-5 text-stone-600">선택 즉시 각 공종의 <strong>시작 예시 사양</strong>이 적용됩니다. 자재·욕실 수·주방 길이 등 실제 조건은 아래 상세 선택에서 바꿀 수 있습니다.</p>
+      <p className="text-xs leading-5 text-stone-600">처음 선택할 때는 <strong>시작 예시 사양</strong>이 적용되며, 이후에는 상세에서 설정한 자재·욕실 수·주방 길이 등을 유지합니다. 아래 참고 소계에는 상세 화면에서 추가로 선택한 공사도 포함됩니다.</p>
     </div>
     <div className="rounded-2xl bg-stone-950 p-5 sm:p-6 text-white space-y-3" aria-live="polite">
       <div className="flex gap-2 items-center text-sm font-bold text-amber-300"><Calculator className="w-4 h-4" />현재 선택 공사 참고 소계</div>

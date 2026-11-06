@@ -5,6 +5,7 @@ import { Calculator, CheckCircle2, Phone, Send, Loader2, ArrowUpRight } from "lu
 import { MetaManager } from "../components/seo/MetaManager";
 import { SITE_CONFIG } from "../config/siteConfig";
 import { EstimateNumberInput } from "../components/EstimateNumberInput";
+import { QuickEstimatePanel } from "../components/QuickEstimatePanel";
 import { approximateWon } from "../utils/estimatePresentation";
 import { db } from "../firebase";
 import { getConversionSessionId, trackEstimateEvent } from "../utils/conversionTracking";
@@ -102,6 +103,7 @@ export function PublicEstimatePage() {
       <h1 className="text-3xl sm:text-4xl font-black break-keep leading-tight">원하는 공사를 고르면,<br />예상 금액이 바로 바뀝니다.</h1>
       <p className="text-stone-300 text-sm leading-6 max-w-3xl">아파트 공급평수와 공종·자재를 선택해 보세요. 타 업체 공개가격과 지니의 가구 기준단가를 구분해 참고하며, 지니 인테리어의 확정 견적은 상담·실측 후 안내합니다.</p>
     </header>
+    <QuickEstimatePanel selection={selection} quote={quote} onAreaChange={area => { setAreaBand("custom"); update({ supplyPyung: area }); }} onUpdate={update} />
     <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-stone-700 leading-6">
       현재 <strong>공급 {supplyPyung}평 기준</strong>입니다. 도배·바닥은 32평 공개 예시를 면적 비율로 환산한 예산 가정입니다. 같은 평수도 확장·욕실 수·주방 길이·발코니와 기존 상태에 따라 금액이 달라집니다. 아는 조건만 수정해 주세요. 타일 면적을 모르면 표시된 기본 가정으로 계산합니다. 원문마다 부가세·철거·보양 조건이 달라, 아래 소계는 전체 공사 총액이 아닙니다.
     </div>
@@ -110,7 +112,7 @@ export function PublicEstimatePage() {
       <a href="#selected-estimate" className="text-xs font-bold text-amber-800 underline shrink-0">상세 내역</a>
     </div>
     <div className="grid lg:grid-cols-12 gap-6 items-start">
-      <fieldset disabled={busy} className="lg:col-span-7 min-w-0 space-y-4">
+      <fieldset id="detailed-estimate" disabled={busy} className="lg:col-span-7 min-w-0 space-y-4 scroll-mt-24">
         <legend className="sr-only">공사 항목 선택</legend>
         <section className={card}>
           <h2 className="font-black text-lg">1. 현장 조건</h2>

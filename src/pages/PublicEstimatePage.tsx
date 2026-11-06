@@ -9,7 +9,7 @@ import { QuickEstimatePanel } from "../components/QuickEstimatePanel";
 import { approximateWon } from "../utils/estimatePresentation";
 import { db } from "../firebase";
 import { getConversionSessionId, trackEstimateEvent } from "../utils/conversionTracking";
-import { completePublicEstimateSubmission } from "../utils/publicEstimateDelivery";
+import { completePublicEstimateSubmission, isPublicEstimatePreviewHost } from "../utils/publicEstimateDelivery";
 import {
   TILE_METHODS, TILE_SIZES, defaultTileSelection,
   WALLPAPER_OPTIONS, FLOOR_OPTIONS, BATHROOM_OPTIONS, PUBLIC_SOURCES, WINDOW_OPTIONS,
@@ -69,10 +69,10 @@ export function PublicEstimatePage() {
     if (!quote.hasSelection) { setError("원하시는 공사 항목을 선택해 주세요."); return; }
     if (!contact.name.trim() || !contact.location.trim() || !/^0\d{8,11}$/.test(contact.phone.replace(/[-\s]/g, ""))) { setError("이름·공사 지역·연락 가능한 전화번호를 확인해 주세요."); return; }
     if (!consent) { setError("상담을 위한 개인정보 수집·이용에 동의해 주세요."); return; }
+    const isPreview = isPublicEstimatePreviewHost(window.location.hostname, SITE_CONFIG.seo.canonicalUrl);
+    if (isPreview) { setError("미리보기 화면에서는 실제 상담을 접수하지 않습니다. 공식 홈페이지에서 신청해 주세요."); return; }
     lock.current = true; setBusy(true); setNotice("");
     try {
-      const isPreview = window.location.hostname.endsWith(".vercel.app") &&
-        window.location.hostname !== new URL(SITE_CONFIG.seo.canonicalUrl).hostname;
       const outcome = await completePublicEstimateSubmission(selection, contact, isPreview, {
         fetchQuote: async selected => {
           // Recalculate on the server; never trust client-supplied prices.

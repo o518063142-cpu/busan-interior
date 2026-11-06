@@ -11,13 +11,14 @@ interface QuickEstimatePanelProps {
   quote: Quote;
   onAreaChange: (area: number) => void;
   onUpdate: (patch: Partial<PublicSelection32>) => void;
+  isPreview?: boolean;
 }
 
 /**
  * Customer-friendly entry to the existing public estimate, not a second pricing engine.
  * Presets are explicitly disclosed; the detailed form remains the source of truth.
  */
-export function QuickEstimatePanel({ selection, quote, onAreaChange, onUpdate }: QuickEstimatePanelProps) {
+export function QuickEstimatePanel({ selection, quote, onAreaChange, onUpdate, isPreview = false }: QuickEstimatePanelProps) {
   const area = selection.supplyPyung ?? 32;
   const bathSelected = selection.bathrooms.some(b => b.method !== "keep");
   const electricalSelected = selection.extraWork?.electrical === "work";
@@ -122,7 +123,7 @@ export function QuickEstimatePanel({ selection, quote, onAreaChange, onUpdate }:
       <p className="text-3xl font-black tabular-nums">{quote.subtotalWon === null ? (quote.hasSelection ? "금액 확인 필요" : "공사를 선택해 주세요") : approximateWon(quote.subtotalWon)}</p>
       <p className="text-xs text-stone-300 leading-5">선택 공사 중 가격이 확인된 항목만 합산했습니다. 선택하지 않은 공사, 현장 조건, 철거·폐기·부가세 등은 빠질 수 있어 전체 예산 범위가 아닙니다. 가격 미확인 항목은 아래 상세 내역에서 확인하세요.</p>
       <a href="#selected-estimate" className="flex items-center justify-center gap-2 rounded-xl bg-amber-400 text-stone-950 p-4 font-black text-sm hover:bg-amber-300">
-        예상 내역 확인하고 실측 상담 신청 <ArrowDown className="w-4 h-4" />
+        {isPreview ? "선택한 예상 내역 확인하기" : "예상 내역 확인하고 실측 상담 신청"} <ArrowDown className="w-4 h-4" />
       </a>
       <a href="#detailed-estimate" className="flex items-center justify-center gap-2 text-sm underline underline-offset-4 text-white py-2">
         공종·자재를 더 자세히 선택하기 <ArrowDown className="w-4 h-4" />

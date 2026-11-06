@@ -15,7 +15,7 @@ import {
   WALLPAPER_OPTIONS, FLOOR_OPTIONS, BATHROOM_OPTIONS, PUBLIC_SOURCES, WINDOW_OPTIONS,
   FILM_QUANTITY_OPTIONS, filmPrice, DOOR_OPTIONS, MOLDING_SPACES, MOLDING_PARTS, MOLDING_METHODS, defaultMoldingSpace, getMoldingReference, DEMOLITION_SCOPE_OPTIONS, ELECTRICAL_WORK_OPTIONS, EXTRA_WORK_SCOPES, EXTRA_WORK_OPTIONS,
   type ExtraWorkChoice, type MoldingMethod, type MoldingSpace,
-  defaultPublicSelection, calculatePublicSelection, formatWon, publicSelectionSummary,
+  defaultPublicSelection, calculatePublicSelection, formatWon,
   type PublicSelection32,
 } from "../../shared/publicEstimate32";
 

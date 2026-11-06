@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { calculatePublicSelection, defaultPublicSelection } from "../shared/publicEstimate32.ts";
-import { completePublicEstimateSubmission } from "../src/utils/publicEstimateDelivery.ts";
+import { completePublicEstimateSubmission, isPublicEstimatePreviewHost } from "../src/utils/publicEstimateDelivery.ts";
 import { buildConsultationKakao, KAKAO_TEXT_LIMIT } from "../shared/kakaoConsultation.ts";
 
 const selection = {
@@ -163,4 +163,14 @@ test("실측 필요 항목만 선택한 경우에도 금액을 지어내지 않�
   assert.equal(result.record.publicEstimateSnapshot.subtotalWon, null);
   assert.match(result.record.details, /실측 견적 필요/);
   assert.equal(result.saved, true);
+});
+
+test("Vercel PR Preview는 실제 상담 저장·카카오 발송 전에 차단하며 운영 주소는 유지", () => {
+  const canonical = "https://gene-interior.vercel.app";
+  assert.equal(isPublicEstimatePreviewHost("gene-interior.vercel.app", canonical), false);
+  assert.equal(isPublicEstimatePreviewHost("gene-interior-mqq3t731w-o518063142-9435s-projects.vercel.app", canonical), true);
+  assert.equal(isPublicEstimatePreviewHost("GENE-INTERIOR-PR20.vercel.app", canonical), true);
+  assert.equal(isPublicEstimatePreviewHost("localhost", canonical), false);
+  assert.equal(isPublicEstimatePreviewHost("gene-interior.example.com", canonical), false);
+  assert.equal(isPublicEstimatePreviewHost("fakevercel.app", canonical), false);
 });

@@ -24,6 +24,8 @@ const card = "rounded-2xl border border-stone-200 bg-white p-5 sm:p-6";
 const choiceLabel = (o: { label: string; price: number | null }) => `${o.label}${o.price === null ? "" : ` · ${formatWon(o.price)}`}`;
 
 export function PublicEstimatePage() {
+  const isPreviewHost = typeof window !== "undefined" &&
+    isPublicEstimatePreviewHost(window.location.hostname, SITE_CONFIG.seo.canonicalUrl);
   const [selection, setSelection] = useState(() => ({ ...defaultPublicSelection(), furnitureBasis: "gene" as const, tilePricingBasis: "budget-v1" as const }));
   const [areaBand, setAreaBand] = useState("30");
   const supplyPyung = selection.supplyPyung ?? 32;
@@ -69,11 +71,10 @@ export function PublicEstimatePage() {
     if (!quote.hasSelection) { setError("원하시는 공사 항목을 선택해 주세요."); return; }
     if (!contact.name.trim() || !contact.location.trim() || !/^0\d{8,11}$/.test(contact.phone.replace(/[-\s]/g, ""))) { setError("이름·공사 지역·연락 가능한 전화번호를 확인해 주세요."); return; }
     if (!consent) { setError("상담을 위한 개인정보 수집·이용에 동의해 주세요."); return; }
-    const isPreview = isPublicEstimatePreviewHost(window.location.hostname, SITE_CONFIG.seo.canonicalUrl);
-    if (isPreview) { setError("미리보기 화면에서는 실제 상담을 접수하지 않습니다. 공식 홈페이지에서 신청해 주세요."); return; }
+    if (isPreviewHost) { setError("미리보기 화면에서는 실제 상담을 접수하지 않습니다. 공식 홈페이지에서 신청해 주세요."); return; }
     lock.current = true; setBusy(true); setNotice("");
     try {
-      const outcome = await completePublicEstimateSubmission(selection, contact, isPreview, {
+      const outcome = await completePublicEstimateSubmission(selection, contact, isPreviewHost, {
         fetchQuote: async selected => {
           // Recalculate on the server; never trust client-supplied prices.
           const response = await fetch("/api/ai-estimate", {
@@ -114,7 +115,10 @@ export function PublicEstimatePage() {
       <h1 className="text-3xl sm:text-4xl font-black break-keep leading-tight">원하는 공사를 고르면,<br />예상 금액이 바로 바뀝니다.</h1>
       <p className="text-stone-300 text-sm leading-6 max-w-3xl">아파트 공급평수와 공종·자재를 선택해 보세요. 타 업체 공개가격과 지니의 가구 기준단가를 구분해 참고하며, 지니 인테리어의 확정 견적은 상담·실측 후 안내합니다.</p>
     </header>
-    <QuickEstimatePanel selection={selection} quote={quote} onAreaChange={area => { setAreaBand("custom"); update({ supplyPyung: area }); }} onUpdate={update} />
+    {isPreviewHost && <div role="status" className="rounded-2xl border border-amber-300 bg-amber-50 p-4 sm:p-5 text-sm text-amber-950 leading-6">
+      <strong>기능 검수용 미리보기입니다.</strong> 평형과 공사 항목 선택 및 예상금액 확인은 가능하지만, 이 화면에서는 실제 상담이 접수되지 않습니다. 이름·연락처 입력 없이 체험해 주세요.
+    </div>}
+    <QuickEstimatePanel selection={selection} quote={quote} onAreaChange={area => { setAreaBand("custom"); update({ supplyPyung: area }); }} onUpdate={update} isPreview={isPreviewHost} />
     <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-stone-700 leading-6">
       현재 <strong>공급 {supplyPyung}평 기준</strong>입니다. 도배·바닥은 32평 공개 예시를 면적 비율로 환산한 예산 가정입니다. 같은 평수도 확장·욕실 수·주방 길이·발코니와 기존 상태에 따라 금액이 달라집니다. 아는 조건만 수정해 주세요. 타일 면적을 모르면 표시된 기본 가정으로 계산합니다. 원문마다 부가세·철거·보양 조건이 달라, 아래 소계는 전체 공사 총액이 아닙니다.
     </div>
@@ -277,7 +281,10 @@ export function PublicEstimatePage() {
         <section className={card}>
           <h3 className="font-black text-lg">이 선택으로 실측 상담</h3>
           <p className="text-xs text-stone-500 mt-2">선택 내역과 출처별 참고 소계, 별도 확인 항목을 함께 전달합니다.</p>
-          {saved ? <div role="status" className="mt-4 rounded-xl bg-emerald-50 p-4 text-emerald-800"><CheckCircle2 className="w-6 h-6 mb-2" /><strong>상담 신청이 접수되었습니다.</strong><p className="text-sm mt-2">담당자가 선택하신 공사 범위를 확인한 뒤 연락드립니다.</p>{notice && <p className="text-xs mt-2">{notice}</p>}</div> : <form onSubmit={submit} className="mt-4 space-y-3">
+          {saved ? <div role="status" className="mt-4 rounded-xl bg-emerald-50 p-4 text-emerald-800"><CheckCircle2 className="w-6 h-6 mb-2" /><strong>상담 신청이 접수되었습니다.</strong><p className="text-sm mt-2">담당자가 선택하신 공사 범위를 확인한 뒤 연락드립니다.</p>{notice && <p className="text-xs mt-2">{notice}</p>}</div> : isPreviewHost ? <div className="mt-4 space-y-3" role="status">
+            <p className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-stone-800 leading-6">이 화면은 미리보기이므로 실제 상담이 접수되지 않습니다. 선택한 견적은 확인할 수 있지만, 이 선택 내역이 운영 홈페이지에 자동 전달되지는 않습니다.</p>
+            <a href={`${SITE_CONFIG.seo.canonicalUrl.replace(/\\/$/, "")}/contact`} className="flex items-center justify-center rounded-xl bg-amber-500 p-4 text-sm font-black text-stone-950">공식 홈페이지에서 상담 신청하기</a>
+          </div> : <form onSubmit={submit} className="mt-4 space-y-3">
             <fieldset disabled={busy} className="space-y-3 min-w-0">
               <input aria-label="이름" autoComplete="name" placeholder="이름" required maxLength={50} className={control} value={contact.name} onChange={e => setContact({ ...contact, name: e.target.value })} />
               <input aria-label="연락처" type="tel" autoComplete="tel" placeholder="연락처" required maxLength={20} className={control} value={contact.phone} onChange={e => setContact({ ...contact, phone: e.target.value })} />

@@ -5,15 +5,17 @@ import { Calculator, CheckCircle2, Phone, Send, Loader2, ArrowUpRight } from "lu
 import { MetaManager } from "../components/seo/MetaManager";
 import { SITE_CONFIG } from "../config/siteConfig";
 import { EstimateNumberInput } from "../components/EstimateNumberInput";
+import { QuickEstimatePanel } from "../components/QuickEstimatePanel";
 import { approximateWon } from "../utils/estimatePresentation";
 import { db } from "../firebase";
 import { getConversionSessionId, trackEstimateEvent } from "../utils/conversionTracking";
+import { completePublicEstimateSubmission, isPublicEstimatePreviewHost } from "../utils/publicEstimateDelivery";
 import {
   TILE_METHODS, TILE_SIZES, defaultTileSelection,
   WALLPAPER_OPTIONS, FLOOR_OPTIONS, BATHROOM_OPTIONS, PUBLIC_SOURCES, WINDOW_OPTIONS,
   FILM_QUANTITY_OPTIONS, filmPrice, DOOR_OPTIONS, MOLDING_SPACES, MOLDING_PARTS, MOLDING_METHODS, defaultMoldingSpace, getMoldingReference, DEMOLITION_SCOPE_OPTIONS, ELECTRICAL_WORK_OPTIONS, EXTRA_WORK_SCOPES, EXTRA_WORK_OPTIONS,
   type ExtraWorkChoice, type MoldingMethod, type MoldingSpace,
-  defaultPublicSelection, calculatePublicSelection, formatWon, publicSelectionSummary,
+  defaultPublicSelection, calculatePublicSelection, formatWon,
   type PublicSelection32,
 } from "../../shared/publicEstimate32";
 
@@ -22,6 +24,8 @@ const card = "rounded-2xl border border-stone-200 bg-white p-5 sm:p-6";
 const choiceLabel = (o: { label: string; price: number | null }) => `${o.label}${o.price === null ? "" : ` · ${formatWon(o.price)}`}`;
 
 export function PublicEstimatePage() {
+  const isPreviewHost = typeof window !== "undefined" &&
+    isPublicEstimatePreviewHost(window.location.hostname, SITE_CONFIG.seo.canonicalUrl);
   const [selection, setSelection] = useState(() => ({ ...defaultPublicSelection(), furnitureBasis: "gene" as const, tilePricingBasis: "budget-v1" as const }));
   const [areaBand, setAreaBand] = useState("30");
   const supplyPyung = selection.supplyPyung ?? 32;
@@ -67,30 +71,39 @@ export function PublicEstimatePage() {
     if (!quote.hasSelection) { setError("원하시는 공사 항목을 선택해 주세요."); return; }
     if (!contact.name.trim() || !contact.location.trim() || !/^0\d{8,11}$/.test(contact.phone.replace(/[-\s]/g, ""))) { setError("이름·공사 지역·연락 가능한 전화번호를 확인해 주세요."); return; }
     if (!consent) { setError("상담을 위한 개인정보 수집·이용에 동의해 주세요."); return; }
+    if (isPreviewHost) { setError("미리보기 화면에서는 실제 상담을 접수하지 않습니다. 공식 홈페이지에서 신청해 주세요."); return; }
     lock.current = true; setBusy(true); setNotice("");
     try {
-      // Recalculate on the server: the saved quote never trusts client-supplied prices.
-      const response = await fetch("/api/ai-estimate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ publicSelection: selection }), signal: AbortSignal.timeout(15000) });
-      const result = await response.json();
-      if (!response.ok || !result.success || result.source !== "public-reference") throw new Error(result.error || "선택 견적 확인에 실패했습니다.");
-      const isPreview = window.location.hostname.endsWith(".vercel.app") &&
-        window.location.hostname !== new URL(SITE_CONFIG.seo.canonicalUrl).hostname;
-      const isTest = isPreview || /^\[TEST\]/i.test(contact.name.trim());
-      const details = `${isTest ? "[TEST] 테스트 접수 · 실적 집계 제외 · 실제 고객 연락 금지\n" : ""}${publicSelectionSummary(selection, result.data)}\n추가 요청: ${contact.details.trim() || "없음"}`;
-      const payload = { name: contact.name.trim(), phone: contact.phone.trim(), location: contact.location.trim(), spaceType: "아파트", area: String(result.data.area.supplyPyung), startDate: "협의", details };
-      const sessionId = getConversionSessionId();
-      const doc = await addDoc(collection(db, "consultations"), {
-        ...payload, status: "new", source: "ai-estimate", estimateType: "public-selection-area",
-        sessionId, isTest, excludeFromMetrics: isTest,
-        estimateConditions: selection, publicEstimateSnapshot: result.data, createdAt: serverTimestamp(),
+      const outcome = await completePublicEstimateSubmission(selection, contact, isPreviewHost, {
+        fetchQuote: async selected => {
+          // Recalculate on the server; never trust client-supplied prices.
+          const response = await fetch("/api/ai-estimate", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ publicSelection: selected }), signal: AbortSignal.timeout(15000),
+          });
+          const result = await response.json();
+          if (!response.ok || !result.success || result.source !== "public-reference") {
+            throw new Error(result.error || "선택 견적 확인에 실패했습니다.");
+          }
+          return result.data;
+        },
+        saveLead: record => addDoc(collection(db, "consultations"), {
+          ...record, createdAt: serverTimestamp(),
+        }),
+        notify: async payload => {
+          const response = await fetch("/api/notify-kakao", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload), signal: AbortSignal.timeout(10000),
+          });
+          const result = await response.json();
+          return response.ok && result.success === true;
+        },
+        trackSubmitted: sessionId => trackEstimateEvent("consultation_submitted", sessionId),
+        getSessionId: getConversionSessionId,
+        createdAt: () => new Date().toLocaleString("ko-KR"),
+        onSaved: () => setSaved(true),
       });
-      setSaved(true);
-      void trackEstimateEvent("consultation_submitted", sessionId);
-      try {
-        const notified = await fetch("/api/notify-kakao", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...payload, docPath: doc.path, createdAt: new Date().toLocaleString("ko-KR") }), signal: AbortSignal.timeout(10000) });
-        const notification = await notified.json();
-        if (!notified.ok || !notification.success) setNotice("담당자 알림 확인이 지연됩니다. 상담은 저장되어 다시 접수하지 않으셔도 됩니다.");
-      } catch { setNotice("담당자 알림 확인이 지연됩니다. 상담은 저장되어 다시 접수하지 않으셔도 됩니다."); }
+      if (!outcome.notified) setNotice("담당자 알림 확인이 지연됩니다. 상담은 저장되어 다시 접수하지 않으셔도 됩니다.");
     } catch (err: any) { setError(err?.name === "TimeoutError" ? "견적 확인 시간이 초과되었습니다. 잠시 후 다시 시도해 주세요." : "상담을 저장하지 못했습니다. 잠시 후 다시 시도하거나 전화로 문의해 주세요."); }
     finally { lock.current = false; setBusy(false); }
   };
@@ -102,6 +115,10 @@ export function PublicEstimatePage() {
       <h1 className="text-3xl sm:text-4xl font-black break-keep leading-tight">원하는 공사를 고르면,<br />예상 금액이 바로 바뀝니다.</h1>
       <p className="text-stone-300 text-sm leading-6 max-w-3xl">아파트 공급평수와 공종·자재를 선택해 보세요. 타 업체 공개가격과 지니의 가구 기준단가를 구분해 참고하며, 지니 인테리어의 확정 견적은 상담·실측 후 안내합니다.</p>
     </header>
+    {isPreviewHost && <div role="status" className="rounded-2xl border border-amber-300 bg-amber-50 p-4 sm:p-5 text-sm text-amber-950 leading-6">
+      <strong>기능 검수용 미리보기입니다.</strong> 평형과 공사 항목 선택 및 예상금액 확인은 가능하지만, 이 화면에서는 실제 상담이 접수되지 않습니다. 이름·연락처 입력 없이 체험해 주세요.
+    </div>}
+    <QuickEstimatePanel selection={selection} quote={quote} onAreaChange={area => { setAreaBand("custom"); update({ supplyPyung: area }); }} onUpdate={update} isPreview={isPreviewHost} />
     <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-stone-700 leading-6">
       현재 <strong>공급 {supplyPyung}평 기준</strong>입니다. 도배·바닥은 32평 공개 예시를 면적 비율로 환산한 예산 가정입니다. 같은 평수도 확장·욕실 수·주방 길이·발코니와 기존 상태에 따라 금액이 달라집니다. 아는 조건만 수정해 주세요. 타일 면적을 모르면 표시된 기본 가정으로 계산합니다. 원문마다 부가세·철거·보양 조건이 달라, 아래 소계는 전체 공사 총액이 아닙니다.
     </div>
@@ -110,7 +127,7 @@ export function PublicEstimatePage() {
       <a href="#selected-estimate" className="text-xs font-bold text-amber-800 underline shrink-0">상세 내역</a>
     </div>
     <div className="grid lg:grid-cols-12 gap-6 items-start">
-      <fieldset disabled={busy} className="lg:col-span-7 min-w-0 space-y-4">
+      <fieldset id="detailed-estimate" disabled={busy} className="lg:col-span-7 min-w-0 space-y-4 scroll-mt-24">
         <legend className="sr-only">공사 항목 선택</legend>
         <section className={card}>
           <h2 className="font-black text-lg">1. 현장 조건</h2>
@@ -264,7 +281,10 @@ export function PublicEstimatePage() {
         <section className={card}>
           <h3 className="font-black text-lg">이 선택으로 실측 상담</h3>
           <p className="text-xs text-stone-500 mt-2">선택 내역과 출처별 참고 소계, 별도 확인 항목을 함께 전달합니다.</p>
-          {saved ? <div role="status" className="mt-4 rounded-xl bg-emerald-50 p-4 text-emerald-800"><CheckCircle2 className="w-6 h-6 mb-2" /><strong>상담 신청이 접수되었습니다.</strong><p className="text-sm mt-2">담당자가 선택하신 공사 범위를 확인한 뒤 연락드립니다.</p>{notice && <p className="text-xs mt-2">{notice}</p>}</div> : <form onSubmit={submit} className="mt-4 space-y-3">
+          {saved ? <div role="status" className="mt-4 rounded-xl bg-emerald-50 p-4 text-emerald-800"><CheckCircle2 className="w-6 h-6 mb-2" /><strong>상담 신청이 접수되었습니다.</strong><p className="text-sm mt-2">담당자가 선택하신 공사 범위를 확인한 뒤 연락드립니다.</p>{notice && <p className="text-xs mt-2">{notice}</p>}</div> : isPreviewHost ? <div className="mt-4 space-y-3" role="status">
+            <p className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-stone-800 leading-6">이 화면은 미리보기이므로 실제 상담이 접수되지 않습니다. 선택한 견적은 확인할 수 있지만, 이 선택 내역이 운영 홈페이지에 자동 전달되지는 않습니다.</p>
+            <a href={new URL("/contact", SITE_CONFIG.seo.canonicalUrl).toString()} className="flex items-center justify-center rounded-xl bg-amber-500 p-4 text-sm font-black text-stone-950">공식 홈페이지에서 상담 신청하기</a>
+          </div> : <form onSubmit={submit} className="mt-4 space-y-3">
             <fieldset disabled={busy} className="space-y-3 min-w-0">
               <input aria-label="이름" autoComplete="name" placeholder="이름" required maxLength={50} className={control} value={contact.name} onChange={e => setContact({ ...contact, name: e.target.value })} />
               <input aria-label="연락처" type="tel" autoComplete="tel" placeholder="연락처" required maxLength={20} className={control} value={contact.phone} onChange={e => setContact({ ...contact, phone: e.target.value })} />

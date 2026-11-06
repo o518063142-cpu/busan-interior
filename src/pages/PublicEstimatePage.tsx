@@ -9,7 +9,7 @@ import { QuickEstimatePanel } from "../components/QuickEstimatePanel";
 import { approximateWon } from "../utils/estimatePresentation";
 import { db } from "../firebase";
 import { getConversionSessionId, trackEstimateEvent } from "../utils/conversionTracking";
-import { buildPublicEstimateLead, buildPublicEstimateNotification } from "../utils/publicEstimateLead";
+import { completePublicEstimateSubmission } from "../utils/publicEstimateDelivery";
 import {
   TILE_METHODS, TILE_SIZES, defaultTileSelection,
   WALLPAPER_OPTIONS, FLOOR_OPTIONS, BATHROOM_OPTIONS, PUBLIC_SOURCES, WINDOW_OPTIONS,
@@ -71,21 +71,38 @@ export function PublicEstimatePage() {
     if (!consent) { setError("상담을 위한 개인정보 수집·이용에 동의해 주세요."); return; }
     lock.current = true; setBusy(true); setNotice("");
     try {
-      // Recalculate on the server: the saved quote never trusts client-supplied prices.
-      const response = await fetch("/api/ai-estimate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ publicSelection: selection }), signal: AbortSignal.timeout(15000) });
-      const result = await response.json();
-      if (!response.ok || !result.success || result.source !== "public-reference") throw new Error(result.error || "선택 견적 확인에 실패했습니다.");
       const isPreview = window.location.hostname.endsWith(".vercel.app") &&
         window.location.hostname !== new URL(SITE_CONFIG.seo.canonicalUrl).hostname;
-      const { payload, record } = buildPublicEstimateLead(selection, result.data, contact, getConversionSessionId(), isPreview);
-      const doc = await addDoc(collection(db, "consultations"), { ...record, createdAt: serverTimestamp() });
-      setSaved(true);
-      void trackEstimateEvent("consultation_submitted", record.sessionId);
-      try {
-        const notified = await fetch("/api/notify-kakao", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(buildPublicEstimateNotification(payload, doc.path, new Date().toLocaleString("ko-KR")) ), signal: AbortSignal.timeout(10000) });
-        const notification = await notified.json();
-        if (!notified.ok || !notification.success) setNotice("담당자 알림 확인이 지연됩니다. 상담은 저장되어 다시 접수하지 않으셔도 됩니다.");
-      } catch { setNotice("담당자 알림 확인이 지연됩니다. 상담은 저장되어 다시 접수하지 않으셔도 됩니다."); }
+      const outcome = await completePublicEstimateSubmission(selection, contact, isPreview, {
+        fetchQuote: async selected => {
+          // Recalculate on the server; never trust client-supplied prices.
+          const response = await fetch("/api/ai-estimate", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ publicSelection: selected }), signal: AbortSignal.timeout(15000),
+          });
+          const result = await response.json();
+          if (!response.ok || !result.success || result.source !== "public-reference") {
+            throw new Error(result.error || "선택 견적 확인에 실패했습니다.");
+          }
+          return result.data;
+        },
+        saveLead: record => addDoc(collection(db, "consultations"), {
+          ...record, createdAt: serverTimestamp(),
+        }),
+        notify: async payload => {
+          const response = await fetch("/api/notify-kakao", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload), signal: AbortSignal.timeout(10000),
+          });
+          const result = await response.json();
+          return response.ok && result.success === true;
+        },
+        trackSubmitted: sessionId => trackEstimateEvent("consultation_submitted", sessionId),
+        getSessionId: getConversionSessionId,
+        createdAt: () => new Date().toLocaleString("ko-KR"),
+        onSaved: () => setSaved(true),
+      });
+      if (!outcome.notified) setNotice("담당자 알림 확인이 지연됩니다. 상담은 저장되어 다시 접수하지 않으셔도 됩니다.");
     } catch (err: any) { setError(err?.name === "TimeoutError" ? "견적 확인 시간이 초과되었습니다. 잠시 후 다시 시도해 주세요." : "상담을 저장하지 못했습니다. 잠시 후 다시 시도하거나 전화로 문의해 주세요."); }
     finally { lock.current = false; setBusy(false); }
   };

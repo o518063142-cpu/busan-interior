@@ -48,3 +48,14 @@ export async function completePublicEstimateSubmission(
   } catch { /* Saving already succeeded; report notification delay only. */ }
   return { saved: true as const, notified, docPath: doc.path, record };
 }
+
+/**
+ * A Vercel PR preview is not an isolated Firebase/Kakao environment.
+ * Do not submit consultation records from these hosts until an independently
+ * configured QA backend and notification recipient are available.
+ */
+export function isPublicEstimatePreviewHost(hostname: string, canonicalUrl: string): boolean {
+  const host = hostname.trim().toLowerCase();
+  const canonicalHost = new URL(canonicalUrl).hostname.toLowerCase();
+  return host.endsWith(".vercel.app") && host !== canonicalHost;
+}

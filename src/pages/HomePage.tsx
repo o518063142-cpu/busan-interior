@@ -525,7 +525,7 @@ export const HomePage: React.FC<HomePageProps> = ({
             }}
             className="inline-flex items-center gap-2 px-6 py-3 bg-stone-950 hover:bg-stone-800 text-stone-100 text-xs sm:text-sm font-extrabold rounded-xl transition-all shadow-xs self-start md:self-auto border border-stone-800 active:scale-[0.98] cursor-pointer font-sans"
           >
-            <span>전체 시공사례 포트폴리오 ({actualProjects.length})</span>
+            <span>전체 시공사례 포트폴리오</span>
             <ChevronRight className="w-4 h-4 text-[#D4AF37]" />
           </button>
         </div>

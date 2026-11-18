@@ -458,7 +458,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({
               </div>
 
               <div>
-                <label className="block font-bold text-stone-800 mb-1">이메일 (선택 · 해외 고객 답변용)</label>
+                <label className="block font-bold text-stone-800 mb-1">이메일 (선택)</label>
                 <input
                   type="email"
                   autoComplete="email"

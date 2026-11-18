@@ -22,6 +22,7 @@ export interface Consultation {
   id: string;
   name: string;
   phone: string;
+  email?: string;
   location: string;
   spaceType: string;
   area: string;
@@ -95,6 +96,7 @@ export interface AIEstimateResult {
 export interface ContactFormInput {
   name: string;
   phone: string;
+  email?: string;
   location: string;
   spaceType: string;
   area: string;

@@ -41,6 +41,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
+    email: "",
     location: prefilledData?.location || "",
     spaceType: prefilledData?.spaceType || "아파트",
     area: prefilledData?.area || "30",
@@ -108,6 +109,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
       const consultationData = {
         name: formData.name.trim(),
         phone: formData.phone.trim(),
+        email: formData.email.trim(),
         location: formData.location.trim(),
         spaceType: formData.spaceType,
         area: formData.area.trim(),
@@ -161,6 +163,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
             body: JSON.stringify({
               name: formData.name.trim(),
               phone: formData.phone.trim(),
+              email: formData.email.trim(),
               location: formData.location.trim(),
               spaceType: formData.spaceType,
               area: formData.area.trim(),
@@ -194,6 +197,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
           body: JSON.stringify({
             name: formData.name.trim(),
             phone: formData.phone.trim(),
+            email: formData.email.trim(),
             location: formData.location.trim(),
             spaceType: formData.spaceType,
             area: formData.area.trim(),
@@ -438,6 +442,20 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                 </div>
               </div>
 
+              <div>
+                <label className="block text-stone-300 font-semibold mb-1 text-xs">이메일 (선택)</label>
+                <input
+                  type="email"
+                  autoComplete="email"
+                  maxLength={254}
+                  placeholder="name@example.com"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  disabled={loading}
+                  className="w-full px-3.5 py-2.5 bg-stone-950 border border-stone-800 rounded-xl text-white placeholder-stone-600 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all text-xs sm:text-sm"
+                />
+              </div>
+
               {/* Location & SpaceType */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
@@ -575,7 +593,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                     htmlFor="privacyAgreed"
                     className="text-stone-200 cursor-pointer font-medium leading-relaxed select-none"
                   >
-                    상담 신청을 위해 이름, 연락처 및 상담
+                    상담 신청을 위해 이름, 연락처, 이메일(입력 시) 및 상담
                     내용을 수집·이용하는 것에 동의합니다.
                     <span className="text-amber-400 font-bold ml-1">
                       (필수)

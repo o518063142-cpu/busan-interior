@@ -26,6 +26,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const {
       name = "",
       phone = "",
+      email = "",
       location = "",
       spaceType = "",
       area = "",
@@ -64,6 +65,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
 성함: ${name}
 연락처: ${phone}
+이메일: ${email || "미입력"}
 지역: ${location}
 공간 유형: ${spaceType}
 면적: ${area}평

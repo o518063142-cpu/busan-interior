@@ -56,15 +56,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const tokenData = (await tokenRes.json()) as {
       access_token?: string;
       error?: string;
+      error_code?: string;
       error_description?: string;
     };
 
     if (!tokenRes.ok || !tokenData.access_token) {
       console.error("KAKAO NOTIFICATION FAILED");
-      console.error(
-        "Token refresh error:",
-        tokenData.error || tokenRes.statusText
-      );
+      // Log only Kakao's structured error code, not token values or raw descriptions.
+      const kakaoErrorCode =
+        typeof tokenData.error_code === "string" && /^KOE\\d{3}$/.test(tokenData.error_code)
+          ? tokenData.error_code
+          : "UNCLASSIFIED";
+      const refreshTokenRejected =
+        tokenData.error_description === "expired_or_invalid_refresh_token";
+      console.error("Token refresh error:", tokenData.error || tokenRes.statusText);
+      console.error("Kakao token refresh diagnostic:", {
+        httpStatus: tokenRes.status,
+        kakaoErrorCode,
+        refreshTokenRejected,
+      });
       return res.status(200).json({
         success: false,
         message: "Failed to refresh Kakao access token",

@@ -197,7 +197,6 @@ export const ContactModal: React.FC<ContactModalProps> = ({
           body: JSON.stringify({
             name: formData.name.trim(),
             phone: formData.phone.trim(),
-            email: formData.email.trim(),
             location: formData.location.trim(),
             spaceType: formData.spaceType,
             area: formData.area.trim(),

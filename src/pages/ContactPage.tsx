@@ -179,7 +179,6 @@ export const ContactPage: React.FC<ContactPageProps> = ({
           body: JSON.stringify({
             name: formData.name.trim(),
             phone: formData.phone.trim(),
-            email: formData.email.trim(),
             location: formData.location.trim(),
             spaceType: formData.spaceType,
             area: formData.area.trim(),

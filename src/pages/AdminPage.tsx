@@ -164,6 +164,7 @@ export const AdminPage: React.FC = () => {
             id: docSnap.id,
             name: data.name || "이름 없음",
             phone: data.phone || "",
+            email: data.email || "",
             location: data.location || "",
             spaceType: data.spaceType || "",
             area: data.area || "",
@@ -1015,6 +1016,16 @@ export const AdminPage: React.FC = () => {
                   </button>
                 </div>
               </div>
+
+              {selectedConsultation.email && (
+                <div className="p-4 bg-stone-950 border border-stone-800 rounded-2xl space-y-2">
+                  <p className="text-xs text-stone-400 font-semibold">고객 이메일</p>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="text-white break-all">{selectedConsultation.email}</span>
+                    <a href={`mailto:${selectedConsultation.email}`} className="px-4 py-2 bg-amber-500 text-stone-950 font-bold rounded-lg text-xs">이메일 답장</a>
+                  </div>
+                </div>
+              )}
 
               {/* Status Change Selector Bar */}
               <div className="p-4 bg-stone-950 rounded-2xl border border-stone-800 space-y-2">

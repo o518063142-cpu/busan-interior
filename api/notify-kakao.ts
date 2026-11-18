@@ -64,7 +64,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       console.error("KAKAO NOTIFICATION FAILED");
       // Log only Kakao's structured error code, not token values or raw descriptions.
       const kakaoErrorCode =
-        typeof tokenData.error_code === "string" && /^KOE\\d{3}$/.test(tokenData.error_code)
+        typeof tokenData.error_code === "string" && /^KOE\d{3}$/.test(tokenData.error_code)
           ? tokenData.error_code
           : "UNCLASSIFIED";
       const refreshTokenRejected =

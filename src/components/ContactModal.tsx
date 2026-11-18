@@ -443,7 +443,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-stone-300 font-semibold mb-1 text-xs">이메일 (선택 · 해외 고객 답변용)</label>
+                <label className="block text-stone-300 font-semibold mb-1 text-xs">이메일 (선택)</label>
                 <input
                   type="email"
                   autoComplete="email"

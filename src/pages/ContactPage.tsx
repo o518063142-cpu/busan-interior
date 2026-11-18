@@ -43,6 +43,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
+    email: "",
     location: initialData?.location || "",
     spaceType: initialData?.spaceType || "아파트",
     area: initialData?.area || "30",
@@ -92,6 +93,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({
       const consultationData = {
         name: formData.name.trim(),
         phone: formData.phone.trim(),
+        email: formData.email.trim(),
         location: formData.location.trim(),
         spaceType: formData.spaceType,
         area: formData.area.trim(),
@@ -144,6 +146,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({
             body: JSON.stringify({
               name: formData.name.trim(),
               phone: formData.phone.trim(),
+              email: formData.email.trim(),
               location: formData.location.trim(),
               spaceType: formData.spaceType,
               area: formData.area.trim(),
@@ -176,6 +179,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({
           body: JSON.stringify({
             name: formData.name.trim(),
             phone: formData.phone.trim(),
+            email: formData.email.trim(),
             location: formData.location.trim(),
             spaceType: formData.spaceType,
             area: formData.area.trim(),
@@ -378,6 +382,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({
                     setFormData({
                       name: "",
                       phone: "",
+    email: "",
                       location: "",
                       spaceType: "아파트",
                       area: "30",
@@ -450,6 +455,19 @@ export const ContactPage: React.FC<ContactPageProps> = ({
                     className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 focus:outline-none focus:border-amber-500"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-stone-800 mb-1">이메일 (선택 · 해외 고객 답변용)</label>
+                <input
+                  type="email"
+                  autoComplete="email"
+                  maxLength={254}
+                  placeholder="name@example.com"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 focus:outline-none focus:border-amber-500"
+                />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -580,7 +598,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({
                     htmlFor="contactPrivacyAgreed"
                     className="text-stone-700 cursor-pointer font-medium leading-relaxed select-none"
                   >
-                    상담 신청을 위해 이름, 연락처 및 상담
+                    상담 신청을 위해 이름, 연락처, 이메일(입력 시) 및 상담
                     내용을 수집·이용하는 것에 동의합니다.
                     <span className="text-amber-600 font-bold ml-1">
                       (필수)

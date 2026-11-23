@@ -51,14 +51,6 @@ import {
 
 export const ProjectManagementSection: React.FC = () => {
   const formRef = useRef<HTMLDivElement>(null);
-  // Independent upload-only smoke test; never writes to Firestore.
-  const [testPhoto, setTestPhoto] = useState<File | null>(null);
-  const [testPhotoUrl, setTestPhotoUrl] = useState("");
-  const [testUploadBusy, setTestUploadBusy] = useState(false);
-  const [testUploadError, setTestUploadError] = useState("");
-  const [testImageLoaded, setTestImageLoaded] = useState(false);
-  const [testImageError, setTestImageError] = useState(false);
-
   // Form State
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
@@ -451,25 +443,6 @@ export const ProjectManagementSection: React.FC = () => {
     return uploaded.secure_url;
   };
 
-  const handleTestPhotoUpload = async () => {
-    if (!testPhoto || testUploadBusy) return;
-    setTestUploadBusy(true);
-    setTestPhotoUrl("");
-    setTestImageLoaded(false);
-    setTestImageError(false);
-    setTestUploadError("");
-    try {
-      // A dedicated Cloudinary folder, completely separate from live project IDs.
-      // No Firestore document is created or modified by this test.
-      const url = await uploadProjectImage(testPhoto, "previewUploadTest", "after");
-      setTestPhotoUrl(url);
-    } catch (error: unknown) {
-      setTestUploadError(error instanceof Error ? error.message : "사진 업로드 테스트에 실패했습니다.");
-    } finally {
-      setTestUploadBusy(false);
-    }
-  };
-
   // Handle Form Submission (Create or Update)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -699,68 +672,6 @@ export const ProjectManagementSection: React.FC = () => {
           </div>
         </div>
       </div>
-
-      {/* Cloudinary smoke test: safe on the production Firestore shared by Preview. */}
-      <section className="rounded-3xl border border-emerald-700/40 bg-stone-900 p-6 sm:p-8 space-y-4" aria-label="Cloudinary 사진 업로드 테스트">
-        <div className="space-y-1">
-          <h3 className="flex items-center gap-2 text-lg font-bold text-white">
-            <Upload className="h-5 w-5 text-emerald-400" /> 사진 1장 업로드 테스트
-          </h3>
-          <p className="text-xs sm:text-sm text-stone-300 break-keep">
-            Cloudinary 저장 및 사진 표시만 검사합니다. 기존 시공사례와 Firestore는 변경하지 않습니다.
-          </p>
-          <p className="text-xs text-amber-300 break-keep">
-            테스트 사진은 Cloudinary의 gene-interior/projects/previewUploadTest/after 폴더에 남으며 필요하면 Cloudinary에서 삭제할 수 있습니다.
-          </p>
-        </div>
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-          <input
-            type="file"
-            accept="image/*"
-            aria-label="테스트할 사진 선택"
-            disabled={testUploadBusy}
-            onChange={(event) => {
-              setTestPhoto(event.target.files?.[0] || null);
-              setTestPhotoUrl("");
-              setTestUploadError("");
-              setTestImageLoaded(false);
-              setTestImageError(false);
-            }}
-            className="block w-full sm:max-w-sm rounded-lg border border-stone-600 bg-stone-950 p-2 text-xs text-white file:mr-3 file:rounded-md file:border-0 file:bg-stone-700 file:px-3 file:py-2 file:text-white"
-          />
-          <button
-            type="button"
-            disabled={!testPhoto || testUploadBusy}
-            onClick={handleTestPhotoUpload}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-bold text-white hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            {testUploadBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-            {testUploadBusy ? "업로드 중..." : "Cloudinary에 사진 올려보기"}
-          </button>
-        </div>
-        {testUploadError && (
-          <p role="alert" className="rounded-lg border border-red-700 bg-red-950/40 p-3 text-sm text-red-200 break-words">
-            업로드 실패: {testUploadError}
-          </p>
-        )}
-        {testPhotoUrl && (
-          <div className="space-y-3 rounded-xl border border-stone-700 bg-stone-950 p-4">
-            <p className="text-sm font-semibold text-emerald-300">
-              {testImageError ? "업로드 완료, 그러나 사진 표시 실패" : testImageLoaded ? "업로드와 사진 표시 모두 성공" : "업로드 완료 — 사진 표시 확인 중"}
-            </p>
-            <img
-              src={testPhotoUrl}
-              alt="Cloudinary 업로드 테스트 사진"
-              onLoad={() => { setTestImageLoaded(true); setTestImageError(false); }}
-              onError={() => { setTestImageError(true); setTestImageLoaded(false); }}
-              className="max-h-80 w-full rounded-lg bg-stone-800 object-contain"
-            />
-            <a href={testPhotoUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs font-semibold text-amber-300 underline">
-              <ExternalLink className="h-3 w-3" /> 업로드한 사진 새 창에서 확인
-            </a>
-          </div>
-        )}
-      </section>
 
       {/* Registration / Edit Form */}
       <div ref={formRef} className="bg-stone-900 border border-stone-800 rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl">

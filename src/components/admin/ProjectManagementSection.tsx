@@ -416,7 +416,7 @@ export const ProjectManagementSection: React.FC = () => {
     if (file.size > 10 * 1024 * 1024) throw new Error("사진 한 장은 10MB 이하여야 합니다.");
 
     const token = await user.getIdToken();
-    const signedResponse = await fetch("/api/cloudinary-upload-sign", {
+    const signedResponse = await fetch("/api/render-listing?mode=cloudinary-sign", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify({ projectId, kind }),

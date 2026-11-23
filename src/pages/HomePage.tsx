@@ -66,6 +66,8 @@ export const HomePage: React.FC<HomePageProps> = ({
   onSelectProject,
 }) => {
   const [firestoreProjects, setFirestoreProjects] = useState<ProjectItem[]>([]);
+  const [serverRealProjects, setServerRealProjects] = useState<ProjectItem[] | null>(null);
+  const [projectsLoading, setProjectsLoading] = useState(true);
   const [activeFeaturedIndex, setActiveFeaturedIndex] = useState(0);
   const [showBeforePhoto, setShowBeforePhoto] = useState(false);
 
@@ -79,7 +81,13 @@ export const HomePage: React.FC<HomePageProps> = ({
       unsubscribe = onSnapshot(
         q,
         (snapshot) => {
-          const items: ProjectItem[] = snapshot.docs.map((docSnap) => {
+          const items: ProjectItem[] = snapshot.docs
+            .filter((docSnap) => {
+              const data = docSnap.data();
+              return data.status !== "private" && data.status !== "draft" &&
+                data.status !== "deleted" && data.isPublished !== false;
+            })
+            .map((docSnap) => {
             const data = docSnap.data();
             return {
               id: docSnap.id,
@@ -111,6 +119,30 @@ export const HomePage: React.FC<HomePageProps> = ({
     }
 
     return () => unsubscribe();
+  }, []);
+
+  // Read the server-side public source that also renders /projects and search HTML.
+  // Firestore listener remains a backup only if this request fails.
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch("/api/render-listing?page=home&format=real-projects-json", {
+      signal: controller.signal,
+    })
+      .then((response) => {
+        if (!response.ok) throw new Error("Project list unavailable");
+        return response.json();
+      })
+      .then((payload: { projects?: ProjectItem[] }) => {
+        if (!Array.isArray(payload.projects)) throw new Error("Invalid project list");
+        setServerRealProjects(payload.projects.filter((project) => project && !project.isSample));
+      })
+      .catch((error) => {
+        if (!controller.signal.aborted) console.warn("Public projects notice:", error);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setProjectsLoading(false);
+      });
+    return () => controller.abort();
   }, []);
 
   // Merge Firestore Projects + Built-in PROJECTS_DATA with prioritization of actual projects
@@ -151,16 +183,22 @@ export const HomePage: React.FC<HomePageProps> = ({
 
   // Homepage portfolio: expose only verified actual projects.
   // Sample/concept projects remain in allProjects for other dedicated views.
-  const actualProjects = useMemo(
-    () => allProjects.filter((project) => !project.isSample),
+  const actualProjects = useMemo(() => {
+    // The SSR source wins when available; otherwise use public Firestore records.
+    // Never substitute samples for a real construction project.
+    const projects = serverRealProjects ?? allProjects;
+    return projects.filter((project) => !project.isSample);
+  }, [serverRealProjects, allProjects]);
+
+  // Design concepts are deliberately separated from actual completed work.
+  // The built-in sample portfolio remains visible even if Firestore is unavailable.
+  const conceptProjects = useMemo(
+    () => allProjects.filter((project) => project.isSample),
     [allProjects]
   );
 
   const featuredProject =
-    actualProjects[activeFeaturedIndex] ||
-    actualProjects[0] ||
-    allProjects[0] ||
-    PROJECTS_DATA[0];
+    actualProjects[activeFeaturedIndex] || actualProjects[0] || null;
 
   return (
     <div className="space-y-16 lg:space-y-24 pb-12">
@@ -525,12 +563,13 @@ export const HomePage: React.FC<HomePageProps> = ({
             }}
             className="inline-flex items-center gap-2 px-6 py-3 bg-stone-950 hover:bg-stone-800 text-stone-100 text-xs sm:text-sm font-extrabold rounded-xl transition-all shadow-xs self-start md:self-auto border border-stone-800 active:scale-[0.98] cursor-pointer font-sans"
           >
-            <span>전체 시공사례 포트폴리오 ({actualProjects.length})</span>
+            <span>전체 시공사례 포트폴리오 ({projectsLoading && actualProjects.length === 0 ? "확인 중" : actualProjects.length})</span>
             <ChevronRight className="w-4 h-4 text-[#D4AF37]" />
           </button>
         </div>
 
-        {/* Featured Large Photo Showcase Box */}
+        {/* Featured Large Photo Showcase Box: no sample fallback in real gallery */}
+        {featuredProject ? (
         <div className="bg-stone-950 text-white rounded-3xl overflow-hidden border border-stone-800 shadow-2xl">
           {/* Top Project Selector Tabs */}
           <div className="relative bg-stone-900/90 border-b border-stone-800">
@@ -723,6 +762,11 @@ export const HomePage: React.FC<HomePageProps> = ({
             </div>
           </div>
         </div>
+        ) : (
+          <div className="rounded-3xl border border-stone-200 bg-stone-50 px-6 py-12 text-center text-sm text-stone-600">
+            {projectsLoading ? "실제 시공사례를 불러오는 중입니다." : "현재 공개된 실제 시공사례를 확인할 수 없습니다."}
+          </div>
+        )}
 
         {/* Secondary Project Cards Grid (With Enlarged Photos: h-72 sm:h-80) */}
         <div className="space-y-6 pt-4 font-sans">
@@ -814,6 +858,50 @@ export const HomePage: React.FC<HomePageProps> = ({
           </div>
         </div>
       </section>
+
+      {/* Separate concept portfolio: never present designs as completed work. */}
+      {conceptProjects.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 lg:px-8 space-y-6 pb-8 sm:pb-12" aria-label="디자인 제안 및 콘셉트 갤러리">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 border-b border-stone-200 pb-5">
+            <div className="space-y-2">
+              <span className="text-xs font-bold tracking-wide text-amber-700">DESIGN CONCEPTS</span>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-stone-950">디자인 제안 · 공간 콘셉트</h2>
+              <p className="text-sm text-stone-600 break-keep">
+                실제 시공실적이 아닌 공간 디자인 제안 이미지입니다. 실제 시공사례와 별도로 제공합니다.
+              </p>
+            </div>
+            <span className="text-sm font-semibold text-stone-600">콘셉트 {conceptProjects.length}건</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {conceptProjects.map((project) => (
+              <Link
+                key={project.id}
+                to={`/projects/${project.slug || project.id}`}
+                className="group overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm hover:shadow-md transition-shadow no-underline text-inherit"
+              >
+                <div className="relative h-56 sm:h-64 overflow-hidden bg-stone-100">
+                  <img
+                    src={project.afterImages?.[0] || project.beforeImage}
+                    alt={`${project.title} 디자인 제안 이미지`}
+                    loading="lazy"
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                  <span className="absolute top-3 left-3 rounded-full bg-amber-500 px-3 py-1 text-xs font-extrabold text-stone-950 shadow-sm">
+                    디자인 제안 · 콘셉트
+                  </span>
+                </div>
+                <div className="p-4 space-y-2">
+                  <h3 className="font-bold text-stone-900 break-keep">{project.title}</h3>
+                  <p className="text-xs text-stone-500 line-clamp-2 break-keep">{project.description}</p>
+                  <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-800">
+                    콘셉트 상세보기 <ChevronRight className="w-4 h-4" />
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* ================= SECTION 4: 지니 인테리어의 강점 ================= */}
       <section className="bg-stone-950 text-white py-16 border-y border-stone-800">

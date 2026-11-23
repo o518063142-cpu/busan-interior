@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { ProjectCategory, ProjectItem } from "../../types";
 import { PROJECTS_DATA } from "../../data/projectsData";
-import { db, storage } from "../../firebase";
+import { auth, db, storage } from "../../firebase";
 import {
   collection,
   doc,
@@ -15,8 +15,6 @@ import {
 } from "firebase/firestore";
 import {
   ref,
-  uploadBytes,
-  getDownloadURL,
   deleteObject,
   listAll,
 } from "firebase/storage";
@@ -53,7 +51,6 @@ import {
 
 export const ProjectManagementSection: React.FC = () => {
   const formRef = useRef<HTMLDivElement>(null);
-
   // Form State
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
@@ -242,12 +239,6 @@ export const ProjectManagementSection: React.FC = () => {
     setKeyFeatures(keyFeatures.filter((_, idx) => idx !== index));
   };
 
-  // Safe file name cleaner for Storage paths
-  const sanitizeFileName = (fileName: string) => {
-    const clean = fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
-    return clean.length > 50 ? clean.slice(-50) : clean;
-  };
-
   // Reset all form inputs and file states
   const resetFormState = () => {
     setEditingProjectId(null);
@@ -407,13 +398,49 @@ export const ProjectManagementSection: React.FC = () => {
       const deletedTitle = projectToDelete.title;
       // Close modal
       setProjectToDelete(null);
-      setSubmitSuccess(`시공사례 "${deletedTitle}" 및 등록된 사진이 정상적으로 삭제되었습니다.`);
+      setSubmitSuccess(`시공사례 "${deletedTitle}" 정보가 삭제되었습니다. Cloudinary에 저장된 사진 파일은 별도 보존됩니다.`);
     } catch (err: any) {
       console.error("Project deletion error:", err);
       setDeleteModalError(`삭제 실패: ${err.message || "오류가 발생했습니다."}`);
     } finally {
       setIsDeleting(false);
     }
+  };
+
+  // Cloudinary credentials stay on Vercel; Firebase Auth identifies the admin.
+  const uploadProjectImage = async (file: File, projectId: string, kind: "after" | "before" | "process"): Promise<string> => {
+    const user = auth.currentUser;
+    if (!user) throw new Error("관리자 로그인 후 사진을 업로드해 주세요.");
+    if (!file.type.startsWith("image/")) throw new Error("이미지 파일만 업로드할 수 있습니다.");
+    if (file.size > 10 * 1024 * 1024) throw new Error("사진 한 장은 10MB 이하여야 합니다.");
+
+    const token = await user.getIdToken();
+    const signedResponse = await fetch("/api/render-listing?mode=cloudinary-sign", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ projectId, kind }),
+    });
+    const signed = await signedResponse.json();
+    if (!signedResponse.ok) throw new Error(signed.error || "사진 업로드 권한 확인에 실패했습니다.");
+
+    const form = new FormData();
+    form.append("file", file);
+    form.append("api_key", signed.apiKey);
+    form.append("timestamp", String(signed.timestamp));
+    form.append("folder", signed.folder);
+    form.append("signature", signed.signature);
+    const uploadResponse = await fetch(
+      `https://api.cloudinary.com/v1_1/${encodeURIComponent(signed.cloudName)}/image/upload`,
+      { method: "POST", body: form }
+    );
+    const uploaded = await uploadResponse.json();
+    if (!uploadResponse.ok || typeof uploaded.secure_url !== "string") {
+      throw new Error(uploaded.error?.message || "Cloudinary 사진 업로드 실패");
+    }
+    if (!uploaded.secure_url.startsWith(`https://res.cloudinary.com/${signed.cloudName}/image/upload/`)) {
+      throw new Error("사진 저장 주소 검증에 실패했습니다.");
+    }
+    return uploaded.secure_url;
   };
 
   // Handle Form Submission (Create or Update)
@@ -466,13 +493,10 @@ export const ProjectManagementSection: React.FC = () => {
       // 3. Handle Representative After Image (afterImages[0])
       let finalMainAfterUrl = existingMainAfterUrl;
       if (mainAfterFile) {
-        setUploadProgressText("대표 완공사진 Firebase Storage에 업로드 중...");
-        const mainFileName = `main_${Date.now()}_${sanitizeFileName(mainAfterFile.name)}`;
-        const mainStorageRef = ref(storage, `projects/${projectId}/after/${mainFileName}`);
+        setUploadProgressText("대표 완공사진 Cloudinary 업로드 중...");
 
         try {
-          const snapshot = await uploadBytes(mainStorageRef, mainAfterFile);
-          finalMainAfterUrl = await getDownloadURL(snapshot.ref);
+          finalMainAfterUrl = await uploadProjectImage(mainAfterFile, projectId, "after");
         } catch (uploadErr: any) {
           console.error("Main after image upload failed:", uploadErr);
           throw new Error(
@@ -489,12 +513,8 @@ export const ProjectManagementSection: React.FC = () => {
           setUploadProgressText(
             `추가 완공사진 (${i + 1}/${additionalAfterFiles.length}) 업로드 중...`
           );
-          const extraFileName = `extra_${Date.now()}_${i + 1}_${sanitizeFileName(file.name)}`;
-          const extraStorageRef = ref(storage, `projects/${projectId}/after/${extraFileName}`);
-
           try {
-            const snapshot = await uploadBytes(extraStorageRef, file);
-            const downloadUrl = await getDownloadURL(snapshot.ref);
+            const downloadUrl = await uploadProjectImage(file, projectId, "after");
             finalAdditionalAfterUrls.push(downloadUrl);
           } catch (uploadErr: any) {
             console.error(`Extra after image ${i + 1} upload failed:`, uploadErr);
@@ -517,13 +537,10 @@ export const ProjectManagementSection: React.FC = () => {
       // 5. Handle Before Image
       let finalBeforeUrl = existingBeforeUrl;
       if (beforeFile) {
-        setUploadProgressText("시공 전(Before) 사진 Firebase Storage에 업로드 중...");
-        const beforeFileName = `before_${Date.now()}_${sanitizeFileName(beforeFile.name)}`;
-        const beforeStorageRef = ref(storage, `projects/${projectId}/before/${beforeFileName}`);
+        setUploadProgressText("시공 전(Before) 사진 Cloudinary 업로드 중...");
 
         try {
-          const snapshot = await uploadBytes(beforeStorageRef, beforeFile);
-          finalBeforeUrl = await getDownloadURL(snapshot.ref);
+          finalBeforeUrl = await uploadProjectImage(beforeFile, projectId, "before");
         } catch (uploadErr: any) {
           console.error("Before image upload failed:", uploadErr);
           throw new Error(`[시공 전 사진] 업로드 실패: ${uploadErr.message || uploadErr}`);
@@ -533,13 +550,10 @@ export const ProjectManagementSection: React.FC = () => {
       // 6. Handle In-Progress Image
       let finalInProgressUrl = existingInProgressUrl;
       if (inProgressFile) {
-        setUploadProgressText("시공 과정(In-Progress) 사진 Firebase Storage에 업로드 중...");
-        const processFileName = `process_${Date.now()}_${sanitizeFileName(inProgressFile.name)}`;
-        const processStorageRef = ref(storage, `projects/${projectId}/process/${processFileName}`);
+        setUploadProgressText("시공 과정(In-Progress) 사진 Cloudinary 업로드 중...");
 
         try {
-          const snapshot = await uploadBytes(processStorageRef, inProgressFile);
-          finalInProgressUrl = await getDownloadURL(snapshot.ref);
+          finalInProgressUrl = await uploadProjectImage(inProgressFile, projectId, "process");
         } catch (uploadErr: any) {
           console.error("In-progress image upload failed:", uploadErr);
           throw new Error(`[시공 과정 사진] 업로드 실패: ${uploadErr.message || uploadErr}`);
@@ -626,7 +640,7 @@ export const ProjectManagementSection: React.FC = () => {
           </div>
           <div>
             <h2 className="text-xl sm:text-2xl font-bold text-white font-sans break-keep">
-              시공사례 포트폴리오 관리 (Firestore & Storage)
+              시공사례 포트폴리오 관리 (Firestore & Cloudinary)
             </h2>
             <p className="text-xs sm:text-sm text-stone-400">
               실제 현장 완공 사진, Before/After, 공사 스펙을 실시간으로 등록·수정·삭제합니다.
@@ -671,7 +685,7 @@ export const ProjectManagementSection: React.FC = () => {
                 {editingProjectId ? "시공사례 수정 모드" : "신규 시공사례 등록"}
               </h3>
               <p className="text-xs text-stone-400">
-                {editingProjectId ? `문서 ID: ${editingProjectId} 데이터를 수정 중입니다.` : "양식을 작성하고 사진을 선택하면 Firebase Storage 업로드 및 DB 저장이 자동 진행됩니다."}
+                {editingProjectId ? `문서 ID: ${editingProjectId} 데이터를 수정 중입니다.` : "양식을 작성하고 사진을 선택하면 Cloudinary 사진 업로드 및 Firestore 저장이 진행됩니다."}
               </p>
             </div>
           </div>
@@ -961,15 +975,15 @@ export const ProjectManagementSection: React.FC = () => {
             </div>
           </div>
 
-          {/* Section 3: 현장 사진 업로드 (Firebase Storage 연동) */}
+          {/* Section 3: 현장 사진 업로드 (Cloudinary 연동) */}
           <div className="space-y-4">
             <div className="flex items-center justify-between border-b border-stone-800 pb-2">
               <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                <span>3. 시공 사진 (Firebase Storage 업로드)</span>
+                <span>3. 시공 사진 (Cloudinary 업로드)</span>
               </h4>
               <span className="text-[11px] text-stone-400">
-                새 사진을 선택하면 Firebase Storage에 자동 업로드됩니다.
+                새 사진을 선택하고 시공사례를 저장하면 Cloudinary에 업로드됩니다.
               </span>
             </div>
 
@@ -1610,7 +1624,7 @@ export const ProjectManagementSection: React.FC = () => {
               <div className="space-y-1">
                 <h3 className="text-lg font-bold text-white font-sans break-keep">시공사례 영구 삭제</h3>
                 <p className="text-xs text-stone-400">
-                  선택하신 시공사례를 데이터베이스 및 Storage에서 삭제합니다.
+                  시공사례 정보는 Firestore에서 삭제됩니다. 기존 Firebase Storage 사진 삭제는 접근 제한으로 실패할 수 있으며 Cloudinary 사진은 보존됩니다.
                 </p>
               </div>
             </div>
@@ -1626,10 +1640,10 @@ export const ProjectManagementSection: React.FC = () => {
                 {projectToDelete.title}
               </h4>
               <p className="text-xs text-stone-400 pt-1">
-                이 시공사례와 연결된 Storage 사진 및 Firestore 데이터를 모두 삭제하시겠습니까?
+                이 시공사례의 Firestore 데이터를 삭제하시겠습니까? Cloudinary 사진 파일은 별도로 보존됩니다.
               </p>
               <p className="text-[11px] text-red-400 font-medium pt-0.5">
-                ※ 삭제된 프로젝트와 업로드된 사진은 복구할 수 없습니다.
+                ※ Firestore에서 삭제된 프로젝트 정보는 복구하기 어렵습니다. 삭제 전 내용을 확인해 주세요.
               </p>
             </div>
 

@@ -4,6 +4,7 @@ import path from "path";
 import { SITE_CONFIG } from "./_config/siteConfig.js";
 import { PROJECTS_DATA, type ProjectItem } from "./_data/projectsData.js";
 import { getFirestoreAdmin, isProjectPublic } from "./_lib/firebaseAdmin.js";
+import { handleProjectMedia } from "./_lib/projectMedia.js";
 
 /**
  * ============================================================
@@ -468,6 +469,12 @@ export default async function handler(
   req: VercelRequest,
   res: VercelResponse
 ) {
+  // Reuse this function for admin media signing (Hobby plan: no extra function).
+  if (req.method === "POST" && req.query.mode === "project-media") {
+    return handleProjectMedia(req, res);
+  }
+  if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
+
   const page =
     (req.query.page as string) ||
     "home";

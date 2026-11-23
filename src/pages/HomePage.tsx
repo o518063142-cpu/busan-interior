@@ -190,6 +190,13 @@ export const HomePage: React.FC<HomePageProps> = ({
     return projects.filter((project) => !project.isSample);
   }, [serverRealProjects, allProjects]);
 
+  // Design concepts are deliberately separated from actual completed work.
+  // The built-in sample portfolio remains visible even if Firestore is unavailable.
+  const conceptProjects = useMemo(
+    () => allProjects.filter((project) => project.isSample),
+    [allProjects]
+  );
+
   const featuredProject =
     actualProjects[activeFeaturedIndex] || actualProjects[0] || null;
 
@@ -851,6 +858,50 @@ export const HomePage: React.FC<HomePageProps> = ({
           </div>
         </div>
       </section>
+
+      {/* Separate concept portfolio: never present designs as completed work. */}
+      {conceptProjects.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 lg:px-8 space-y-6 pb-8 sm:pb-12" aria-label="디자인 제안 및 콘셉트 갤러리">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 border-b border-stone-200 pb-5">
+            <div className="space-y-2">
+              <span className="text-xs font-bold tracking-wide text-amber-700">DESIGN CONCEPTS</span>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-stone-950">디자인 제안 · 공간 콘셉트</h2>
+              <p className="text-sm text-stone-600 break-keep">
+                실제 시공실적이 아닌 공간 디자인 제안 이미지입니다. 실제 시공사례와 별도로 제공합니다.
+              </p>
+            </div>
+            <span className="text-sm font-semibold text-stone-600">콘셉트 {conceptProjects.length}건</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {conceptProjects.map((project) => (
+              <Link
+                key={project.id}
+                to={`/projects/${project.slug || project.id}`}
+                className="group overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm hover:shadow-md transition-shadow no-underline text-inherit"
+              >
+                <div className="relative h-56 sm:h-64 overflow-hidden bg-stone-100">
+                  <img
+                    src={project.afterImages?.[0] || project.beforeImage}
+                    alt={`${project.title} 디자인 제안 이미지`}
+                    loading="lazy"
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                  <span className="absolute top-3 left-3 rounded-full bg-amber-500 px-3 py-1 text-xs font-extrabold text-stone-950 shadow-sm">
+                    디자인 제안 · 콘셉트
+                  </span>
+                </div>
+                <div className="p-4 space-y-2">
+                  <h3 className="font-bold text-stone-900 break-keep">{project.title}</h3>
+                  <p className="text-xs text-stone-500 line-clamp-2 break-keep">{project.description}</p>
+                  <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-800">
+                    콘셉트 상세보기 <ChevronRight className="w-4 h-4" />
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* ================= SECTION 4: 지니 인테리어의 강점 ================= */}
       <section className="bg-stone-950 text-white py-16 border-y border-stone-800">

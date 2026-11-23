@@ -428,6 +428,19 @@ export async function fetchCombinedProjects(): Promise<{
     }
   }
 
+  // Keep the public JSON, homepage SSR and /projects SSR in one newest-first order.
+  // Firestore Admin returns Timestamp objects; REST returns ISO timestamp strings.
+  const createdAtMillis = (value: any): number => {
+    if (!value) return 0;
+    if (typeof value.toMillis === "function") return value.toMillis();
+    if (typeof value.seconds === "number") return value.seconds * 1000 + (value.nanoseconds || 0) / 1e6;
+    if (typeof value._seconds === "number") return value._seconds * 1000 + (value._nanoseconds || 0) / 1e6;
+    if (typeof value === "number") return value > 1e11 ? value : value * 1000;
+    if (typeof value === "string") return Date.parse(value) || 0;
+    return 0;
+  };
+  realProjects.sort((a, b) => createdAtMillis(b.createdAt) - createdAtMillis(a.createdAt));
+
   console.log(
     `[render-listing] FINAL real=${realProjects.length}, sample=${sampleProjects.length}, total=${realProjects.length + sampleProjects.length}`
   );

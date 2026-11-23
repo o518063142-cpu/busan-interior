@@ -16,7 +16,7 @@ import {
 } from "firebase/firestore";
 import {
   ref,
-   deleteObject,
+  deleteObject,
   listAll,
 } from "firebase/storage";
 import {
@@ -383,10 +383,10 @@ export const ProjectManagementSection: React.FC = () => {
     setDeleteModalError(null);
 
     try {
-      // 1. Delete Storage photos in projects/{projectId}/ (safely ignore non-existent files)
+      // Delete current Cloudinary media first. Do not remove Firestore data on a failed delete.
+      await deleteProjectMedia(projectToDelete.id);
+      // Legacy Firebase Storage may now be blocked on Spark; leave originals untouched if so.
       try {
-        await deleteProjectMedia(projectToDelete.id);
-        // Legacy Firebase Storage may now be blocked on Spark; do not block Firestore deletion.
         await deleteStorageFolder(`projects/${projectToDelete.id}`);
       } catch (storageErr: any) {
         console.warn("Storage folder deletion note (continuing to document delete):", storageErr);

@@ -51,6 +51,13 @@ import {
 
 export const ProjectManagementSection: React.FC = () => {
   const formRef = useRef<HTMLDivElement>(null);
+  // Independent upload-only smoke test; never writes to Firestore.
+  const [testPhoto, setTestPhoto] = useState<File | null>(null);
+  const [testPhotoUrl, setTestPhotoUrl] = useState("");
+  const [testUploadBusy, setTestUploadBusy] = useState(false);
+  const [testUploadError, setTestUploadError] = useState("");
+  const [testImageLoaded, setTestImageLoaded] = useState(false);
+  const [testImageError, setTestImageError] = useState(false);
 
   // Form State
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
@@ -444,6 +451,25 @@ export const ProjectManagementSection: React.FC = () => {
     return uploaded.secure_url;
   };
 
+  const handleTestPhotoUpload = async () => {
+    if (!testPhoto || testUploadBusy) return;
+    setTestUploadBusy(true);
+    setTestPhotoUrl("");
+    setTestImageLoaded(false);
+    setTestImageError(false);
+    setTestUploadError("");
+    try {
+      // A dedicated Cloudinary folder, completely separate from live project IDs.
+      // No Firestore document is created or modified by this test.
+      const url = await uploadProjectImage(testPhoto, "previewUploadTest", "after");
+      setTestPhotoUrl(url);
+    } catch (error: unknown) {
+      setTestUploadError(error instanceof Error ? error.message : "사진 업로드 테스트에 실패했습니다.");
+    } finally {
+      setTestUploadBusy(false);
+    }
+  };
+
   // Handle Form Submission (Create or Update)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -641,7 +667,7 @@ export const ProjectManagementSection: React.FC = () => {
           </div>
           <div>
             <h2 className="text-xl sm:text-2xl font-bold text-white font-sans break-keep">
-              시공사례 포트폴리오 관리 (Firestore & Storage)
+              시공사례 포트폴리오 관리 (Firestore & Cloudinary)
             </h2>
             <p className="text-xs sm:text-sm text-stone-400">
               실제 현장 완공 사진, Before/After, 공사 스펙을 실시간으로 등록·수정·삭제합니다.
@@ -674,6 +700,68 @@ export const ProjectManagementSection: React.FC = () => {
         </div>
       </div>
 
+      {/* Cloudinary smoke test: safe on the production Firestore shared by Preview. */}
+      <section className="rounded-3xl border border-emerald-700/40 bg-stone-900 p-6 sm:p-8 space-y-4" aria-label="Cloudinary 사진 업로드 테스트">
+        <div className="space-y-1">
+          <h3 className="flex items-center gap-2 text-lg font-bold text-white">
+            <Upload className="h-5 w-5 text-emerald-400" /> 사진 1장 업로드 테스트
+          </h3>
+          <p className="text-xs sm:text-sm text-stone-300 break-keep">
+            Cloudinary 저장 및 사진 표시만 검사합니다. 기존 시공사례와 Firestore는 변경하지 않습니다.
+          </p>
+          <p className="text-xs text-amber-300 break-keep">
+            테스트 사진은 Cloudinary의 gene-interior/projects/previewUploadTest/after 폴더에 남으며 필요하면 Cloudinary에서 삭제할 수 있습니다.
+          </p>
+        </div>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          <input
+            type="file"
+            accept="image/*"
+            aria-label="테스트할 사진 선택"
+            disabled={testUploadBusy}
+            onChange={(event) => {
+              setTestPhoto(event.target.files?.[0] || null);
+              setTestPhotoUrl("");
+              setTestUploadError("");
+              setTestImageLoaded(false);
+              setTestImageError(false);
+            }}
+            className="block w-full sm:max-w-sm rounded-lg border border-stone-600 bg-stone-950 p-2 text-xs text-white file:mr-3 file:rounded-md file:border-0 file:bg-stone-700 file:px-3 file:py-2 file:text-white"
+          />
+          <button
+            type="button"
+            disabled={!testPhoto || testUploadBusy}
+            onClick={handleTestPhotoUpload}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-bold text-white hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {testUploadBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+            {testUploadBusy ? "업로드 중..." : "Cloudinary에 사진 올려보기"}
+          </button>
+        </div>
+        {testUploadError && (
+          <p role="alert" className="rounded-lg border border-red-700 bg-red-950/40 p-3 text-sm text-red-200 break-words">
+            업로드 실패: {testUploadError}
+          </p>
+        )}
+        {testPhotoUrl && (
+          <div className="space-y-3 rounded-xl border border-stone-700 bg-stone-950 p-4">
+            <p className="text-sm font-semibold text-emerald-300">
+              {testImageError ? "업로드 완료, 그러나 사진 표시 실패" : testImageLoaded ? "업로드와 사진 표시 모두 성공" : "업로드 완료 — 사진 표시 확인 중"}
+            </p>
+            <img
+              src={testPhotoUrl}
+              alt="Cloudinary 업로드 테스트 사진"
+              onLoad={() => { setTestImageLoaded(true); setTestImageError(false); }}
+              onError={() => { setTestImageError(true); setTestImageLoaded(false); }}
+              className="max-h-80 w-full rounded-lg bg-stone-800 object-contain"
+            />
+            <a href={testPhotoUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs font-semibold text-amber-300 underline">
+              <ExternalLink className="h-3 w-3" /> 업로드한 사진 새 창에서 확인
+            </a>
+          </div>
+        )}
+      </section>
+
       {/* Registration / Edit Form */}
       <div ref={formRef} className="bg-stone-900 border border-stone-800 rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-stone-800 pb-4">
@@ -686,7 +774,7 @@ export const ProjectManagementSection: React.FC = () => {
                 {editingProjectId ? "시공사례 수정 모드" : "신규 시공사례 등록"}
               </h3>
               <p className="text-xs text-stone-400">
-                {editingProjectId ? `문서 ID: ${editingProjectId} 데이터를 수정 중입니다.` : "양식을 작성하고 사진을 선택하면 Firebase Storage 업로드 및 DB 저장이 자동 진행됩니다."}
+                {editingProjectId ? `문서 ID: ${editingProjectId} 데이터를 수정 중입니다.` : "양식을 작성하고 사진을 선택하면 Cloudinary 사진 업로드 및 Firestore 저장이 진행됩니다."}
               </p>
             </div>
           </div>
@@ -976,15 +1064,15 @@ export const ProjectManagementSection: React.FC = () => {
             </div>
           </div>
 
-          {/* Section 3: 현장 사진 업로드 (Firebase Storage 연동) */}
+          {/* Section 3: 현장 사진 업로드 (Cloudinary 연동) */}
           <div className="space-y-4">
             <div className="flex items-center justify-between border-b border-stone-800 pb-2">
               <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                <span>3. 시공 사진 (Firebase Storage 업로드)</span>
+                <span>3. 시공 사진 (Cloudinary 업로드)</span>
               </h4>
               <span className="text-[11px] text-stone-400">
-                새 사진을 선택하면 Firebase Storage에 자동 업로드됩니다.
+                새 사진을 선택하고 시공사례를 저장하면 Cloudinary에 업로드됩니다.
               </span>
             </div>
 
@@ -1625,7 +1713,7 @@ export const ProjectManagementSection: React.FC = () => {
               <div className="space-y-1">
                 <h3 className="text-lg font-bold text-white font-sans break-keep">시공사례 영구 삭제</h3>
                 <p className="text-xs text-stone-400">
-                  선택하신 시공사례를 데이터베이스 및 Storage에서 삭제합니다.
+                  시공사례 정보는 Firestore에서 삭제됩니다. 기존 Firebase Storage 사진 삭제는 접근 제한으로 실패할 수 있으며 Cloudinary 사진은 보존됩니다.
                 </p>
               </div>
             </div>
@@ -1641,10 +1729,10 @@ export const ProjectManagementSection: React.FC = () => {
                 {projectToDelete.title}
               </h4>
               <p className="text-xs text-stone-400 pt-1">
-                이 시공사례와 연결된 Storage 사진 및 Firestore 데이터를 모두 삭제하시겠습니까?
+                이 시공사례의 Firestore 데이터를 삭제하시겠습니까? Cloudinary 사진 파일은 별도로 보존됩니다.
               </p>
               <p className="text-[11px] text-red-400 font-medium pt-0.5">
-                ※ 삭제된 프로젝트와 업로드된 사진은 복구할 수 없습니다.
+                ※ Firestore에서 삭제된 프로젝트 정보는 복구하기 어렵습니다. 삭제 전 내용을 확인해 주세요.
               </p>
             </div>
 

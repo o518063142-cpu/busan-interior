@@ -482,6 +482,34 @@ export default async function handler(
   } =
     await fetchCombinedProjects();
 
+  // Share the exact same PUBLIC real-project list with the browser homepage.
+  // The HTML renderer and this JSON response use fetchCombinedProjects(),
+  // including its Firestore Admin/REST merge and public-status checks.
+  if (req.query.format === "real-projects-json") {
+    res.setHeader("Cache-Control", "public, s-maxage=60, stale-while-revalidate=300");
+    res.setHeader("Content-Type", "application/json; charset=utf-8");
+    return res.status(200).json({
+      projects: realProjects.map((project) => ({
+        id: project.id,
+        slug: project.slug || project.id,
+        isSample: false,
+        title: project.title,
+        location: project.location,
+        category: project.category,
+        spaceTypeDetail: project.spaceTypeDetail || "",
+        area: project.area || "",
+        duration: project.duration || "",
+        scope: project.scope || "",
+        clientRequest: project.clientRequest || "",
+        beforeImage: project.beforeImage || "",
+        inProgressImage: project.inProgressImage || "",
+        afterImages: Array.isArray(project.afterImages) ? project.afterImages : [],
+        description: project.description || "",
+        keyFeatures: Array.isArray(project.keyFeatures) ? project.keyFeatures : [],
+      })),
+    });
+  }
+
   const baseUrl =
     "https://gene-interior.vercel.app";
 

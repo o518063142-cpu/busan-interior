@@ -5,7 +5,7 @@ type Kind = "after" | "before" | "process";
 async function projectMediaAction(body: Record<string, string>) {
   const token = await auth.currentUser?.getIdToken();
   if (!token) throw new Error("관리자 계정으로 다시 로그인해주세요.");
-  const response = await fetch("/api/project-media", {
+  const response = await fetch("/api/render-listing?mode=project-media", {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
     body: JSON.stringify(body),

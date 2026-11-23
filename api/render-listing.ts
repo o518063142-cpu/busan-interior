@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { createHash } from "node:crypto";
 import { getAuth } from "firebase-admin/auth";
+import { getApps, initializeApp } from "firebase-admin/app";
 import fs from "fs";
 import path from "path";
 import { SITE_CONFIG } from "./_config/siteConfig.js";
@@ -488,11 +489,11 @@ export default async function handler(
     if (!idToken) return res.status(401).json({ error: "관리자 로그인이 필요합니다." });
   
     try {
-      // Reuse the initialized Firebase Admin service credentials.
-      if (!await getFirestoreAdmin()) {
-        return res.status(503).json({ error: "서버 관리자 인증 설정이 필요합니다." });
-      }
-      const user = await getAuth().verifyIdToken(idToken, true);
+      // Firebase ID tokens can be signature-verified using Google's public certificates.
+      // Preview does not need service-account credentials for this operation.
+      // This does not perform a token-revocation lookup; Firebase tokens expire within an hour.
+      const app = getApps()[0] || initializeApp({ projectId: "busan-interior" });
+      const user = await getAuth(app).verifyIdToken(idToken);
       if (!allowedUids.has(user.uid)) {
         return res.status(403).json({ error: "사진 업로드 권한이 없습니다." });
       }

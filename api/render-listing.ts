@@ -485,6 +485,18 @@ export default async function handler(
   // Share the exact same PUBLIC real-project list with the browser homepage.
   // The HTML renderer and this JSON response use fetchCombinedProjects(),
   // including its Firestore Admin/REST merge and public-status checks.
+  // Temporary Preview-only check: diagnose original Firebase Storage photo reachability.
+  if (req.query.format === "check-photo" && process.env.VERCEL_ENV === "preview") {
+    const src = realProjects[0]?.afterImages?.[0];
+    if (!src) return res.status(200).json({photoListed: false});
+    try {
+      const imageResponse = await fetch(src, { method: "GET", signal: AbortSignal.timeout(9000) });
+      return res.status(200).json({ photoListed: true, status: imageResponse.status, type: imageResponse.headers.get("content-type"), length: imageResponse.headers.get("content-length") });
+    } catch (error) {
+      return res.status(200).json({ photoListed: true, fetchError: String(error).slice(0, 140) });
+    }
+  }
+
   if (req.query.format === "real-projects-json") {
     res.setHeader("Cache-Control", "public, s-maxage=60, stale-while-revalidate=300");
     res.setHeader("Content-Type", "application/json; charset=utf-8");

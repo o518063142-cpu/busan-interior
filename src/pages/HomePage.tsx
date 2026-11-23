@@ -81,7 +81,13 @@ export const HomePage: React.FC<HomePageProps> = ({
       unsubscribe = onSnapshot(
         q,
         (snapshot) => {
-          const items: ProjectItem[] = snapshot.docs.map((docSnap) => {
+          const items: ProjectItem[] = snapshot.docs
+            .filter((docSnap) => {
+              const data = docSnap.data();
+              return data.status !== "private" && data.status !== "draft" &&
+                data.status !== "deleted" && data.isPublished !== false;
+            })
+            .map((docSnap) => {
             const data = docSnap.data();
             return {
               id: docSnap.id,

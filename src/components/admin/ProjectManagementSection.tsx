@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { ProjectCategory, ProjectItem } from "../../types";
 import { PROJECTS_DATA } from "../../data/projectsData";
 import { db, storage } from "../../firebase";
+import { uploadProjectImage, deleteProjectMedia } from "../../utils/projectMedia";
 import {
   collection,
   doc,
@@ -15,9 +16,7 @@ import {
 } from "firebase/firestore";
 import {
   ref,
-  uploadBytes,
-  getDownloadURL,
-  deleteObject,
+   deleteObject,
   listAll,
 } from "firebase/storage";
 import {
@@ -242,11 +241,6 @@ export const ProjectManagementSection: React.FC = () => {
     setKeyFeatures(keyFeatures.filter((_, idx) => idx !== index));
   };
 
-  // Safe file name cleaner for Storage paths
-  const sanitizeFileName = (fileName: string) => {
-    const clean = fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
-    return clean.length > 50 ? clean.slice(-50) : clean;
-  };
 
   // Reset all form inputs and file states
   const resetFormState = () => {
@@ -391,6 +385,8 @@ export const ProjectManagementSection: React.FC = () => {
     try {
       // 1. Delete Storage photos in projects/{projectId}/ (safely ignore non-existent files)
       try {
+        await deleteProjectMedia(projectToDelete.id);
+        // Legacy Firebase Storage may now be blocked on Spark; do not block Firestore deletion.
         await deleteStorageFolder(`projects/${projectToDelete.id}`);
       } catch (storageErr: any) {
         console.warn("Storage folder deletion note (continuing to document delete):", storageErr);
@@ -466,13 +462,10 @@ export const ProjectManagementSection: React.FC = () => {
       // 3. Handle Representative After Image (afterImages[0])
       let finalMainAfterUrl = existingMainAfterUrl;
       if (mainAfterFile) {
-        setUploadProgressText("대표 완공사진 Firebase Storage에 업로드 중...");
-        const mainFileName = `main_${Date.now()}_${sanitizeFileName(mainAfterFile.name)}`;
-        const mainStorageRef = ref(storage, `projects/${projectId}/after/${mainFileName}`);
+        setUploadProgressText("대표 완공사진 무료 이미지 저장소에 업로드 중...");
 
         try {
-          const snapshot = await uploadBytes(mainStorageRef, mainAfterFile);
-          finalMainAfterUrl = await getDownloadURL(snapshot.ref);
+          finalMainAfterUrl = await uploadProjectImage(projectId, "after", mainAfterFile);
         } catch (uploadErr: any) {
           console.error("Main after image upload failed:", uploadErr);
           throw new Error(
@@ -489,12 +482,9 @@ export const ProjectManagementSection: React.FC = () => {
           setUploadProgressText(
             `추가 완공사진 (${i + 1}/${additionalAfterFiles.length}) 업로드 중...`
           );
-          const extraFileName = `extra_${Date.now()}_${i + 1}_${sanitizeFileName(file.name)}`;
-          const extraStorageRef = ref(storage, `projects/${projectId}/after/${extraFileName}`);
-
+ 
           try {
-            const snapshot = await uploadBytes(extraStorageRef, file);
-            const downloadUrl = await getDownloadURL(snapshot.ref);
+            const downloadUrl = await uploadProjectImage(projectId, "after", file);
             finalAdditionalAfterUrls.push(downloadUrl);
           } catch (uploadErr: any) {
             console.error(`Extra after image ${i + 1} upload failed:`, uploadErr);
@@ -517,13 +507,10 @@ export const ProjectManagementSection: React.FC = () => {
       // 5. Handle Before Image
       let finalBeforeUrl = existingBeforeUrl;
       if (beforeFile) {
-        setUploadProgressText("시공 전(Before) 사진 Firebase Storage에 업로드 중...");
-        const beforeFileName = `before_${Date.now()}_${sanitizeFileName(beforeFile.name)}`;
-        const beforeStorageRef = ref(storage, `projects/${projectId}/before/${beforeFileName}`);
+        setUploadProgressText("시공 전(Before) 사진 무료 이미지 저장소에 업로드 중...");
 
         try {
-          const snapshot = await uploadBytes(beforeStorageRef, beforeFile);
-          finalBeforeUrl = await getDownloadURL(snapshot.ref);
+          finalBeforeUrl = await uploadProjectImage(projectId, "before", beforeFile);
         } catch (uploadErr: any) {
           console.error("Before image upload failed:", uploadErr);
           throw new Error(`[시공 전 사진] 업로드 실패: ${uploadErr.message || uploadErr}`);
@@ -533,13 +520,10 @@ export const ProjectManagementSection: React.FC = () => {
       // 6. Handle In-Progress Image
       let finalInProgressUrl = existingInProgressUrl;
       if (inProgressFile) {
-        setUploadProgressText("시공 과정(In-Progress) 사진 Firebase Storage에 업로드 중...");
-        const processFileName = `process_${Date.now()}_${sanitizeFileName(inProgressFile.name)}`;
-        const processStorageRef = ref(storage, `projects/${projectId}/process/${processFileName}`);
+        setUploadProgressText("시공 과정(In-Progress) 사진 무료 이미지 저장소에 업로드 중...");
 
         try {
-          const snapshot = await uploadBytes(processStorageRef, inProgressFile);
-          finalInProgressUrl = await getDownloadURL(snapshot.ref);
+          finalInProgressUrl = await uploadProjectImage(projectId, "process", inProgressFile);
         } catch (uploadErr: any) {
           console.error("In-progress image upload failed:", uploadErr);
           throw new Error(`[시공 과정 사진] 업로드 실패: ${uploadErr.message || uploadErr}`);

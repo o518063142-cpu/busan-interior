@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { PROJECTS_DATA } from "../data/projectsData";
+import { sortProjectsNewestFirst } from "../utils/sortProjectsNewestFirst";
 import { ProjectCategory, ProjectItem } from "../types";
 import { db } from "../firebase";
 import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
@@ -65,6 +66,7 @@ export const ProjectPage: React.FC<ProjectPageProps> = ({
               id: docSnap.id,
               slug: data.slug || (docSnap.id === "wkv0to3v3LYzluyUtBU2" ? "busan-sajik-villa-remodeling" : ""),
               isSample: data.isSample ?? false,
+              createdAt: data.createdAt,
               title: data.title || "시공 프로젝트",
               location: data.location || "부산",
               category: (data.category as "주거" | "상가·매장" | "카페·음식점" | "사무실" | "공공·교육시설") || "주거",
@@ -115,7 +117,7 @@ export const ProjectPage: React.FC<ProjectPageProps> = ({
       }
     }
 
-    return combined;
+    return sortProjectsNewestFirst(combined);
   }, [firestoreProjects]);
 
   const categories: ProjectCategory[] = [

@@ -40,6 +40,7 @@ export interface ProjectItem {
   id: string;
   slug?: string; // SEO 고정 영문 슬러그 (예: busan-sajik-villa-remodeling)
   isSample: boolean; // 샘플 프로젝트 표시 표지 (true)
+  createdAt?: unknown; // Firestore 등록일 (기존 데이터는 없을 수 있음)
   title: string; // 프로젝트명
   location: string; // 지역 (예: 부산진구 전포동)
   category: "주거" | "상가·매장" | "카페·음식점" | "사무실" | "공공·교육시설"; // 공간 유형 카테고리

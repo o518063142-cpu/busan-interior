@@ -403,7 +403,7 @@ export const ProjectManagementSection: React.FC = () => {
       const deletedTitle = projectToDelete.title;
       // Close modal
       setProjectToDelete(null);
-      setSubmitSuccess(`시공사례 "${deletedTitle}" 및 등록된 사진이 정상적으로 삭제되었습니다.`);
+      setSubmitSuccess(`시공사례 "${deletedTitle}"가 삭제되었습니다. 기존 Firebase Storage 사진은 접근 제한 시 서버에 남을 수 있습니다.`);
     } catch (err: any) {
       console.error("Project deletion error:", err);
       setDeleteModalError(`삭제 실패: ${err.message || "오류가 발생했습니다."}`);
